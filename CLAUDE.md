@@ -38,6 +38,20 @@ packages/shared tipe, konstanta, tokens.css, kunci teks, nama aplikasi
 docs/           dokumentasi proyek
 ```
 
+### Struktur `apps/web` (mengikuti merchant umkm-pos)
+
+Per fitur, bukan per tipe berkas. Alias `@/` menunjuk ke `apps/web/src`.
+
+```text
+src/modules/<fitur>/{pages,components,router,services,stores,composables,helpers}
+src/core/global-routes.ts   glob modules/**/router/index.ts, guard guest/public, 404 terakhir
+src/layouts/                AppLayout
+src/components/             komponen global (Avatar, Button, NavBar, ...)
+src/plugins/http.ts         klien HTTP; src/helpers/ util bersama
+```
+
+Modul: auth, feed, posts (kartu post, komentar, like, share), friends, profile, legal, error. Setiap modul mengekspor rutenya di `router/index.ts`; `meta.app: true` berarti rute berada di dalam AppLayout. Rute dinamis `/:username` otomatis didaftarkan setelah rute statis. Store tetap setup store Pinia (satu `stores/index.ts`), bukan dipecah state/getters/actions.
+
 Nama aplikasi (`retrobook`) disimpan di satu konstanta di `packages/shared`; jangan menulisnya langsung di komponen.
 
 ## Perintah

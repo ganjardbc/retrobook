@@ -2,11 +2,11 @@ import { APP_NAME } from '@retrobook/shared'
 import '@retrobook/shared/tokens.css'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
-import { setHttpHooks } from './api/http'
-import App from './App.vue'
-import { router } from './router'
-import { useAuthStore } from './stores/auth'
-import './styles/base.css'
+import { setHttpHooks } from '@/plugins/http'
+import App from '@/App.vue'
+import { router } from '@/core/global-routes'
+import { useAuthStore } from '@/modules/auth/stores'
+import '@/styles/base.css'
 
 async function bootstrap() {
   document.title = APP_NAME

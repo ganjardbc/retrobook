@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { usePaged } from './paged'
+import { usePaged } from '@/composables/paged'
 
 type Item = { id: number }
 const page = (ids: number[], nextCursor: number | null, total?: number) => ({

@@ -124,7 +124,7 @@ Perilaku responsif (UX-11): satu breakpoint sederhana di sekitar 900 px menyembu
 
 ## 4. Komponen
 
-Setiap komponen jadi satu Vue SFC di `apps/web/src/components/`. Penamaan mengikuti kolom "Komponen".
+Setiap komponen jadi satu Vue SFC: komponen global di `apps/web/src/components/`, komponen fitur di `apps/web/src/modules/<fitur>/components/`. Penamaan mengikuti kolom "Komponen".
 
 | Komponen | Spesifikasi |
 |---|---|

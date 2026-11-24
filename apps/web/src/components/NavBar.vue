@@ -2,9 +2,9 @@
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { RouterLink } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
-import Avatar from './Avatar.vue'
-import WordMark from './WordMark.vue'
+import { useAuthStore } from '@/modules/auth/stores'
+import Avatar from '@/components/Avatar.vue'
+import WordMark from '@/components/WordMark.vue'
 
 defineEmits<{ 'toggle-menu': []; logout: [] }>()
 const auth = useAuthStore()

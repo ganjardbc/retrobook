@@ -2,11 +2,11 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
-import { session } from '../api/session'
-import { useAuthStore } from '../stores/auth'
-import AppLayout from './AppLayout.vue'
-import Avatar from './Avatar.vue'
-import Button from './Button.vue'
+import { session } from '@/helpers/session'
+import { useAuthStore } from '@/modules/auth/stores'
+import AppLayout from '@/layouts/AppLayout.vue'
+import Avatar from '@/components/Avatar.vue'
+import Button from '@/components/Button.vue'
 
 const makeRouter = () =>
   createRouter({

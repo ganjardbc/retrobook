@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { t, type MessageKey } from '@retrobook/shared/i18n'
 import { RouterLink } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
-import Avatar from './Avatar.vue'
+import { useAuthStore } from '@/modules/auth/stores'
+import Avatar from '@/components/Avatar.vue'
 
 // Hanya rute yang sudah ada; item lain (Messages, Friends, ...) ditambahkan bersama halamannya.
 const items: { label: MessageKey; to: string }[] = [
