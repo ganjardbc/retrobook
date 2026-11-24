@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RouterView, useRouter } from 'vue-router'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import AppFooter from './AppFooter.vue'
 import LeftMenu from './LeftMenu.vue'
@@ -8,6 +8,7 @@ import NavBar from './NavBar.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 const menuOpen = ref(false)
 
 // Menu kiri di layar sempit berupa panel tarik; tutup saat pindah halaman.
@@ -20,7 +21,7 @@ async function logout() {
 </script>
 
 <template>
-  <div class="layout">
+  <div class="layout" :class="{ 'layout--profile': route.meta.layout === 'profile' }">
     <NavBar @toggle-menu="menuOpen = !menuOpen" @logout="logout" />
     <div class="layout__cols">
       <aside class="layout__left" :class="{ 'layout__left--open': menuOpen }"><LeftMenu /></aside>
@@ -40,6 +41,14 @@ async function logout() {
   max-width: calc(var(--w-left) + var(--w-feed) + var(--w-right) + 2 * var(--sp-3));
   margin: 0 auto;
   padding: var(--sp-3);
+}
+/* Profil: tanpa menu kiri; kolom utama selebar timeline (referensi profil Maret 2015). */
+.layout--profile .layout__cols {
+  grid-template-columns: minmax(0, var(--w-timeline)) minmax(0, 1fr);
+  max-width: calc(var(--w-timeline) + var(--w-right) + var(--sp-3));
+}
+.layout--profile .layout__left {
+  display: none;
 }
 /* UX-11: satu breakpoint di sekitar 900 px menyembunyikan kolom kanan. */
 @media (max-width: 900px) {

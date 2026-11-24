@@ -7,6 +7,8 @@ declare module 'vue-router' {
     guest?: boolean
     /** Terbuka untuk siapa saja. */
     public?: boolean
+    /** 'profile': tanpa menu kiri, lebar timeline (UI spec 3). */
+    layout?: 'profile'
   }
 }
 
@@ -19,6 +21,20 @@ export const router = createRouter({
       children: [
         { path: '', name: 'home', component: () => import('../views/HomeView.vue') },
         { path: 'friends', name: 'friends', component: () => import('../views/FriendsView.vue') },
+        // Harus setelah rute akar lain: `/:username` menangkap semua segmen (karena itu daftar username terlarang).
+        {
+          path: ':username',
+          component: () => import('../views/ProfileView.vue'),
+          meta: { layout: 'profile' },
+          children: [
+            { path: '', name: 'profile', component: () => import('../views/ProfileTimeline.vue') },
+            {
+              path: 'about',
+              name: 'profile-about',
+              component: () => import('../views/ProfileAbout.vue'),
+            },
+          ],
+        },
       ],
     },
     {

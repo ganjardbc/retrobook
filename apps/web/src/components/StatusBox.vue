@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PRIVACIES, type Privacy } from '@retrobook/shared'
+import { PRIVACIES, type Post, type Privacy } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { computed, ref } from 'vue'
 import { ApiRequestError } from '../api/http'
@@ -10,6 +10,7 @@ import Button from './Button.vue'
 const MAX_BYTES = 5 * 1024 * 1024
 const TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
+const emit = defineEmits<{ posted: [post: Post] }>()
 const feed = useFeedStore()
 const content = ref('')
 const privacy = ref<Privacy>('FRIENDS')
@@ -59,6 +60,7 @@ async function submit() {
       imageUrl: imageUrl.value,
     })
     feed.prepend(post)
+    emit('posted', post)
     content.value = ''
     removePhoto()
   } catch (e) {

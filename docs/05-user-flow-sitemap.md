@@ -41,7 +41,7 @@ flowchart TD
 | `/privacy` | Kebijakan privasi dan label parodi | bebas | 1 | UX-12 |
 | `/forgot-password`, `/reset-password` | Reset password | tamu | 3 | AUTH-05 |
 | `/` | News feed, status box, kolom kanan | member | 1 | POST-04 |
-| `/:username` | Profil, tab Timeline | member | 1 | PRF-01 |
+| `/:username` | Profil, tab Timeline. Status implementasi (T-21): header (cover, foto, nama, aksi pertemanan), tab Timeline dan About, kartu info; Friends dan Photos (T-24), Update Info (T-22), dan scroller tahun (T-44) menyusul | member | 1 | PRF-01 |
 | `/:username/about`, `/friends`, `/photos` | Tab profil | member | 1 | PRF-01, 04 |
 | `/friends` | Permintaan masuk, saran teman, semua teman. Status implementasi (T-19): permintaan masuk (Confirm, Delete Request) dan semua teman (jumlah, pencarian, Load more, Unfriend); saran teman menyusul di T-41 | member | 1 | FRD-02, 04, 05 |
 | `/search` | Hasil pencarian lengkap | member | 2 | SRC-01 |
