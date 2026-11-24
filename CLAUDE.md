@@ -6,7 +6,7 @@ Panduan untuk Claude Code di repo **retrobook**. Baca ini dulu, lalu buka dokume
 
 retrobook adalah jejaring sosial **parodi** bertampilan 2014 sampai Maret 2015: user app, admin panel, dan satu API. Ini fun project (pembelajaran, demo, bahan konten Coderium), bukan produk komersial. Pemilik: Ganjar, yang memutuskan arsitektur.
 
-Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), T-04 (kerangka NestJS), T-05 (modul Auth), T-06 (tokens.css, tipe bersama), T-07 (app Vue dasar, login, register), dan T-08 (token terukur) selesai. Lanjut dari `docs/08-backlog.md` (T-09).
+Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), T-04 (kerangka NestJS), T-05 (modul Auth), T-06 (tokens.css, tipe bersama), T-07 (app Vue dasar, login, register), T-08 (token terukur), dan T-09 (CI dasar) selesai: minggu 1 tuntas. Lanjut dari `docs/08-backlog.md` (T-10).
 
 ## Dokumen (sumber kebenaran)
 

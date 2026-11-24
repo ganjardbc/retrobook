@@ -1,0 +1,49 @@
+name: CI
+
+# Unit dan integrasi pada setiap push (docs/07-test-plan.md bagian 10).
+# E2E Playwright ditambahkan sebagai job terpisah di T-27 (hanya pull request ke main dan rilis).
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: retrobook_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci-root-password"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      # Hanya untuk CI; bukan rahasia asli.
+      DATABASE_URL: mysql://root:ci-root-password@127.0.0.1:3306/retrobook_test
+      TEST_DATABASE_URL: mysql://root:ci-root-password@127.0.0.1:3306/retrobook_test
+      JWT_SECRET: ci-only-secret-not-for-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # versi pnpm dari field packageManager
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Prisma client dan migrasi
+        run: |
+          pnpm --filter @retrobook/db exec prisma generate
+          pnpm --filter @retrobook/db exec prisma migrate deploy
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build

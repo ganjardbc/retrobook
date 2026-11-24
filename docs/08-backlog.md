@@ -20,7 +20,7 @@ Backlog awal yang diturunkan dari [PRD](02-prd.md) dan [Roadmap](01-roadmap.md):
 | [x] T-06 | `packages/shared`: `tokens.css` dari UI spec, tipe bersama (`UserSummary`, `Post`, enum) | S | UX-09 |
 | [x] T-07 | Vue 3 app dasar: router, Pinia, klien HTTP dengan interceptor refresh, halaman login dan register | M | AUTH-01 sampai 03 |
 | [x] T-08 | Pengukuran referensi: ambil hex dan dimensi dari tangkapan layar, kunci `tokens.css` | S | UI 10, R-07 |
-| [ ] T-09 | CI dasar: lint, test, build; Jest dan Vitest terpasang | S | Test 10 |
+| [x] T-09 | CI dasar: lint, test, build; Jest dan Vitest terpasang | S | Test 10 |
 
 Keluaran minggu 1: bisa daftar dan masuk dari browser, token diperbarui otomatis, token visual terkunci.
 
