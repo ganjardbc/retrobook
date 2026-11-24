@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test'
 
-const apiPort = process.env.API_PORT ?? '3000'
+const apiPort = process.env.API_PORT ?? '3030'
 const webPort = '5173'
 
 export default defineConfig({

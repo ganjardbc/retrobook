@@ -13,9 +13,9 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       proxy: {
-        '/api': `http://localhost:${env.API_PORT ?? 3000}`,
-        '/socket.io': { target: `http://localhost:${env.API_PORT ?? 3000}`, ws: true },
-        '/uploads': `http://localhost:${env.API_PORT ?? 3000}`,
+        '/api': `http://localhost:${env.API_PORT ?? 3030}`,
+        '/socket.io': { target: `http://localhost:${env.API_PORT ?? 3030}`, ws: true },
+        '/uploads': `http://localhost:${env.API_PORT ?? 3030}`,
       },
     },
     test: { environment: 'jsdom' },
