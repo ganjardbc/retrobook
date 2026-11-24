@@ -144,7 +144,7 @@ describe('ProfileView', () => {
     ['NONE', ['Add Friend']],
     ['REQUEST_SENT', ['Cancel Request']],
     ['REQUEST_RECEIVED', ['Confirm', 'Delete Request']],
-    ['FRIENDS', ['✓ Friends']],
+    ['FRIENDS', ['✓ Friends', 'Poke']],
   ] as const)('relationship %s menampilkan tombol yang sesuai', async (rel, labels) => {
     vi.spyOn(usersApi, 'profile').mockResolvedValue(profile({ relationship: rel }))
     const { w } = await mountAt('/siti')

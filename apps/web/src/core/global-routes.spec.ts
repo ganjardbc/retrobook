@@ -10,6 +10,7 @@ describe('global-routes', () => {
     expect(name('/me/edit')).toBe('profile-edit')
     expect(name('/login')).toBe('login')
     expect(name('/privacy')).toBe('privacy')
+    expect(name('/pokes')).toBe('pokes')
   })
 
   it('username jatuh ke profil dan tab-nya; sisanya 404', () => {

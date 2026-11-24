@@ -19,7 +19,13 @@ watch(open, (isOpen) => {
 
 /** Halaman satu post belum ada di web (backlog); notifikasi post membawa ke profil aktor. */
 const target = (n: AppNotification) =>
-  n.type === 'FRIEND_REQUEST' ? '/friends' : n.actor ? `/${n.actor.username}` : '/'
+  n.type === 'POKE'
+    ? '/pokes'
+    : n.type === 'FRIEND_REQUEST'
+      ? '/friends'
+      : n.actor
+        ? `/${n.actor.username}`
+        : '/'
 </script>
 
 <template>

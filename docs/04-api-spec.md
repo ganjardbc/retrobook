@@ -229,7 +229,8 @@ Satu laporan per pelapor per target; mengulang mengembalikan 409 `ALREADY_REPORT
 | GET | `/friends/suggestions` | People You May Know (FRD-05), berdasarkan teman bersama, tanpa yang sudah teman atau diblokir |
 | GET | `/friends/birthdays` | Teman yang berulang tahun hari ini (FRD-07) |
 | POST | `/pokes` | `{ userId }` poke atau poke balik (POK-01) |
-| GET | `/pokes` | Poke aktif yang diterima dan belum dibalas |
+| GET | `/pokes` | Poke aktif yang diterima dan belum dibalas (cursor) |
+| DELETE | `/pokes/:userId` | "Remove": tandai poke dari user itu sudah dilihat |
 | POST | `/blocks` | `{ userId }` blokir; menghapus pertemanan/permintaan yang ada dalam transaksi |
 | DELETE | `/blocks/:userId` | Buka blokir |
 | GET | `/blocks` | Daftar yang diblokir (cursor `limit`/`cursor`) |
@@ -246,7 +247,9 @@ Aturan (BR-01, BR-11):
 - Tidak bisa berteman dengan diri sendiri (422 `SELF_ACTION_NOT_ALLOWED`) atau dengan user yang saling memblokir (404).
 - Satu baris per pasangan; service mengisi `pair_low_id` dan `pair_high_id` dengan min dan max dari dua id. Permintaan silang (A kirim ke B saat B sudah kirim ke A) langsung menjadi ACCEPTED di satu transaksi.
 - Memblokir menghapus pertemanan dan permintaan yang ada dalam satu transaksi.
-- Poke ulang memperbarui `created_at` dan mengosongkan `seen_at`; poke hanya antar teman atau semua user (diputuskan di PRD; usulan: hanya antar teman).
+- Poke ulang memperbarui `created_at` dan mengosongkan `seen_at`. Keputusan D-6 (usulan dipakai, belum dikonfirmasi Ganjar): poke hanya antar teman.
+
+Status implementasi (T-34): `POST /pokes` 200 `{ userId, createdAt }`; diri sendiri 422 `SELF_ACTION_NOT_ALLOWED`; bukan teman, permintaan PENDING, diblokir (arah mana pun), BANNED, terhapus, atau tidak ada: 404 yang sama. Upsert baris (from, to), penutupan poke lawan, dan notifikasi `POKE` berjalan dalam satu transaksi; membalas poke menandai poke lawan sebagai dilihat ("sampai dilihat atau dibalas"). Penerima mendapat `notification:new` dan `poke:new`. `GET /pokes` mengembalikan `{ items: [{ user, createdAt }], nextCursor }`, terbaru dulu, hanya poke belum dilihat dari teman yang masih boleh terlihat (unfriend, blokir, BANNED, atau terhapus menyembunyikannya). `DELETE /pokes/:userId` 204, 404 bila tidak ada poke aktif dari user itu. Rate limit 20 per jam menyusul di T-40.
 
 ## 6. Pencarian dan trending (SRC-01, SRC-02)
 

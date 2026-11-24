@@ -3,6 +3,7 @@ import type { Profile } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { ref } from 'vue'
+import { pokesApi } from '@/modules/pokes/services/api'
 import { useProfileStore } from '@/modules/profile/stores'
 import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
@@ -24,6 +25,17 @@ async function onPhoto(kind: 'avatar' | 'cover', e: Event) {
 function unfriend() {
   if (window.confirm(t('profile.action.unfriend.confirm', { name: props.profile.displayName }))) {
     void store.relate('unfriend')
+  }
+}
+const poked = ref(false)
+const pokeFailed = ref(false)
+async function poke() {
+  pokeFailed.value = false
+  try {
+    await pokesApi.poke(props.profile.id)
+    poked.value = true
+  } catch {
+    pokeFailed.value = true
   }
 }
 // Message (T-36) dan View Activity Log (Fase 3) ditambahkan bersama fiturnya.
@@ -101,11 +113,17 @@ function unfriend() {
           t('profile.action.delete')
         }}</Button>
       </template>
-      <Button v-else-if="profile.relationship === 'FRIENDS'" variant="default" @click="unfriend">
-        ✓ {{ t('profile.action.friends') }}
-      </Button>
+      <template v-else-if="profile.relationship === 'FRIENDS'">
+        <Button variant="default" @click="unfriend">✓ {{ t('profile.action.friends') }}</Button>
+        <Button variant="default" @click="poke">{{
+          poked ? t('profile.action.poked') : t('profile.action.poke')
+        }}</Button>
+      </template>
     </div>
     <p v-if="photoError" class="form-error header__error" role="alert">{{ photoError }}</p>
+    <p v-else-if="pokeFailed" class="form-error header__error" role="alert">
+      {{ t('profile.action.error') }}
+    </p>
     <p v-else-if="store.actionFailed" class="form-error header__error" role="alert">
       {{ t('profile.action.error') }}
     </p>

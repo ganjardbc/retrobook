@@ -8,6 +8,7 @@ import Avatar from '@/components/Avatar.vue'
 const items: { label: MessageKey; to: string }[] = [
   { label: 'menu.newsFeed', to: '/' },
   { label: 'menu.friends', to: '/friends' },
+  { label: 'menu.pokes', to: '/pokes' },
 ]
 const auth = useAuthStore()
 </script>

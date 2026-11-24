@@ -98,6 +98,9 @@ export type AppNotification = {
   createdAt: string
 }
 
+/** Poke aktif yang diterima (`GET /pokes`). */
+export type PokeItem = { user: UserSummary; createdAt: string }
+
 export type FriendRequest = { user: UserSummary; createdAt: string }
 
 /** Daftar teman: Paged biasa ditambah jumlah total (tab Friends menampilkan jumlah, FRD-04). */
