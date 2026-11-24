@@ -6,7 +6,7 @@ Panduan untuk Claude Code di repo **retrobook**. Baca ini dulu, lalu buka dokume
 
 retrobook adalah jejaring sosial **parodi** bertampilan 2014 sampai Maret 2015: user app, admin panel, dan satu API. Ini fun project (pembelajaran, demo, bahan konten Coderium), bukan produk komersial. Pemilik: Ganjar, yang memutuskan arsitektur.
 
-Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), T-04 (kerangka NestJS), T-05 (modul Auth), dan T-06 (tokens.css, tipe bersama) selesai. Lanjut dari `docs/08-backlog.md` (T-07).
+Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), T-04 (kerangka NestJS), T-05 (modul Auth), T-06 (tokens.css, tipe bersama), dan T-07 (app Vue dasar, login, register) selesai. Lanjut dari `docs/08-backlog.md` (T-08).
 
 ## Dokumen (sumber kebenaran)
 
@@ -46,7 +46,7 @@ Skrip akar yang sudah jalan: `pnpm install`, `pnpm lint` (ESLint di akar, bukan 
 
 ```bash
 pnpm install
-pnpm dev            # web, admin, api bersamaan (belum; sementara: pnpm --filter @retrobook/api dev)
+pnpm dev            # web, admin, api bersamaan (belum; sementara: pnpm --filter @retrobook/api dev dan pnpm --filter @retrobook/web dev)
 pnpm lint
 pnpm -r test        # Jest + Vitest
 pnpm test:e2e       # Playwright

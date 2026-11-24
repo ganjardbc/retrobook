@@ -10,6 +10,7 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./i18n": "./i18n/index.ts",
     "./tokens.css": "./tokens.css"
   },
   "sideEffects": [
