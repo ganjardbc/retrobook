@@ -122,6 +122,9 @@ export type Conversation = { user: UserSummary; lastMessage: ChatMessage; unread
 /** Poke aktif yang diterima (`GET /pokes`). */
 export type PokeItem = { user: UserSummary; createdAt: string }
 
+/** People You May Know (`GET /friends/suggestions`). */
+export type FriendSuggestion = { user: UserSummary; mutualFriends: number }
+
 export type FriendRequest = { user: UserSummary; createdAt: string }
 
 /** Daftar teman: Paged biasa ditambah jumlah total (tab Friends menampilkan jumlah, FRD-04). */

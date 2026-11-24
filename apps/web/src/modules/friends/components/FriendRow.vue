@@ -3,7 +3,7 @@ import type { UserSummary } from '@retrobook/shared'
 import { RouterLink } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
 
-defineProps<{ user: UserSummary }>()
+defineProps<{ user: UserSummary; meta?: string }>()
 </script>
 
 <template>
@@ -11,6 +11,7 @@ defineProps<{ user: UserSummary }>()
     <Avatar :name="user.displayName" :src="user.avatarUrl" size="m" />
     <div class="row__who">
       <RouterLink class="row__name" :to="`/${user.username}`">{{ user.displayName }}</RouterLink>
+      <div v-if="meta" class="row__meta">{{ meta }}</div>
     </div>
     <div class="row__actions"><slot /></div>
   </li>
@@ -33,6 +34,10 @@ defineProps<{ user: UserSummary }>()
 }
 .row__name {
   font-weight: bold;
+}
+.row__meta {
+  color: var(--c-text-muted);
+  font-size: var(--fs-small);
 }
 .row__actions {
   display: flex;

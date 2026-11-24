@@ -11,12 +11,21 @@ import {
 } from '@nestjs/common'
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
 import { CursorQueryDto } from '../posts/dto/post.dto'
-import { FriendsQueryDto, SendRequestDto } from './dto/friends.dto'
+import {
+  BirthdaysQueryDto,
+  FriendsQueryDto,
+  SendRequestDto,
+  SuggestionsQueryDto,
+} from './dto/friends.dto'
+import { FriendDiscoveryService } from './discovery.service'
 import { FriendsService } from './friends.service'
 
 @Controller('friends')
 export class FriendsController {
-  constructor(private readonly friends: FriendsService) {}
+  constructor(
+    private readonly friends: FriendsService,
+    private readonly discovery: FriendDiscoveryService,
+  ) {}
 
   @Post('requests')
   send(@CurrentUser() user: AuthUser, @Body() dto: SendRequestDto) {
@@ -46,6 +55,16 @@ export class FriendsController {
   @Get()
   list(@CurrentUser() user: AuthUser, @Query() q: FriendsQueryDto) {
     return this.friends.list(user.id, q.limit, q.cursor, q.q)
+  }
+
+  @Get('suggestions')
+  suggestions(@CurrentUser() user: AuthUser, @Query() q: SuggestionsQueryDto) {
+    return this.discovery.suggestions(user.id, q.limit)
+  }
+
+  @Get('birthdays')
+  birthdays(@CurrentUser() user: AuthUser, @Query() q: BirthdaysQueryDto) {
+    return this.discovery.birthdays(user.id, q.date)
   }
 
   @Delete(':userId')

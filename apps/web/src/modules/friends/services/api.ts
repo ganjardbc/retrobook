@@ -1,10 +1,22 @@
-import type { FriendRequest, FriendsPage, FriendshipResult, Paged } from '@retrobook/shared'
+import type {
+  FriendRequest,
+  FriendSuggestion,
+  FriendsPage,
+  FriendshipResult,
+  Paged,
+  UserSummary,
+} from '@retrobook/shared'
 import { request } from '@/plugins/http'
 
 const qs = (cursor?: number | null, extra = '') =>
   `?limit=10${cursor ? `&cursor=${cursor}` : ''}${extra}`
 
 export const friendsApi = {
+  /** People You May Know (FRD-05). */
+  suggestions: (limit = 5) =>
+    request<{ items: FriendSuggestion[] }>(`/friends/suggestions?limit=${limit}`),
+  /** Teman yang berulang tahun pada `date` (YYYY-MM-DD, tanggal lokal pengguna; FRD-07). */
+  birthdays: (date: string) => request<{ items: UserSummary[] }>(`/friends/birthdays?date=${date}`),
   requests: (cursor?: number | null) =>
     request<Paged<FriendRequest>>(`/friends/requests${qs(cursor)}`),
   list: (cursor?: number | null, q = '') =>

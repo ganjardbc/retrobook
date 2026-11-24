@@ -2,6 +2,8 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/modules/auth/stores'
+import BirthdaysCard from '@/modules/friends/components/BirthdaysCard.vue'
+import PeopleYouMayKnow from '@/modules/friends/components/PeopleYouMayKnow.vue'
 import ChatDock from '@/modules/chat/components/ChatDock.vue'
 import ChatSidebar from '@/modules/chat/components/ChatSidebar.vue'
 import { useChatStore } from '@/modules/chat/stores'
@@ -38,8 +40,12 @@ async function logout() {
     <div class="layout__cols">
       <aside class="layout__left" :class="{ 'layout__left--open': menuOpen }"><LeftMenu /></aside>
       <main class="layout__main"><RouterView /></main>
-      <!-- Trending dan saran teman menyusul (T-41, T-42); chat di dasar kolom (T-37). -->
-      <aside class="layout__right"><ChatSidebar /></aside>
+      <!-- Trending menyusul (T-42); kartu di atas, chat di dasar kolom (UI spec 3). -->
+      <aside class="layout__right">
+        <BirthdaysCard />
+        <PeopleYouMayKnow />
+        <ChatSidebar />
+      </aside>
     </div>
     <ChatDock />
     <AppFooter />

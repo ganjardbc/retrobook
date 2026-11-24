@@ -246,6 +246,8 @@ Status implementasi (T-18): permintaan, terima, tolak/batalkan, unfriend, daftar
 - `GET /friends/requests` mengembalikan `{ items: [{ user, createdAt }], nextCursor }`, terbaru dulu. `GET /friends` mengembalikan `{ items: UserSummary[], nextCursor, total }`, terbaru dulu, `?q=` mencocokkan nama atau username apa adanya (karakter `%` dan `_` bukan wildcard). Teman yang BANNED atau terhapus tidak ditampilkan dan tidak dihitung.
 - Blokir tersedia melalui `/blocks`; permintaan antar pasangan yang saling memblokir ditolak 404 dan saat memblokir relasi pertemanan/permintaan dihapus dalam transaksi.
 
+Status implementasi (T-41): `GET /friends/suggestions?limit=` (bawaan 5, 1 sampai 20) mengembalikan `{ items: [{ user, mutualFriends }] }`: teman dari teman, urut jumlah teman bersama lalu id. Tidak memuat diri sendiri, siapa pun yang sudah punya baris pertemanan dengan pemanggil (teman, permintaan terkirim, atau masuk), bot, akun terhapus atau BANNED, maupun blokir dua arah; teman bersama yang tidak boleh dilihat pemanggil tidak dihitung. Agregasi di memori atas teman pemanggil (shortcut; ganti SQL bila graf membesar), kandidat teratas yang diperiksa 100. `GET /friends/birthdays?date=YYYY-MM-DD` (bawaan hari ini UTC; klien mengirim tanggal lokalnya; bukan tanggal kalender valid: 400) mengembalikan `{ items: UserSummary[] }` teman yang berulang tahun pada tanggal itu, urut nama, tanpa tahun lahir; yang lahir 29 Februari dirayakan 1 Maret pada tahun bukan kabisat. Keduanya hanya memuat yang lolos `VisibilityService`.
+
 Aturan (BR-01, BR-11):
 
 - Tidak bisa berteman dengan diri sendiri (422 `SELF_ACTION_NOT_ALLOWED`) atau dengan user yang saling memblokir (404).
