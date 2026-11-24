@@ -11,6 +11,7 @@ import type {
 import { AppException } from '../../common/app-exception'
 import { escapeLike } from '../../common/like'
 import { PrismaService } from '../../prisma/prisma.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import { VisibilityService } from '../visibility/visibility.service'
 import { pairOf } from './pair'
 
@@ -35,6 +36,7 @@ export class FriendsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly visibility: VisibilityService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /** FRD-01. Permintaan silang (lawan sudah mengirim) langsung menjadi ACCEPTED. */
@@ -64,6 +66,11 @@ export class FriendsService {
         await this.prisma.friendship.create({
           data: { requesterId: viewerId, addresseeId: targetId, ...pair, status: 'PENDING' },
         })
+        await this.notifications.notify({
+          userId: targetId,
+          actorId: viewerId,
+          type: 'FRIEND_REQUEST',
+        })
         return { userId: targetId, status: 'PENDING' }
       } catch (e) {
         if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002')) throw e
@@ -83,7 +90,7 @@ export class FriendsService {
     })
     if (!row) throw new AppException(404, 'NOT_FOUND', 'Permintaan tidak ditemukan')
     if (row.status === 'ACCEPTED') return { userId: requesterId, status: 'ACCEPTED' }
-    await this.acceptRow(row.id)
+    await this.acceptRow(row.id, requesterId, viewerId)
     return { userId: requesterId, status: 'ACCEPTED' }
   }
 
@@ -214,18 +221,24 @@ export class FriendsService {
     if (row.requesterId === viewerId) {
       throw new AppException(409, 'REQUEST_PENDING', 'Permintaan sudah dikirim')
     }
-    await this.acceptRow(row.id)
+    await this.acceptRow(row.id, targetId, viewerId)
     return { userId: targetId, status: 'ACCEPTED' }
   }
 
-  private async acceptRow(id: number) {
-    await this.prisma.$transaction(async (tx) => {
+  /** `requesterId` dikabari bahwa `accepterId` menerima; notifikasi dibuat dalam transaksi yang sama. */
+  private async acceptRow(id: number, requesterId: number, accepterId: number) {
+    const notif = await this.prisma.$transaction(async (tx) => {
       // Bersyarat pada PENDING: dua penerimaan serentak tidak saling menimpa.
-      await tx.friendship.updateMany({
+      const { count } = await tx.friendship.updateMany({
         where: { id, status: 'PENDING' },
         data: { status: 'ACCEPTED', respondedAt: new Date() },
       })
-      // Notifikasi FRIEND_ACCEPT ditambahkan di sini pada T-32 (satu transaksi).
+      if (count === 0) return null
+      return this.notifications.create(
+        { userId: requesterId, actorId: accepterId, type: 'FRIEND_ACCEPT' },
+        tx,
+      )
     })
+    this.notifications.push(requesterId, notif)
   }
 }

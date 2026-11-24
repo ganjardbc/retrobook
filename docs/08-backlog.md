@@ -69,7 +69,7 @@ Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan t
 | ID | Tugas | Ukuran | PRD |
 |---|---|---|---|
 | [x] T-31 | Gateway Socket.IO `/realtime`: auth token, room per user, presence | L | CHT-02 |
-| [ ] T-32 | API notifikasi: pembuatan dari like, komentar, permintaan, terima; `unread-count`; tandai terbaca | M | NTF-01 |
+| [x] T-32 | API notifikasi: pembuatan dari like, komentar, permintaan, terima; `unread-count`; tandai terbaca | M | NTF-01 |
 | [ ] T-33 | `Jewel` tiga ikon dengan dropdown dan badge realtime | L | NTF-02, UX-01 |
 | [ ] T-34 | Poke: API, halaman, notifikasi | M | POK-01 |
 | [ ] T-35 | Wall post dan tag teman, notifikasi, tampilan "Nama ▸ Nama" | L | WAL-01, 02 |

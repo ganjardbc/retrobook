@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import type { Comment as CommentDto, Paged, UserSummary } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import { VisibilityService } from '../visibility/visibility.service'
 
 const commentSelect = {
@@ -23,6 +24,7 @@ export class CommentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly visibility: VisibilityService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /** Urut lama ke baru (INT-02), kursor = id komentar terakhir yang sudah diterima. */
@@ -48,12 +50,19 @@ export class CommentsService {
   }
 
   async create(viewerId: number, postId: number, content: string): Promise<CommentDto> {
-    await this.assertPostVisible(viewerId, postId)
+    const post = await this.assertPostVisible(viewerId, postId)
     if (!content.trim())
       throw new AppException(400, 'VALIDATION_FAILED', 'Komentar tidak boleh kosong')
     const row = await this.prisma.comment.create({
       data: { postId, authorId: viewerId, content },
       select: commentSelect,
+    })
+    await this.notifications.notify({
+      userId: post.authorId,
+      actorId: viewerId,
+      type: 'COMMENT',
+      postId,
+      commentId: row.id,
     })
     return this.toDto(row)
   }
@@ -76,9 +85,10 @@ export class CommentsService {
   private async assertPostVisible(viewerId: number, postId: number, message?: string) {
     const post = await this.prisma.post.findFirst({
       where: { AND: [{ id: postId }, this.visibility.postWhere(viewerId)] },
-      select: { id: true },
+      select: { id: true, authorId: true },
     })
     if (!post) throw message ? new AppException(404, 'NOT_FOUND', message) : postNotFound()
+    return post
   }
 
   private toDto(row: Row): CommentDto {

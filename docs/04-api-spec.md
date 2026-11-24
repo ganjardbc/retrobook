@@ -262,9 +262,9 @@ Aturan (BR-01, BR-11):
 |---|---|---|
 | GET | `/notifications` | Daftar (cursor), terbaru di atas |
 | GET | `/notifications/unread-count` | `{ count }` untuk badge jewel |
-| POST | `/notifications/read` | `{ ids?: number[] }` tandai terbaca; tanpa `ids` berarti semua |
+| POST | `/notifications/read` | `{ ids?: number[] }` tandai terbaca; tanpa `ids` berarti semua. Hanya milik sendiri (id lain diabaikan). Respons `{ count }`: sisa belum dibaca |
 
-Tipe: `LIKE`, `COMMENT`, `FRIEND_REQUEST`, `FRIEND_ACCEPT`, `POKE`, `TAG`, `WALL_POST`, `ANNOUNCEMENT`. Aksi pada konten sendiri tidak membuat notifikasi. Bentuk item:
+Tipe: `LIKE`, `COMMENT`, `FRIEND_REQUEST`, `FRIEND_ACCEPT`, `POKE`, `TAG`, `WALL_POST`, `ANNOUNCEMENT`. Aksi pada konten sendiri tidak membuat notifikasi, begitu pula antar pasangan yang saling blokir; LIKE yang sama pada post yang sama dicatat sekali (like, unlike, like lagi). Daftar dan `unread-count` disaring saat dibaca lewat `VisibilityService`: notifikasi hilang bila aktor diblokir atau BANNED, atau post atau komentarnya dihapus atau tidak lagi boleh dilihat. Setiap notifikasi baru juga dikirim ke room `user:<id>` sebagai event `notification:new`. `text` berbahasa Inggris dari server. Dibuat saat ini oleh: like (LIKE), komentar (COMMENT), permintaan teman (FRIEND_REQUEST), terima (FRIEND_ACCEPT, satu transaksi dengan penerimaan); POKE, TAG, WALL_POST, ANNOUNCEMENT menyusul bersama fiturnya. Bentuk item:
 
 ```json
 { "id": 5, "type": "COMMENT", "actor": { "id": 4, "displayName": "Sari" }, "postId": 12, "commentId": 40, "text": "Sari commented on your post", "readAt": null, "createdAt": "…" }

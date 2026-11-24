@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import type { Paged, UserSummary } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import { VisibilityService } from '../visibility/visibility.service'
 
 export type LikeState = { likeCount: number; likedByMe: boolean }
@@ -12,13 +13,20 @@ export class LikesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly visibility: VisibilityService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /** Like post (idempoten): mengulang tidak membuat baris kedua. */
   async like(viewerId: number, postId: number): Promise<LikeState> {
-    await this.assertVisible(viewerId, postId)
+    const post = await this.assertVisible(viewerId, postId)
     try {
       await this.prisma.like.create({ data: { userId: viewerId, postId } })
+      await this.notifications.notify({
+        userId: post.authorId,
+        actorId: viewerId,
+        type: 'LIKE',
+        postId,
+      })
     } catch (e) {
       // Dua permintaan bersamaan: UNIQUE (user_id, post_id) menolak yang kedua; hasil akhirnya sama.
       if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002')) throw e
@@ -64,9 +72,10 @@ export class LikesService {
   private async assertVisible(viewerId: number, postId: number) {
     const post = await this.prisma.post.findFirst({
       where: { AND: [{ id: postId }, this.visibility.postWhere(viewerId)] },
-      select: { id: true },
+      select: { id: true, authorId: true },
     })
     if (!post) throw new AppException(404, 'NOT_FOUND', 'Post tidak ditemukan')
+    return post
   }
 
   private async state(viewerId: number, postId: number): Promise<LikeState> {
