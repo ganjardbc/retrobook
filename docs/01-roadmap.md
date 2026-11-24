@@ -37,7 +37,7 @@ Stack mengikuti Insell (Vue 3, Vite, NestJS, Prisma, MySQL, PNPM monorepo); dua 
 | Lapisan     | Pilihan                         | Catatan                                                    |
 |-------------|---------------------------------|------------------------------------------------------------|
 | User app    | Vue 3 + Vite, Vue Router, Pinia | CSS/SCSS tulis tangan, tanpa UI kit supaya terasa autentik |
-| Admin panel | Vue 3 + Vite (apps/admin)       | Tabel, filter, dan grafik sederhana                        |
+| Admin panel | Vue 3 + Vite + PrimeVue         | Tabel, filter, dialog (PrimeVue); grafik sederhana         |
 | API         | NestJS                          | Satu modul per domain, guard JWT dan guard role            |
 | Database    | MySQL + Prisma                  | Migrasi lewat Prisma Migrate                               |
 | Realtime    | Socket.IO (NestJS Gateway)      | Chat, notifikasi, presence                                 |

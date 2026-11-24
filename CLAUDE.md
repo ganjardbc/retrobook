@@ -6,7 +6,7 @@ Panduan untuk Claude Code di repo **retrobook**. Baca ini dulu, lalu buka dokume
 
 retrobook adalah jejaring sosial **parodi** bertampilan 2014 sampai Maret 2015: user app, admin panel, dan satu API. Ini fun project (pembelajaran, demo, bahan konten Coderium), bukan produk komersial. Pemilik: Ganjar, yang memutuskan arsitektur.
 
-Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), T-04 (kerangka NestJS), dan T-05 (modul Auth) selesai. Lanjut dari `docs/08-backlog.md` (T-06).
+Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), T-04 (kerangka NestJS), T-05 (modul Auth), dan T-06 (tokens.css, tipe bersama) selesai. Lanjut dari `docs/08-backlog.md` (T-07).
 
 ## Dokumen (sumber kebenaran)
 
@@ -91,7 +91,7 @@ pnpm --filter @retrobook/db migrate:test   # migrasi ke DB uji (TEST_DATABASE_UR
 - Format error seragam: `{ statusCode, message, code }` (API spec 1.1). Pagination cursor `?limit&cursor` dengan respons `{ items, nextCursor }`.
 - NestJS: satu modul per domain (auth, users, posts, comments, likes, friends, pokes, messages, notifications, search, reports, admin/*); validasi lewat DTO (class-validator); guard JWT dan `RolesGuard` untuk `/api/admin/*`.
 - Vue: SFC dengan `<script setup lang="ts">`; Pinia untuk state; satu komponen per berkas, nama sesuai `docs/06-ui-ux-spec.md` bagian 4.
-- **CSS tulis tangan dengan variabel dari `packages/shared/tokens.css`**; tanpa UI kit pihak ketiga di user app. Jangan menulis warna atau ukuran mentah di komponen bila ada token. Admin boleh sederhana dan netral, tetap tanpa UI kit berat.
+- **CSS tulis tangan dengan variabel dari `packages/shared/tokens.css`**; tanpa UI kit pihak ketiga di user app. Jangan menulis warna atau ukuran mentah di komponen bila ada token. **Admin panel memakai PrimeVue** (keputusan Ganjar, 2026-11-24) untuk tabel, filter, dan dialog; tema netral, bukan retro. PrimeVue tidak boleh masuk ke `apps/web`.
 - Teks antarmuka lewat kunci di `packages/shared/i18n`, bukan literal di komponen.
 - Bahasa: kode, nama variabel, dan commit dalam bahasa Inggris; dokumen dan komentar penjelasan dalam bahasa Indonesia, boleh keduanya bila lebih jelas.
 

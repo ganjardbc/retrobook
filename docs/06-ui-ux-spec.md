@@ -9,7 +9,7 @@ Spesifikasi tampilan untuk `apps/web` (gaya 2014 sampai Maret 2015) dan panduan 
 1. **Identitas sendiri.** Pakai nama, logo, dan ikon buatan sendiri; jangan memakai nama, logo, atau aset merek asli. Tidak ada halaman login yang meniru situs asli (UX-08, UX-12, R-05).
 2. **Label parodi** di footer dan halaman register: "Fun project / parodi, bukan produk resmi apa pun".
 3. **Satu sumber token.** Warna, jarak, dan font dibaca dari CSS variable (UX-09), sehingga tema Time Travel (THM-01) cukup mengganti nilai.
-4. **Tanpa UI kit pihak ketiga.** CSS ditulis tangan agar terasa autentik (UX-10).
+4. **User app tanpa UI kit pihak ketiga.** CSS ditulis tangan agar terasa autentik (UX-10). Pengecualian: admin panel memakai PrimeVue.
 5. **Referensi, bukan target 2019.** Tangkapan layar gaya 2019 hanya pembanding; target adalah feed 2014 dan profil Maret 2015.
 6. **Karakter era itu:** sudut hampir kotak, border tipis, tanpa bayangan tebal, teks tautan alih-alih tombol ikon besar, hanya reaksi Like (BR-13).
 
@@ -164,7 +164,7 @@ Format waktu: relatif ("2 hrs", "Yesterday at 9:41am"), lalu tanggal penuh setel
 
 ## 9. Admin panel
 
-Admin sengaja **tidak** bergaya retro supaya bisa dipakai nyaman: bersih, padat, berbasis tabel. Tetap Vue 3 + Vite dan CSS tulis tangan agar tidak menambah dependensi.
+Admin sengaja **tidak** bergaya retro supaya bisa dipakai nyaman: bersih, padat, berbasis tabel. Tetap Vue 3 + Vite, dengan PrimeVue (tema netral) untuk tabel, filter, dan dialog; PrimeVue tidak dipakai di `apps/web`.
 
 | Elemen | Spesifikasi |
 |---|---|

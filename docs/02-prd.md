@@ -241,7 +241,7 @@ Tampilan mengikuti empat tangkapan layar referensi (feed 2014, profil Maret 2015
 | UX-07 | Daftar chat penuh tinggi dengan titik hijau dan label Web atau Mobile; dock chat di dasar layar | Maksimal tiga jendela |
 | UX-08 | Halaman login: header biru dengan kolom login, tagline berikon di kiri, formulir Sign Up dengan tombol hijau | Susunan saja; nama, logo, dan ikon buatan sendiri |
 | UX-09 | Semua warna, jarak, dan font dibaca dari satu set design token | Memungkinkan tema Time Travel |
-| UX-10 | Tanpa UI kit pihak ketiga; CSS ditulis tangan | Agar terasa autentik dan ringan |
+| UX-10 | User app tanpa UI kit pihak ketiga; CSS ditulis tangan. Admin panel memakai PrimeVue | Agar user app terasa autentik dan ringan; admin tidak retro dan butuh tabel, filter, dialog |
 | UX-11 | Satu breakpoint sederhana di sekitar 900 px menyembunyikan kolom samping | Agar terbuka di ponsel |
 | UX-12 | Label parodi di footer dan halaman register; tanpa nama, logo, atau aset merek asli | Lihat bagian aturan dan risiko |
 
