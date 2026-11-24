@@ -12,6 +12,7 @@ import { UsersModule } from './modules/users/users.module'
 import { VisibilityModule } from './modules/visibility/visibility.module'
 import { HealthModule } from './modules/health/health.module'
 import { BlocksModule } from './modules/blocks/blocks.module'
+import { RealtimeModule } from './modules/realtime/realtime.module'
 
 // Satu modul per domain di src/modules/*; tambahkan ke imports saat tugasnya dikerjakan.
 @Module({
@@ -31,6 +32,7 @@ import { BlocksModule } from './modules/blocks/blocks.module'
     FriendsModule,
     BlocksModule,
     UsersModule,
+    RealtimeModule,
     HealthModule,
   ],
 })
