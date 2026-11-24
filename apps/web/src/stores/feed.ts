@@ -66,6 +66,12 @@ export const useFeedStore = defineStore('feed', () => {
     }
   }
 
+  /** Menyesuaikan jumlah komentar setelah komentar ditambah/dihapus dari daftar. */
+  function adjustComments(id: number, delta: number) {
+    const post = items.value.find((p) => p.id === id)
+    if (post) post.commentCount = Math.max(0, post.commentCount + delta)
+  }
+
   const prepend = (post: Post) => items.value.unshift(post)
   const remove = (id: number) => {
     items.value = items.value.filter((p) => p.id !== id)
@@ -81,6 +87,7 @@ export const useFeedStore = defineStore('feed', () => {
     reset,
     loadMore,
     toggleLike,
+    adjustComments,
     prepend,
     remove,
   }

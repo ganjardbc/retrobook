@@ -6,11 +6,17 @@ import { RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { formatTime } from '../utils/time'
 import Avatar from './Avatar.vue'
+import CommentList from './CommentList.vue'
 import LikeSummary from './LikeSummary.vue'
 import PostActions from './PostActions.vue'
 
 const props = defineProps<{ post: Post }>()
-const emit = defineEmits<{ delete: [id: number]; 'toggle-like': [id: number] }>()
+const emit = defineEmits<{
+  delete: [id: number]
+  'toggle-like': [id: number]
+  'comment-count': [id: number, delta: number]
+}>()
+const comments = ref<InstanceType<typeof CommentList> | null>(null)
 
 const auth = useAuthStore()
 const menuOpen = ref(false)
@@ -71,9 +77,19 @@ function remove() {
       loading="lazy"
     />
 
-    <PostActions :liked="post.likedByMe" @toggle-like="emit('toggle-like', post.id)" />
+    <PostActions
+      :liked="post.likedByMe"
+      @toggle-like="emit('toggle-like', post.id)"
+      @comment="comments?.focusInput()"
+    />
     <LikeSummary :post="post" />
-    <!-- Daftar komentar dan kotak komentar: T-16. -->
+    <CommentList
+      ref="comments"
+      :post-id="post.id"
+      :post-author-id="post.author.id"
+      :comment-count="post.commentCount"
+      @count-change="(d) => emit('comment-count', post.id, d)"
+    />
   </article>
 </template>
 

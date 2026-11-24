@@ -148,4 +148,14 @@ describe('feed store', () => {
       expect(spy).not.toHaveBeenCalled()
     })
   })
+
+  it('adjustComments menaikkan dan menurunkan jumlah, tidak di bawah 0', () => {
+    const feed = useFeedStore()
+    feed.prepend({ ...post(1), commentCount: 1 })
+    feed.adjustComments(1, 2)
+    expect(feed.items[0]?.commentCount).toBe(3)
+    feed.adjustComments(1, -10)
+    expect(feed.items[0]?.commentCount).toBe(0)
+    feed.adjustComments(404, 1) // tidak ada: diabaikan
+  })
 })

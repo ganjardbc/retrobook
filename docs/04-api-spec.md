@@ -198,6 +198,8 @@ Hanya satu jenis reaksi, yaitu Like (BR-13). Status implementasi (T-15): endpoin
 
 Kata terlarang berlaku sama seperti post.
 
+Status implementasi (T-16): `imageUrl` pada komentar (INT-05) dan kata terlarang belum ada; `likeCount` dan `likedByMe` komentar selalu 0 dan false sampai INT-03. Komentar terlihat bila post induknya terlihat, belum dihapus, penulisnya tidak BANNED atau terhapus, dan tidak hidden kecuali milik pembaca (BR-07); `commentCount` di post memakai aturan yang sama. Daftar berurut lama ke baru dengan kursor maju; UI memuat halaman pertama saat "View N comments" diklik dan "View more comments" muncul di bawah daftar (bukan di atas) karena urutan maju.
+
 ### 4.4 Laporan (INT-04)
 
 | Method | Path | Fungsi |

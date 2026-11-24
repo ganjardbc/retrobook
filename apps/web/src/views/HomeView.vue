@@ -63,6 +63,7 @@ watch(
       :post="post"
       @delete="onDelete"
       @toggle-like="onLike"
+      @comment-count="feed.adjustComments"
     />
 
     <p

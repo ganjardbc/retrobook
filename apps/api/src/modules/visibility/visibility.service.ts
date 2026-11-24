@@ -37,6 +37,18 @@ export class VisibilityService {
   }
 
   /**
+   * Komentar yang boleh dibaca (di atas syarat bahwa post induknya terlihat, lihat postWhere):
+   * belum dihapus, penulisnya tidak BANNED/terhapus, dan tidak hidden kecuali milik viewer (BR-07).
+   */
+  commentWhere(viewerId: number): Prisma.CommentWhereInput {
+    return {
+      deletedAt: null,
+      author: { deletedAt: null, status: { not: 'BANNED' } },
+      OR: [{ hidden: false }, { authorId: viewerId }],
+    }
+  }
+
+  /**
    * Like yang boleh dihitung dan ditampilkan: penyuka yang BANNED atau terhapus disembunyikan
    * seperti kontennya (BR-05).
    */

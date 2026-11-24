@@ -16,13 +16,13 @@ const userSummary = {
 } satisfies Prisma.UserSelect
 
 // Penyuka yang disembunyikan (BANNED/terhapus) tidak ikut dihitung; aturannya ada di VisibilityService.
-const postInclude = (likerWhere: Prisma.LikeWhereInput) =>
+const postInclude = (likerWhere: Prisma.LikeWhereInput, commentWhere: Prisma.CommentWhereInput) =>
   ({
     author: { select: userSummary },
     _count: {
       select: {
         likes: { where: likerWhere },
-        comments: { where: { deletedAt: null, hidden: false } },
+        comments: { where: commentWhere },
       },
     },
     likes: {
@@ -54,7 +54,7 @@ export class PostsService {
 
     const row = await this.prisma.post.create({
       data: { authorId: viewerId, content, imageUrl, privacy: dto.privacy ?? 'FRIENDS' },
-      include: this.include(),
+      include: this.include(viewerId),
     })
     return this.toDto(row, new Set())
   }
@@ -78,7 +78,7 @@ export class PostsService {
     const row = await this.prisma.post.update({
       where: { id },
       data: { content, imageUrl, privacy: dto.privacy, editedAt: new Date() },
-      include: this.include(),
+      include: this.include(viewerId),
     })
     return (await this.toDtos(viewerId, [row]))[0]!
   }
@@ -97,7 +97,7 @@ export class PostsService {
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-      include: this.include(),
+      include: this.include(viewerId),
     })
     const page = rows.slice(0, limit)
     return {
@@ -110,14 +110,14 @@ export class PostsService {
   private async findVisible(viewerId: number, id: number): Promise<PostRow> {
     const row = await this.prisma.post.findFirst({
       where: { AND: [{ id }, this.visibility.postWhere(viewerId)] },
-      include: this.include(),
+      include: this.include(viewerId),
     })
     if (!row) throw notFound()
     return row
   }
 
-  private include() {
-    return postInclude(this.visibility.likerWhere())
+  private include(viewerId: number) {
+    return postInclude(this.visibility.likerWhere(), this.visibility.commentWhere(viewerId))
   }
 
   private async assertUpload(imageUrl: string | null) {

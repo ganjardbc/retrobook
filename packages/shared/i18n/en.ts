@@ -55,7 +55,6 @@ export const en = {
   'post.delete': 'Delete',
   'post.delete.confirm': 'Delete this post? This cannot be undone.',
   'post.image.alt': 'Photo posted by {name}',
-  'post.comments': '{n} comments',
 
   'like.action': 'Like',
   'like.unlike': 'Unlike',
@@ -67,6 +66,17 @@ export const en = {
   'like.others.one': '1 other',
   'like.others.many': '{n} others',
   'like.error': 'Could not update your like. Please try again.',
+
+  'comment.action': 'Comment',
+  'comments.view.one': 'View 1 comment',
+  'comments.view.many': 'View {n} comments',
+  'comments.more': 'View more comments',
+  'comments.placeholder': 'Write a comment...',
+  'comments.delete': 'Delete',
+  'comments.delete.confirm': 'Delete this comment?',
+  'comments.error.load': 'Could not load comments.',
+  'comments.error.send': 'Could not post your comment.',
+  'comments.list': 'Comments',
 
   'feed.empty': 'No posts yet. Write something or add some friends to fill your News Feed.',
   'feed.loadMore': 'Load more posts',
