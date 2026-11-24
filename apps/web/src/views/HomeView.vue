@@ -1,27 +1,93 @@
 <script setup lang="ts">
 import { t } from '@retrobook/shared/i18n'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { postsApi } from '../api/posts'
+import Button from '../components/Button.vue'
+import PostCard from '../components/PostCard.vue'
+import StatusBox from '../components/StatusBox.vue'
 import { useAuthStore } from '../stores/auth'
+import { useFeedStore } from '../stores/feed'
 
-// Placeholder: StatusBox dan feed menyusul di T-14.
 const auth = useAuthStore()
+const feed = useFeedStore()
+const sentinel = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | undefined
+
+async function onDelete(id: number) {
+  try {
+    await postsApi.remove(id)
+    feed.remove(id)
+  } catch {
+    /* gagal: kartu tetap ada; pesan kesalahan bergaya Toast menyusul */
+  }
+}
+
+onMounted(() => {
+  // Feed milik akun sebelumnya tidak boleh terlihat setelah ganti akun.
+  if (feed.ownerId !== (auth.user?.id ?? null)) feed.reset(auth.user?.id ?? null)
+  void feed.loadMore()
+  // Infinite scroll (POST-04); tombol "Load more" tetap ada untuk keyboard dan browser tanpa IntersectionObserver.
+  if (typeof IntersectionObserver !== 'undefined' && sentinel.value) {
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) void feed.loadMore()
+      },
+      { rootMargin: '200px' },
+    )
+    observer.observe(sentinel.value)
+  }
+})
+onBeforeUnmount(() => observer?.disconnect())
+// Setelah halaman terisi, sentinel masih terlihat bila konten pendek: muat lagi sampai layar penuh atau habis.
+watch(
+  () => feed.items.length,
+  () =>
+    observer &&
+    sentinel.value &&
+    (observer.unobserve(sentinel.value), observer.observe(sentinel.value)),
+)
 </script>
 
 <template>
-  <section class="card">
-    <h1>{{ t('home.welcome', { name: auth.user?.displayName ?? '' }) }}</h1>
-    <p>{{ t('home.soon') }}</p>
-  </section>
+  <div class="home">
+    <StatusBox />
+    <PostCard v-for="post in feed.items" :key="post.id" :post="post" @delete="onDelete" />
+
+    <p
+      v-if="!feed.loading && !feed.failed && feed.done && feed.items.length === 0"
+      class="home__note"
+    >
+      {{ t('feed.empty') }}
+    </p>
+    <p v-else-if="feed.done && feed.items.length" class="home__note">{{ t('feed.end') }}</p>
+    <p v-if="feed.loading" class="home__note" role="status">{{ t('common.loading') }}</p>
+    <div v-if="feed.failed" class="home__note" role="alert">
+      {{ t('feed.error') }}
+      <Button variant="default" @click="feed.loadMore()">{{ t('feed.retry') }}</Button>
+    </div>
+    <div v-if="!feed.done && !feed.loading && !feed.failed" class="home__more">
+      <Button variant="default" @click="feed.loadMore()">{{ t('feed.loadMore') }}</Button>
+    </div>
+    <div ref="sentinel" class="home__sentinel" />
+  </div>
 </template>
 
 <style scoped>
-.card {
-  padding: var(--sp-4);
-  background: var(--c-card);
-  border: var(--card-border);
-  border-radius: var(--radius);
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
 }
-.card h1 {
-  margin: 0 0 var(--sp-2);
-  font-size: var(--fs-title);
+.home__note {
+  margin: 0;
+  padding: var(--sp-3);
+  color: var(--c-text-muted);
+  text-align: center;
+}
+.home__more {
+  text-align: center;
+}
+.home__sentinel {
+  height: 1px;
 }
 </style>

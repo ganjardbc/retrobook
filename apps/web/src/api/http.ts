@@ -32,13 +32,16 @@ async function toError(res: Response): Promise<ApiRequestError> {
   )
 }
 
+// FormData dikirim apa adanya: browser yang mengisi Content-Type multipart beserta boundary-nya.
 const jsonInit = (method: string, body?: unknown, token?: string | null): RequestInit => ({
   method,
   headers: {
-    ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+    ...(body !== undefined && !(body instanceof FormData)
+      ? { 'Content-Type': 'application/json' }
+      : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   },
-  body: body !== undefined ? JSON.stringify(body) : undefined,
+  body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
 })
 
 let refreshing: Promise<boolean> | null = null

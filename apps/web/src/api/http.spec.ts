@@ -111,6 +111,17 @@ describe('http client', () => {
     await expect(request('/x', { auth: false })).rejects.toMatchObject({ messages: ['a', 'b'] })
   })
 
+  it('FormData dikirim apa adanya tanpa Content-Type manual', async () => {
+    session.set(tokens(1))
+    fetchMock.mockResolvedValueOnce(json(201, { url: '/uploads/a.png' }))
+    const form = new FormData()
+    form.append('file', new Blob(['x']), 'a.png')
+    await request('/uploads/post-image', { method: 'POST', body: form })
+    const init = fetchMock.mock.calls[0]![1]
+    expect(init.body).toBe(form)
+    expect(init.headers['Content-Type']).toBeUndefined()
+  })
+
   it('204 mengembalikan undefined', async () => {
     session.set(tokens(1))
     fetchMock.mockResolvedValueOnce(json(204))

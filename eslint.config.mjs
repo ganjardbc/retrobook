@@ -1,6 +1,7 @@
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
 import tseslint from 'typescript-eslint'
+import globals from 'globals'
 import vueParser from 'vue-eslint-parser'
 
 export default tseslint.config(
@@ -12,6 +13,8 @@ export default tseslint.config(
     files: ['**/*.vue'],
     languageOptions: { parser: vueParser, parserOptions: { parser: tseslint.parser } },
   },
+  { files: ['apps/web/**/*.{ts,vue}', 'apps/admin/**/*.{ts,vue}'], languageOptions: { globals: globals.browser } },
+  { files: ['apps/api/**/*.ts', 'packages/**/*.ts', '*.mjs'], languageOptions: { globals: globals.node } },
   // CLAUDE.md: jangan pakai v-html untuk konten pengguna.
   { files: ['**/*.vue'], rules: { 'vue/no-v-html': 'error' } },
   // Nama komponen mengikuti docs/06-ui-ux-spec.md bagian 4 (Button, Avatar, Modal, ...).

@@ -6,6 +6,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev": "pnpm -r --parallel --filter @retrobook/api --filter @retrobook/web dev",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -17,6 +18,7 @@
     "@eslint/js": "^9.39.0",
     "eslint": "^9.39.0",
     "eslint-plugin-vue": "^10.12.1",
+    "globals": "^17.14.0",
     "prettier": "^3.6.0",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.46.0",
