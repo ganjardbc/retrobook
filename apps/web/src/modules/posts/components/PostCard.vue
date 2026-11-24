@@ -34,6 +34,16 @@ const editError = ref('')
 const auth = useAuthStore()
 const menuOpen = ref(false)
 const isMine = computed(() => auth.user?.id === props.post.author.id)
+// BR-04: pemilik dinding boleh menghapus wall post dari dindingnya, tetapi tidak mengeditnya.
+const isWallOwner = computed(() => auth.user?.id === props.post.wallOwner?.id)
+// "with A", "with A and B", "with A and N others" (UX 2015).
+const withFirst = computed(() => props.post.tags.slice(0, 2))
+const withOthers = computed(() => Math.max(0, props.post.tags.length - 2))
+const withOthersText = computed(() =>
+  withOthers.value === 0
+    ? ''
+    : ` ${t('post.and')} ${withOthers.value === 1 ? t('post.other') : t('post.others', { n: withOthers.value })}`,
+)
 const when = computed(() => formatTime(props.post.createdAt))
 // Ikon privasi sederhana; ikon retro khusus menyusul bersama aset.
 const PRIVACY_ICON = { PUBLIC: '🌐', FRIENDS: '👥', ONLY_ME: '🔒' } as const
@@ -79,6 +89,23 @@ async function saveEdit() {
         <RouterLink class="post__name" :to="`/${post.author.username}`">{{
           post.author.displayName
         }}</RouterLink>
+        <template v-if="post.wallOwner">
+          <span class="post__arrow" aria-hidden="true"> ▸ </span>
+          <span class="visually-hidden"> {{ t('post.to') }} </span>
+          <RouterLink class="post__name" :to="`/${post.wallOwner.username}`">{{
+            post.wallOwner.displayName
+          }}</RouterLink>
+        </template>
+        <span v-if="post.tags.length" class="post__with">
+          {{ ` — ${t('post.with')} ` }}
+          <template v-for="(tag, i) in withFirst" :key="tag.id">
+            {{ i === 0 ? '' : withOthers ? ', ' : ` ${t('post.and')} ` }}
+            <RouterLink class="post__name" :to="`/${tag.username}`">{{
+              tag.displayName
+            }}</RouterLink>
+          </template>
+          {{ withOthersText }}
+        </span>
         <div class="post__meta">
           <span>{{ when }}</span>
           <span
@@ -90,7 +117,7 @@ async function saveEdit() {
           <span v-if="post.editedAt">· {{ t('post.edited') }}</span>
         </div>
       </div>
-      <div v-if="isMine" class="post__menu">
+      <div v-if="isMine || isWallOwner" class="post__menu">
         <button
           class="post__dots"
           type="button"
@@ -102,7 +129,9 @@ async function saveEdit() {
           …
         </button>
         <div v-if="menuOpen" class="post__dropdown">
-          <button type="button" class="post__item" @click="startEdit">{{ t('post.edit') }}</button>
+          <button v-if="isMine" type="button" class="post__item" @click="startEdit">
+            {{ t('post.edit') }}
+          </button>
           <button type="button" class="post__item" @click="remove">{{ t('post.delete') }}</button>
         </div>
       </div>
@@ -117,7 +146,12 @@ async function saveEdit() {
         maxlength="5000"
         :aria-label="t('post.edit.placeholder')"
       />
-      <select v-model="editPrivacy" class="post__edit-privacy" :aria-label="t('statusBox.privacy')">
+      <select
+        v-if="!post.wallOwner"
+        v-model="editPrivacy"
+        class="post__edit-privacy"
+        :aria-label="t('statusBox.privacy')"
+      >
         <option v-for="privacy in PRIVACIES" :key="privacy" :value="privacy">
           {{ t(`privacy.${privacy}`) }}
         </option>

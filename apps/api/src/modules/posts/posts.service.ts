@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import type { Paged, Post as PostDto, SharedPost, UserSummary } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
+import { NotificationsService } from '../notifications/notifications.service'
 import { UploadsService } from '../uploads/uploads.service'
 import { VisibilityService } from '../visibility/visibility.service'
 import type { CreatePostDto, SharePostDto, UpdatePostDto } from './dto/post.dto'
@@ -16,8 +17,18 @@ const userSummary = {
 } satisfies Prisma.UserSelect
 
 // Penyuka yang disembunyikan (BANNED/terhapus) tidak ikut dihitung; aturannya ada di VisibilityService.
-const postInclude = (likerWhere: Prisma.LikeWhereInput, commentWhere: Prisma.CommentWhereInput) =>
+const postInclude = (
+  likerWhere: Prisma.LikeWhereInput,
+  commentWhere: Prisma.CommentWhereInput,
+  userWhere: Prisma.UserWhereInput,
+) =>
   ({
+    // Yang di-tag tetapi BANNED, terhapus, atau terblokir bagi pembaca tidak ditampilkan.
+    tags: {
+      where: { user: userWhere },
+      orderBy: { userId: 'asc' },
+      select: { user: { select: userSummary } },
+    },
     author: { select: userSummary },
     wallOwner: { select: userSummary },
     _count: {
@@ -45,6 +56,7 @@ export class PostsService {
     private readonly prisma: PrismaService,
     private readonly visibility: VisibilityService,
     private readonly uploads: UploadsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async create(viewerId: number, dto: CreatePostDto): Promise<PostDto> {
@@ -53,10 +65,27 @@ export class PostsService {
     if (!content.trim() && !imageUrl) throw empty()
     await this.assertUpload(imageUrl)
 
+    const wallOwner = dto.wallOwnerUsername
+      ? await this.resolveWallOwner(viewerId, dto.wallOwnerUsername)
+      : null
+    // Wall post terlihat oleh teman penulis dan pemilik dinding (BR-04); ONLY_ME tidak masuk akal di sini.
+    if (wallOwner && dto.privacy === 'ONLY_ME') {
+      throw new AppException(400, 'VALIDATION_FAILED', 'Post di dinding teman tidak bisa ONLY_ME')
+    }
+    const tagIds = await this.resolveTags(viewerId, dto.taggedUserIds ?? [])
+
     const row = await this.prisma.post.create({
-      data: { authorId: viewerId, content, imageUrl, privacy: dto.privacy ?? 'FRIENDS' },
+      data: {
+        authorId: viewerId,
+        content,
+        imageUrl,
+        privacy: wallOwner ? 'FRIENDS' : (dto.privacy ?? 'FRIENDS'),
+        wallOwnerId: wallOwner?.id,
+        tags: { create: tagIds.map((userId) => ({ userId })) },
+      },
       include: this.include(viewerId),
     })
+    await this.notifyCreated(row.id, viewerId, wallOwner?.id ?? null, tagIds)
     return this.toDto(row, new Set(), new Map())
   }
 
@@ -168,6 +197,67 @@ export class PostsService {
     }
   }
 
+  /** Pemilik dinding harus teman penulis; selain itu 404 yang sama (tidak membocorkan keberadaan). */
+  private async resolveWallOwner(viewerId: number, username: string) {
+    const owner = await this.prisma.user.findFirst({
+      where: {
+        username,
+        AND: [this.visibility.userWhere(viewerId), this.visibility.friendOf(viewerId)],
+      },
+      select: { id: true },
+    })
+    if (!owner) {
+      // Diri sendiri bukan teman: jawab spesifik supaya klien tahu itu salah pakai, bukan 404.
+      const self = await this.prisma.user.count({ where: { id: viewerId, username } })
+      if (self) {
+        throw new AppException(
+          422,
+          'SELF_ACTION_NOT_ALLOWED',
+          'Tidak bisa menulis di dinding sendiri',
+        )
+      }
+      throw new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemukan')
+    }
+    return owner
+  }
+
+  /** WAL-02: hanya teman penulis yang boleh di-tag. */
+  private async resolveTags(viewerId: number, ids: number[]): Promise<number[]> {
+    if (ids.length === 0) return []
+    const friends = await this.prisma.user.findMany({
+      where: {
+        id: { in: ids },
+        AND: [this.visibility.userWhere(viewerId), this.visibility.friendOf(viewerId)],
+      },
+      select: { id: true },
+    })
+    if (friends.length !== ids.length) {
+      throw new AppException(422, 'UNPROCESSABLE', 'Hanya teman yang bisa di-tag')
+    }
+    return friends.map((f) => f.id)
+  }
+
+  /**
+   * Notifikasi WALL_POST untuk pemilik dinding dan TAG untuk yang di-tag. Yang di-tag hanya dikabari bila
+   * post itu memang boleh dilihatnya (aturan terpusat); pemilik dinding tidak mendapat TAG ganda.
+   */
+  private async notifyCreated(
+    postId: number,
+    actorId: number,
+    wallOwnerId: number | null,
+    tagIds: number[],
+  ) {
+    if (wallOwnerId !== null) {
+      await this.notifications.notify({ userId: wallOwnerId, actorId, type: 'WALL_POST', postId })
+    }
+    for (const userId of tagIds.filter((id) => id !== wallOwnerId)) {
+      const canSee = await this.prisma.post.count({
+        where: { AND: [{ id: postId }, this.visibility.postWhere(userId)] },
+      })
+      if (canSee) await this.notifications.notify({ userId, actorId, type: 'TAG', postId })
+    }
+  }
+
   /** Post yang boleh dibaca viewer, atau 404 yang sama untuk semua sebab (tidak membocorkan keberadaan). */
   private async findVisible(viewerId: number, id: number): Promise<PostRow> {
     const row = await this.prisma.post.findFirst({
@@ -179,7 +269,11 @@ export class PostsService {
   }
 
   private include(viewerId: number) {
-    return postInclude(this.visibility.likerWhere(viewerId), this.visibility.commentWhere(viewerId))
+    return postInclude(
+      this.visibility.likerWhere(viewerId),
+      this.visibility.commentWhere(viewerId),
+      this.visibility.userWhere(viewerId),
+    )
   }
 
   private async assertUpload(imageUrl: string | null) {
@@ -243,7 +337,7 @@ export class PostsService {
       imageUrl: row.imageUrl,
       feeling: row.feeling,
       privacy: row.privacy,
-      tags: [], // tag teman: T-35
+      tags: row.tags.map((t) => t.user as UserSummary),
       likeCount: row._count.likes,
       commentCount: row._count.comments,
       likedByMe: likedIds.has(row.id),

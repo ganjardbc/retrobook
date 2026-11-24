@@ -4,8 +4,15 @@ import { request } from '@/plugins/http'
 export const postsApi = {
   feed: (cursor?: number | null, limit = 10) =>
     request<Paged<Post>>(`/feed?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
-  create: (input: { content: string; privacy: Privacy; imageUrl?: string | null }) =>
-    request<Post>('/posts', { method: 'POST', body: input }),
+  create: (input: {
+    content: string
+    privacy: Privacy
+    imageUrl?: string | null
+    /** WAL-01: tulis di dinding teman. */
+    wallOwnerUsername?: string
+    /** WAL-02: id teman yang di-tag. */
+    taggedUserIds?: number[]
+  }) => request<Post>('/posts', { method: 'POST', body: input }),
   update: (id: number, input: { content: string; privacy: Privacy }) =>
     request<Post>(`/posts/${id}`, { method: 'PATCH', body: input }),
   like: (id: number) =>

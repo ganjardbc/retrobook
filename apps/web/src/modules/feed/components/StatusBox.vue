@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { PRIVACIES, type Post, type Privacy } from '@retrobook/shared'
+import { PRIVACIES, type Post, type Privacy, type UserSummary } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { ApiRequestError } from '@/plugins/http'
 import { postsApi } from '@/modules/posts/services/api'
 import { useFeedStore } from '@/modules/feed/stores'
 import { imageProblem } from '@/helpers/image'
 import Button from '@/components/Button.vue'
+import TagSuggestions from '@/modules/feed/components/TagSuggestions.vue'
 
+/** Bila diisi, post ditulis di dinding teman ini (WAL-01) dan privasi tidak dipilih (BR-04). */
+const props = defineProps<{ wallOwner?: Pick<UserSummary, 'username' | 'displayName'> }>()
 const emit = defineEmits<{ posted: [post: Post] }>()
+const MAX_TAGS = 10
 const feed = useFeedStore()
 const content = ref('')
 const privacy = ref<Privacy>('FRIENDS')
@@ -19,6 +23,39 @@ const busy = ref(false)
 const error = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const draftInput = ref<HTMLTextAreaElement | null>(null)
+const suggestions = ref<InstanceType<typeof TagSuggestions> | null>(null)
+const tagged = ref<UserSummary[]>([])
+/** Teks setelah "@" di depan kursor (WAL-02); null bila tidak sedang mengetik tag. */
+const mention = ref<string | null>(null)
+let mentionStart = 0
+
+function detectMention() {
+  const el = draftInput.value
+  if (!el) return
+  const pos = el.selectionStart
+  const m = /(^|\s)@([^\s@]{0,30})$/.exec(content.value.slice(0, pos))
+  mention.value = m ? m[2]! : null
+  if (m) mentionStart = pos - m[2]!.length - 1
+}
+
+function addTag(user: UserSummary) {
+  const el = draftInput.value
+  const pos = el?.selectionStart ?? content.value.length
+  // "@kata" yang diketik diganti chip, bukan tertinggal di teks.
+  content.value = content.value.slice(0, mentionStart) + content.value.slice(pos)
+  if (tagged.value.length < MAX_TAGS && !tagged.value.some((u) => u.id === user.id)) {
+    tagged.value.push(user)
+  }
+  mention.value = null
+  void nextTick(() => {
+    el?.focus()
+    el?.setSelectionRange(mentionStart, mentionStart)
+  })
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if (mention.value !== null && suggestions.value?.handleKey(e)) e.preventDefault()
+}
 
 function focusDraft() {
   draftInput.value?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
@@ -64,10 +101,14 @@ async function submit() {
       content: content.value,
       privacy: privacy.value,
       imageUrl: imageUrl.value,
+      ...(props.wallOwner ? { wallOwnerUsername: props.wallOwner.username } : {}),
+      ...(tagged.value.length ? { taggedUserIds: tagged.value.map((u) => u.id) } : {}),
     })
     feed.prepend(post)
     emit('posted', post)
     content.value = ''
+    tagged.value = []
+    mention.value = null
     removePhoto()
   } catch (e) {
     error.value = e instanceof ApiRequestError ? e.messages.join(' ') : t('error.network')
@@ -102,9 +143,45 @@ async function submit() {
         class="status__text"
         rows="2"
         maxlength="5000"
-        :placeholder="t('statusBox.placeholder')"
-        :aria-label="t('statusBox.placeholder')"
+        :placeholder="
+          wallOwner
+            ? t('statusBox.wall.placeholder', { name: wallOwner.displayName })
+            : t('statusBox.placeholder')
+        "
+        :aria-label="
+          wallOwner
+            ? t('statusBox.wall.placeholder', { name: wallOwner.displayName })
+            : t('statusBox.placeholder')
+        "
+        :aria-expanded="mention !== null"
+        aria-autocomplete="list"
+        :title="t('statusBox.tag.hint')"
+        @input="detectMention"
+        @click="detectMention"
+        @keyup.left.right="detectMention"
+        @keydown="onKeydown"
       />
+      <TagSuggestions
+        v-if="mention !== null"
+        ref="suggestions"
+        :query="mention"
+        :exclude="tagged.map((u) => u.id)"
+        @pick="addTag"
+        @close="mention = null"
+      />
+      <p v-if="tagged.length" class="status__tagged">
+        {{ t('statusBox.tag.with') }}:
+        <span v-for="u in tagged" :key="u.id" class="status__chip">
+          {{ u.displayName }}
+          <button
+            type="button"
+            :aria-label="t('statusBox.tag.remove', { name: u.displayName })"
+            @click="tagged = tagged.filter((x) => x.id !== u.id)"
+          >
+            ×
+          </button>
+        </span>
+      </p>
       <div v-if="previewUrl" class="status__preview">
         <img :src="previewUrl" :alt="t('statusBox.photoPreview')" />
         <button
@@ -120,7 +197,12 @@ async function submit() {
     </div>
 
     <div class="status__foot">
-      <select v-model="privacy" class="status__privacy" :aria-label="t('statusBox.privacy')">
+      <select
+        v-if="!wallOwner"
+        v-model="privacy"
+        class="status__privacy"
+        :aria-label="t('statusBox.privacy')"
+      >
         <option v-for="p in PRIVACIES" :key="p" :value="p">{{ t(`privacy.${p}`) }}</option>
       </select>
       <Button type="submit" :disabled="!canPost">{{ t('statusBox.post') }}</Button>
@@ -219,5 +301,27 @@ async function submit() {
   border: 1px solid var(--c-input-border);
   border-radius: var(--radius);
   background: var(--c-card);
+}
+.status__tagged {
+  margin: var(--sp-2) 0 0;
+  color: var(--c-text-muted);
+}
+.status__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-left: var(--sp-1);
+  padding: 0 var(--sp-1);
+  background: var(--c-card-subtle);
+  border: 1px solid var(--c-border);
+  color: var(--c-text);
+}
+.status__chip button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-text-muted);
+  font: inherit;
+  cursor: pointer;
 }
 </style>

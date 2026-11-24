@@ -12,6 +12,7 @@ const store = useProfileStore()
 const feed = useFeedStore()
 const list = store.timeline
 const isSelf = computed(() => store.profile?.relationship === 'SELF')
+const isFriend = computed(() => store.profile?.relationship === 'FRIENDS')
 
 async function onDelete(id: number) {
   try {
@@ -30,11 +31,22 @@ function onShared(post: Parameters<typeof list.prepend>[0]) {
 
 // Post tertulis di timeline sendiri juga masuk ke feed, dan sebaliknya.
 const onPosted = (post: Parameters<typeof list.prepend>[0]) => list.prepend(post)
+// Wall post di dinding teman: tampil di timeline ini dan di feed sendiri.
+function onWallPosted(post: Parameters<typeof list.prepend>[0]) {
+  list.prepend(post)
+  feed.prepend(post)
+}
 </script>
 
 <template>
   <div class="timeline">
     <StatusBox v-if="isSelf" @posted="onPosted" />
+    <!-- WAL-01: teman menulis di dinding; hasilnya tampil "Nama ▸ Nama". -->
+    <StatusBox
+      v-else-if="isFriend && store.profile"
+      :wall-owner="store.profile"
+      @posted="onWallPosted"
+    />
 
     <PostCard
       v-for="post in list.items"

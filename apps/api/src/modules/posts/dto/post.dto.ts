@@ -1,11 +1,23 @@
 import { Privacy } from '@prisma/client'
 import { Type } from 'class-transformer'
-import { IsEnum, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min } from 'class-validator'
+import {
+  ArrayMaxSize,
+  ArrayUnique,
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator'
 
 // Hanya URL hasil POST /uploads/post-image yang diterima; URL luar (atau javascript:) ditolak.
 export const UPLOAD_URL = /^\/uploads\/[0-9a-f]{32}\.(jpg|png|webp)$/
 
-export class CreatePostDto {
+export class UpdatePostDto {
   @IsOptional()
   @IsString()
   @MaxLength(5000, { message: 'Post maksimal 5.000 karakter' })
@@ -20,7 +32,24 @@ export class CreatePostDto {
   privacy?: Privacy
 }
 
-export class UpdatePostDto extends CreatePostDto {}
+/** POST /posts. Dinding dan tag hanya ditentukan saat membuat; edit tidak mengubahnya. */
+export class CreatePostDto extends UpdatePostDto {
+  /** WAL-01: tulis di dinding teman (BR-04). */
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  wallOwnerUsername?: string | null
+
+  /** WAL-02: teman yang di-tag (maksimal 10). */
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10, { message: 'Maksimal 10 teman yang di-tag' })
+  @ArrayUnique()
+  @Type(() => Number)
+  @IsInt({ each: true })
+  @Min(1, { each: true })
+  taggedUserIds?: number[]
+}
 
 /** POST /posts/:id/share: komentar sendiri opsional; foto tidak ada karena isinya post asal. */
 export class SharePostDto {

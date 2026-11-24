@@ -117,6 +117,21 @@ describe('ProfileView', () => {
     expect(other.w.find('.header__photo').exists()).toBe(false) // orang lain: tanpa kontrol foto
   })
 
+  it('profil teman: StatusBox dinding tanpa pilihan privasi; bukan teman: tanpa kotak', async () => {
+    vi.spyOn(usersApi, 'profile').mockResolvedValueOnce(profile({ relationship: 'FRIENDS' }))
+    const friend = await mountAt('/siti')
+    expect(friend.w.find('.status').exists()).toBe(true)
+    expect(friend.w.find('textarea').attributes('placeholder')).toBe(
+      'Write something to Siti Aminah...',
+    )
+    expect(friend.w.find('.status__privacy').exists()).toBe(false)
+
+    setActivePinia(createPinia())
+    useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
+    vi.spyOn(usersApi, 'profile').mockResolvedValueOnce(profile({ relationship: 'REQUEST_SENT' }))
+    expect((await mountAt('/siti')).w.find('.status').exists()).toBe(false)
+  })
+
   it('404: pesan "tidak tersedia" tanpa membedakan sebab, tidak ada header', async () => {
     vi.spyOn(usersApi, 'profile').mockRejectedValue(new ApiRequestError(404, 'NOT_FOUND', ['x']))
     const { w } = await mountAt('/hantu')

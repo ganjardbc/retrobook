@@ -6,8 +6,10 @@ import { RouterLink } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
 import Jewel from '@/components/Jewel.vue'
 import { formatTime } from '@/helpers/time'
+import { useAuthStore } from '@/modules/auth/stores'
 import { useNotificationsStore } from '@/modules/notifications/stores'
 
+const auth = useAuthStore()
 const store = useNotificationsStore()
 const open = ref(false)
 
@@ -21,11 +23,13 @@ watch(open, (isOpen) => {
 const target = (n: AppNotification) =>
   n.type === 'POKE'
     ? '/pokes'
-    : n.type === 'FRIEND_REQUEST'
-      ? '/friends'
-      : n.actor
-        ? `/${n.actor.username}`
-        : '/'
+    : n.type === 'WALL_POST' && auth.user
+      ? `/${auth.user.username}` // tertulis di dinding saya
+      : n.type === 'FRIEND_REQUEST'
+        ? '/friends'
+        : n.actor
+          ? `/${n.actor.username}`
+          : '/'
 </script>
 
 <template>

@@ -38,3 +38,13 @@ input {
   background: var(--c-card);
   color: var(--c-danger);
 }
+
+/* Teks untuk pembaca layar saja. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
