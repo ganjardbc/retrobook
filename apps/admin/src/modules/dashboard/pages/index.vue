@@ -55,7 +55,7 @@ onMounted(() => { void dashboard.fetchStats() })
   <section class="section-heading"><div><p class="eyebrow">NAVIGASI CEPAT</p><h2>Mulai dari sini</h2></div></section>
   <div class="quick-grid">
     <RouterLink to="/users" class="quick-card"><span class="quick-icon quick-icon--blue">♙</span><div><strong>Kelola pengguna</strong><p>Cari dan tinjau akun komunitas</p></div><span class="quick-arrow">↗</span></RouterLink>
-    <div class="quick-card quick-card--disabled"><span class="quick-icon quick-icon--amber">▤</span><div><strong>Moderasi konten</strong><p>Segera tersedia</p></div><span class="soon-pill">SEGERA</span></div>
+    <RouterLink class="quick-card" to="/moderation"><span class="quick-icon quick-icon--amber">▤</span><div><strong>Moderasi konten</strong><p>Tinjau post dan komentar</p></div><span class="quick-arrow">→</span></RouterLink>
     <div class="quick-card quick-card--disabled"><span class="quick-icon quick-icon--rose">⚑</span><div><strong>Antrean laporan</strong><p>Segera tersedia</p></div><span class="soon-pill">SEGERA</span></div>
   </div>
 </template>

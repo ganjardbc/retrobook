@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
-import { Prisma, User } from '@prisma/client'
+import { Prisma, Role, User } from '@prisma/client'
 import * as argon2 from 'argon2'
 import { AppException } from '../../common/app-exception'
 import type { Env } from '../../config/env.validation'
@@ -73,7 +73,7 @@ export class AuthService {
     }
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, requiredRole?: Role) {
     const user = await this.prisma.user.findFirst({
       where: {
         deletedAt: null,
@@ -88,10 +88,13 @@ export class AuthService {
     }
     if (!(await argon2.verify(user.passwordHash, dto.password))) throw INVALID_CREDENTIALS()
     this.assertCanSignIn(user)
+    if (requiredRole && user.role !== requiredRole) {
+      throw new AppException(403, 'FORBIDDEN', 'Akses hanya untuk administrator')
+    }
     return this.issue(user)
   }
 
-  async refresh(refreshToken: string) {
+  async refresh(refreshToken: string, requiredRole?: Role) {
     const row = await this.prisma.refreshToken.findUnique({
       where: { tokenHash: hashToken(refreshToken) },
       include: { user: true },
@@ -110,6 +113,9 @@ export class AuthService {
       throw new AppException(401, 'UNAUTHORIZED', 'Token tidak valid')
     }
     this.assertCanSignIn(row.user)
+    if (requiredRole && row.user.role !== requiredRole) {
+      throw new AppException(403, 'FORBIDDEN', 'Akses hanya untuk administrator')
+    }
 
     // Pencabutan bersyarat membuat dua refresh bersamaan tidak bisa sama-sama berhasil.
     const revoked = await this.prisma.refreshToken.updateMany({
@@ -120,8 +126,9 @@ export class AuthService {
     return this.issue(row.user)
   }
 
-  async logout(userId: number, refreshToken: string): Promise<void> {
-    await this.prisma.refreshToken.updateMany({
+  async logout(userId: number, refreshToken: string, tx?: Prisma.TransactionClient): Promise<void> {
+    const database = tx ?? this.prisma
+    await database.refreshToken.updateMany({
       where: { tokenHash: hashToken(refreshToken), userId, revokedAt: null },
       data: { revokedAt: new Date() },
     })
@@ -159,6 +166,7 @@ export class AuthService {
         username: user.username,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
+        role: user.role,
       },
       accessToken,
       refreshToken,

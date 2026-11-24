@@ -102,18 +102,18 @@ Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan t
 
 | ID | Tugas | Ukuran | PRD |
 |---|---|---|---|
-| [ ] T-48 | Tabel `audit_logs`, `settings`, `announcements`, `blocked_words`, `reports`; migrasi | M | ERD |
-| [ ] T-49 | `RolesGuard` dan rute `/api/admin/*`; seed atau CLI admin pertama | M | ADM-01 |
-| [ ] T-50 | Helper audit transaksional dipakai semua aksi tulis admin | M | ADM-14 |
-| [ ] T-51 | Admin app: layout, login, router guard, komponen tabel dan filter | L | ADM-01 |
-| [ ] T-52 | Dashboard: statistik dan dua grafik | L | ADM-02 |
-| [ ] T-53 | Manajemen user: daftar, detail, status (cabut sesi), role, reset password, hapus; perlindungan admin terakhir | L | ADM-03 sampai 07, BR-14 |
+| [x] T-48 | Tabel `audit_logs`, `settings`, `announcements`, `blocked_words`, `reports`; migrasi | M | ERD |
+| [x] T-49 | `RolesGuard` dan rute `/api/admin/*`; seed atau CLI admin pertama | M | ADM-01 |
+| [x] T-50 | Helper audit transaksional dipakai semua aksi tulis admin | M | ADM-14 |
+| [x] T-51 | Admin app: layout, login, router guard, komponen tabel dan filter | L | ADM-01 |
+| [x] T-52 | Dashboard: statistik dan dua grafik | L | ADM-02 |
+| [x] T-53 | Manajemen user: daftar, detail, status (cabut sesi), role, reset password, hapus; perlindungan admin terakhir | L | ADM-03 sampai 07, BR-14 |
 
 ## Minggu 9: Admin, bagian 2 (gerbang R3)
 
 | ID | Tugas | Ukuran | PRD |
 |---|---|---|---|
-| [ ] T-54 | Moderasi post dan komentar: sembunyikan, tampilkan, hapus, aksi massal | L | ADM-08, 09, BR-07 |
+| [x] T-54 | Moderasi post dan komentar: sembunyikan, tampilkan, hapus, aksi massal | L | ADM-08, 09, BR-07 |
 | [ ] T-55 | Antrean laporan dengan keputusan sekali panggil (tiga klik) | L | ADM-10 |
 | [ ] T-56 | Kata terlarang: kelola, filter saat tulis, tandai konten lama | M | ADM-11, BR-08 |
 | [ ] T-57 | Pengaturan sistem: maintenance mode, buka atau tutup pendaftaran; halaman `/maintenance` | M | ADM-12, BR-12 |

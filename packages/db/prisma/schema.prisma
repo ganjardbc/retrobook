@@ -44,6 +44,25 @@ enum NotifType {
   ANNOUNCEMENT
 }
 
+enum ReportTargetType {
+  POST
+  COMMENT
+  USER
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  INAPPROPRIATE
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
+
 model User {
   id           Int        @id @default(autoincrement())
   email        String     @unique @db.VarChar(191)
@@ -81,6 +100,12 @@ model User {
   notificationsAsActor Notification[] @relation("NotifActor")
   blocksMade           Block[]        @relation("Blocker")
   blocksReceived       Block[]        @relation("Blocked")
+  reportsMade          Report[]       @relation("ReportReporter")
+  reportsHandled       Report[]       @relation("ReportHandler")
+  auditLogs            AuditLog[]
+  settingsUpdated      Setting[]      @relation("SettingUpdater")
+  announcementsCreated Announcement[] @relation("AnnouncementCreator")
+  blockedWordsCreated  BlockedWord[]  @relation("BlockedWordCreator")
 
   @@index([status, createdAt])
   @@index([username])
@@ -274,20 +299,97 @@ model Message {
 }
 
 model Notification {
-  id        Int       @id @default(autoincrement())
-  userId    Int       @map("user_id")
-  actorId   Int?      @map("actor_id")
-  type      NotifType
-  postId    Int?      @map("post_id")
-  commentId Int?      @map("comment_id")
-  readAt    DateTime? @map("read_at")
-  createdAt DateTime  @default(now()) @map("created_at")
+  id             Int       @id @default(autoincrement())
+  userId         Int       @map("user_id")
+  actorId        Int?      @map("actor_id")
+  type           NotifType
+  postId         Int?      @map("post_id")
+  commentId      Int?      @map("comment_id")
+  announcementId Int?      @map("announcement_id")
+  readAt         DateTime? @map("read_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
 
-  user    User     @relation("NotifRecipient", fields: [userId], references: [id], onDelete: Restrict)
-  actor   User?    @relation("NotifActor", fields: [actorId], references: [id], onDelete: SetNull)
-  post    Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user         User          @relation("NotifRecipient", fields: [userId], references: [id], onDelete: Restrict)
+  actor        User?         @relation("NotifActor", fields: [actorId], references: [id], onDelete: SetNull)
+  post         Post?         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment      Comment?      @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  announcement Announcement? @relation(fields: [announcementId], references: [id], onDelete: SetNull)
 
   @@index([userId, readAt, createdAt])
+  @@index([announcementId])
   @@map("notifications")
+}
+
+model Report {
+  id         Int              @id @default(autoincrement())
+  reporterId Int              @map("reporter_id")
+  targetType ReportTargetType @map("target_type")
+  targetId   Int              @map("target_id")
+  reason     ReportReason
+  note       String?          @db.Text
+  status     ReportStatus     @default(PENDING)
+  handledBy  Int?             @map("handled_by")
+  handledAt  DateTime?        @map("handled_at")
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  reporter User  @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  handler  User? @relation("ReportHandler", fields: [handledBy], references: [id], onDelete: Restrict)
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@map("reports")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  adminId    Int      @map("admin_id")
+  action     String   @db.VarChar(60)
+  targetType String?  @map("target_type") @db.VarChar(30)
+  targetId   Int?     @map("target_id")
+  detail     Json?
+  ip         String?  @db.VarChar(45)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Restrict)
+
+  @@index([adminId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_logs")
+}
+
+model Setting {
+  key       String   @id @db.VarChar(60)
+  value     Json
+  updatedBy Int?     @map("updated_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  updater User? @relation("SettingUpdater", fields: [updatedBy], references: [id], onDelete: Restrict)
+
+  @@map("settings")
+}
+
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(120)
+  body      String   @db.Text
+  createdBy Int      @map("created_by")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  creator       User           @relation("AnnouncementCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  notifications Notification[]
+
+  @@map("announcements")
+}
+
+model BlockedWord {
+  id        Int      @id @default(autoincrement())
+  word      String   @unique @db.VarChar(60)
+  createdBy Int      @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  creator User @relation("BlockedWordCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@map("blocked_words")
 }

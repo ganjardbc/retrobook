@@ -23,14 +23,14 @@ async function logout() {
       <nav class="side-nav" aria-label="Navigasi admin">
         <RouterLink class="nav-link" :class="{ 'nav-link--active': route.name === 'admin-dashboard' }" to="/"><span class="nav-icon">◫</span> Ringkasan</RouterLink>
         <RouterLink class="nav-link" :class="{ 'nav-link--active': route.name === 'admin-users' }" to="/users"><span class="nav-icon">♙</span> Pengguna</RouterLink>
-        <a class="nav-link nav-link--muted" href="#moderation" aria-disabled="true"><span class="nav-icon">▤</span> Moderasi <span class="nav-soon">SEGERA</span></a>
+        <RouterLink class="nav-link" :class="{ 'nav-link--active': route.path.startsWith('/moderation') }" to="/moderation"><span class="nav-icon">▤</span> Moderasi</RouterLink>
         <a class="nav-link nav-link--muted" href="#reports" aria-disabled="true"><span class="nav-icon">⚑</span> Laporan</a>
       </nav>
       <div class="sidebar-bottom"><div class="workspace-label">SISTEM</div><a class="nav-link nav-link--muted" href="#settings" aria-disabled="true"><span class="nav-icon">⚙</span> Pengaturan</a><div class="sidebar-note"><span class="status-dot"/> Semua sistem beroperasi</div></div>
     </aside>
     <div v-if="mobileNavOpen" class="mobile-scrim" @click="mobileNavOpen = false"/>
     <section class="shell-main">
-      <header class="topbar"><button class="mobile-menu" aria-label="Buka navigasi" @click="mobileNavOpen = !mobileNavOpen">☰</button><div class="breadcrumbs"><span>Workspace</span><span class="crumb-sep">/</span><strong>{{ route.name === 'admin-users' ? 'Pengguna' : 'Ringkasan' }}</strong></div><div class="topbar-right"><span class="environment-tag"><i/> INTERNAL</span><div class="profile-chip"><span class="avatar">{{ initials }}</span><span class="profile-name">{{ auth.user?.displayName ?? 'Administrator' }}<small>Administrator</small></span></div><button class="logout-button" title="Keluar" aria-label="Keluar" @click="logout">↗</button></div></header>
+      <header class="topbar"><button class="mobile-menu" aria-label="Buka navigasi" @click="mobileNavOpen = !mobileNavOpen">☰</button><div class="breadcrumbs"><span>Workspace</span><span class="crumb-sep">/</span><strong>{{ route.path.startsWith('/moderation') ? 'Moderasi' : route.path.startsWith('/users') ? 'Pengguna' : 'Ringkasan' }}</strong></div><div class="topbar-right"><span class="environment-tag"><i/> INTERNAL</span><div class="profile-chip"><span class="avatar">{{ initials }}</span><span class="profile-name">{{ auth.user?.displayName ?? 'Administrator' }}<small>Administrator</small></span></div><button class="logout-button" title="Keluar" aria-label="Keluar" @click="logout">↗</button></div></header>
       <main class="page-content"><RouterView/></main>
       <footer class="admin-footer"><span>RETROBOOK ADMIN</span><span>Ruang aman untuk komunitas.</span></footer>
     </section>

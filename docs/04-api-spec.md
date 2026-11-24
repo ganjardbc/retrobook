@@ -348,22 +348,32 @@ Akun bot (BOT-01) tidak punya endpoint khusus; bot berjalan sebagai job di API y
 
 Setiap aksi tulis menyimpan satu baris `audit_logs` dalam transaksi yang sama (ADM-14). Daftar memakai pagination cursor yang sama; admin boleh melihat konten `hidden`.
 
+Autentikasi admin memakai sesi access/refresh yang sama, tetapi endpoint login dan refresh hanya menerbitkan sesi untuk akun ber-role `ADMIN`. Admin bootstrap pertama dibuat melalui CLI API: jalankan `pnpm --filter @retrobook/api admin:create` dengan `ADMIN_EMAIL`, `ADMIN_USERNAME`, `ADMIN_DISPLAY_NAME`, dan `ADMIN_PASSWORD` (minimal 12 karakter) tersedia di environment; perintah menolak berjalan bila admin aktif sudah ada.
+
 | Method | Path | Fungsi | ID |
 |---|---|---|---|
-| GET | `/admin/stats` | Total user, post, komentar; user aktif hari ini; pendaftar 7 hari; laporan pending | ADM-02 |
-| GET | `/admin/stats/series?days=14` | Deret harian pendaftaran dan post untuk grafik | ADM-02 |
+| POST | `/admin/auth/login` | `{ identifier, password }`; hanya role ADMIN | ADM-01 |
+| POST | `/admin/auth/refresh` | `{ refreshToken }`; refresh token user biasa ditolak | ADM-01 |
+| POST | `/admin/auth/logout` | `{ refreshToken }`; mencabut sesi admin | ADM-01 |
+
+| Method | Path | Fungsi | ID |
+|---|---|---|---|
+| GET | `/admin/stats` | `{ totalUsers, totalPosts, totalComments, activeUsersToday, newUsersLast7Days, pendingReports }` | ADM-02 |
+| GET | `/admin/stats/series?days=14` | `{ registrationsByDay, postsByDay }`; tiap item `{ date: 'YYYY-MM-DD', count }`; `days` 1–90, default 14 | ADM-02 |
 | GET | `/admin/users` | `?q=&status=&role=&cursor=` | ADM-03 |
 | GET | `/admin/users/:id` | Detail termasuk jumlah laporan terhadapnya | ADM-03 |
 | PATCH | `/admin/users/:id/status` | `{ status: 'ACTIVE'|'SUSPENDED'|'BANNED', reason }`; mencabut semua refresh token bila bukan ACTIVE | ADM-04 |
 | PATCH | `/admin/users/:id/role` | `{ role }`; menolak menurunkan diri sendiri bila admin terakhir (422 `LAST_ADMIN`) | ADM-07, BR-14 |
 | POST | `/admin/users/:id/reset-password` | Hasilkan password sementara atau tautan reset | ADM-06 |
 | DELETE | `/admin/users/:id` | Soft delete; konfirmasi dua langkah di UI; menolak admin terakhir | ADM-05, BR-14 |
-| GET | `/admin/posts` | `?filter=hidden|reported|deleted&q=` | ADM-08 |
+| GET | `/admin/posts` | `?filter=hidden|reported|deleted&q=&from=&to=&cursor=&limit=`; `reported` menampilkan laporan berstatus PENDING | ADM-08 |
 | PATCH | `/admin/posts/:id` | `{ hidden: boolean }` sembunyikan atau tampilkan lagi | ADM-08 |
 | DELETE | `/admin/posts/:id` | Soft delete | ADM-08 |
-| GET | `/admin/comments` | Sama seperti post | ADM-09 |
-| PATCH | `/admin/comments/:id` | `{ hidden }` | ADM-09 |
-| POST | `/admin/comments/bulk` | `{ ids, action: 'hide'|'delete' }` | ADM-09 |
+| POST | `/admin/posts/bulk` | `{ ids, action: 'hide'|'show'|'delete', reason? }`; maksimal 100 ID per aksi | ADM-08 |
+| GET | `/admin/comments` | Filter, tanggal, pencarian, cursor dan limit sama seperti daftar post | ADM-09 |
+| PATCH | `/admin/comments/:id` | `{ hidden }` sembunyikan atau tampilkan lagi | ADM-09 |
+| DELETE | `/admin/comments/:id` | Soft delete | ADM-09 |
+| POST | `/admin/comments/bulk` | `{ ids, action: 'hide'|'show'|'delete', reason? }`; maksimal 100 ID per aksi | ADM-09 |
 | GET | `/admin/reports` | `?status=PENDING` dengan pratinjau target | ADM-10 |
 | PATCH | `/admin/reports/:id` | `{ status: 'REVIEWED'|'DISMISSED', action?: 'HIDE_CONTENT'|'DELETE_CONTENT'|'SUSPEND_USER', note? }`; satu panggilan memutuskan dan mencatat (target tiga klik) | ADM-10 |
 | GET/POST/DELETE | `/admin/blocked-words` | Kelola kata terlarang; kata disimpan huruf kecil dan unik | ADM-11 |

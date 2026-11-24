@@ -18,6 +18,7 @@ import { SearchModule } from './modules/search/search.module'
 import { RateLimitModule } from './common/rate-limit'
 import { PokesModule } from './modules/pokes/pokes.module'
 import { RealtimeModule } from './modules/realtime/realtime.module'
+import { AdminModule } from './modules/admin/admin.module'
 
 // Satu modul per domain di src/modules/*; tambahkan ke imports saat tugasnya dikerjakan.
 @Module({
@@ -44,6 +45,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module'
     SearchModule,
     MessagesModule,
     HealthModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

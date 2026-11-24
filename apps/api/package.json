@@ -7,7 +7,8 @@
     "build": "nest build",
     "start": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "dotenv -e ../../.env -- jest --runInBand"
+    "test": "dotenv -e ../../.env -- jest --runInBand",
+    "admin:create": "dotenv -e ../../.env -- node scripts/create-admin.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^11",
