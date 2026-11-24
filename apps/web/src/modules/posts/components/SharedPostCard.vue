@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { formatTime } from '@/helpers/time'
 import Avatar from '@/components/Avatar.vue'
+import HashtagText from '@/modules/posts/components/HashtagText.vue'
 
 const props = defineProps<{ original: NonNullable<Post['sharedFrom']> }>()
 
@@ -26,7 +27,7 @@ const post = computed(() => ('unavailable' in props.original ? null : props.orig
         </div>
       </div>
       <!-- Isi asal selalu teks, tidak pernah HTML. -->
-      <p v-if="post.content" class="shared__text">{{ post.content }}</p>
+      <p v-if="post.content" class="shared__text"><HashtagText :text="post.content" /></p>
       <img
         v-if="post.imageUrl"
         class="shared__image"

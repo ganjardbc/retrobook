@@ -119,6 +119,9 @@ export type ChatFriend = {
 /** Satu baris daftar percakapan (`GET /messages/conversations`). */
 export type Conversation = { user: UserSummary; lastMessage: ChatMessage; unreadCount: number }
 
+/** Satu baris trending (`GET /trending`): hashtag dan jumlah post publik 24 jam terakhir. */
+export type TrendingTag = { tag: string; count: number }
+
 /** Poke aktif yang diterima (`GET /pokes`). */
 export type PokeItem = { user: UserSummary; createdAt: string }
 

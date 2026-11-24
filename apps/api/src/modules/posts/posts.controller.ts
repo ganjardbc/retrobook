@@ -62,3 +62,18 @@ export class FeedController {
     return this.posts.feed(user.id, q.limit, q.cursor)
   }
 }
+
+@Controller()
+export class HashtagsController {
+  constructor(private readonly posts: PostsService) {}
+
+  @Get('trending')
+  trending(@CurrentUser() user: AuthUser) {
+    return this.posts.trending(user.id)
+  }
+
+  @Get('hashtags/:tag/posts')
+  byHashtag(@CurrentUser() user: AuthUser, @Param('tag') tag: string, @Query() q: CursorQueryDto) {
+    return this.posts.byHashtag(user.id, tag, q.limit, q.cursor)
+  }
+}

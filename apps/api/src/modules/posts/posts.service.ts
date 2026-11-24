@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
-import type { Paged, Post as PostDto, SharedPost, UserSummary } from '@retrobook/shared'
+import {
+  extractHashtags,
+  type Paged,
+  type Post as PostDto,
+  type SharedPost,
+  type TrendingTag,
+  type UserSummary,
+} from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
 import { NotificationsService } from '../notifications/notifications.service'
@@ -48,7 +55,15 @@ const postInclude = (
 type PostRow = Prisma.PostGetPayload<{ include: ReturnType<typeof postInclude> }>
 
 const notFound = () => new AppException(404, 'NOT_FOUND', 'Post tidak ditemukan')
+const TRENDING_SIZE = 10
+const TRENDING_WINDOW_MS = 24 * 60 * 60 * 1000
+// SRC-02 dan hashtag publik: hanya post publik biasa (bukan wall post) yang tidak disembunyikan admin.
+const publicPost: Prisma.PostWhereInput = { privacy: 'PUBLIC', wallOwnerId: null, hidden: false }
+
 const empty = () => new AppException(400, 'VALIDATION_FAILED', 'Post tidak boleh kosong')
+
+const hashtagLinks = (tags: string[]) =>
+  tags.map((tag) => ({ hashtag: { connectOrCreate: { where: { tag }, create: { tag } } } }))
 
 @Injectable()
 export class PostsService {
@@ -82,6 +97,7 @@ export class PostsService {
         privacy: wallOwner ? 'FRIENDS' : (dto.privacy ?? 'FRIENDS'),
         wallOwnerId: wallOwner?.id,
         tags: { create: tagIds.map((userId) => ({ userId })) },
+        hashtags: { create: hashtagLinks(extractHashtags(content)) },
       },
       include: this.include(viewerId),
     })
@@ -110,9 +126,26 @@ export class PostsService {
     if (!content.trim() && !imageUrl && !isShare) throw empty()
     if (imageUrl !== current.imageUrl) await this.assertUpload(imageUrl)
 
+    // POST-10: sinkronkan hashtag; yang tetap ada tidak dibuat ulang supaya waktunya (trending) tidak bergeser.
+    const tags = extractHashtags(content)
+    const existing = await this.prisma.postHashtag.findMany({
+      where: { postId: id },
+      select: { hashtagId: true, hashtag: { select: { tag: true } } },
+    })
+    const kept = new Set(existing.map((e) => e.hashtag.tag))
+    const removedIds = existing.filter((e) => !tags.includes(e.hashtag.tag)).map((e) => e.hashtagId)
     const row = await this.prisma.post.update({
       where: { id },
-      data: { content, imageUrl, privacy: dto.privacy, editedAt: new Date() },
+      data: {
+        content,
+        imageUrl,
+        privacy: dto.privacy,
+        editedAt: new Date(),
+        hashtags: {
+          deleteMany: { hashtagId: { in: removedIds } },
+          create: hashtagLinks(tags.filter((tag) => !kept.has(tag))),
+        },
+      },
       include: this.include(viewerId),
     })
     return (await this.toDtos(viewerId, [row]))[0]!
@@ -150,6 +183,7 @@ export class PostsService {
         content: dto.content ?? '',
         privacy: dto.privacy ?? 'FRIENDS',
         sharedFromId: rootId,
+        hashtags: { create: hashtagLinks(extractHashtags(dto.content ?? '')) },
       },
       include: this.include(viewerId),
     })
@@ -159,6 +193,58 @@ export class PostsService {
   async feed(viewerId: number, limit: number, cursor?: number): Promise<Paged<PostDto>> {
     const rows = await this.prisma.post.findMany({
       where: this.visibility.feedWhere(viewerId),
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      include: this.include(viewerId),
+    })
+    const page = rows.slice(0, limit)
+    return {
+      items: await this.toDtos(viewerId, page),
+      nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+    }
+  }
+
+  /**
+   * SRC-02: hashtag terbanyak 24 jam terakhir (maksimal 10), tanpa yang `hidden` (ADM-17). Yang dihitung
+   * hanya post publik yang terlihat bagi pembaca ini, jadi post terhapus, disembunyikan, penulis BANNED,
+   * dan pasangan blokir tidak ikut (aturan terpusat di VisibilityService).
+   */
+  async trending(viewerId: number): Promise<{ items: TrendingTag[] }> {
+    const rows = await this.prisma.postHashtag.groupBy({
+      by: ['hashtagId'],
+      where: {
+        createdAt: { gte: new Date(Date.now() - TRENDING_WINDOW_MS) },
+        hashtag: { hidden: false },
+        post: { AND: [this.visibility.postWhere(viewerId), publicPost] },
+      },
+      _count: { postId: true },
+      orderBy: [{ _count: { postId: 'desc' } }, { hashtagId: 'asc' }],
+      take: TRENDING_SIZE,
+    })
+    const tags = await this.prisma.hashtag.findMany({
+      where: { id: { in: rows.map((r) => r.hashtagId) } },
+      select: { id: true, tag: true },
+    })
+    const byId = new Map(tags.map((t) => [t.id, t.tag]))
+    return { items: rows.map((r) => ({ tag: byId.get(r.hashtagId)!, count: r._count.postId })) }
+  }
+
+  /** POST-10: post publik dengan hashtag ini; tag tidak dikenal memberi daftar kosong (tidak membocorkan apa pun). */
+  async byHashtag(
+    viewerId: number,
+    tag: string,
+    limit: number,
+    cursor?: number,
+  ): Promise<Paged<PostDto>> {
+    const rows = await this.prisma.post.findMany({
+      where: {
+        AND: [
+          this.visibility.postWhere(viewerId),
+          publicPost,
+          { hashtags: { some: { hashtag: { tag: tag.toLowerCase() } } } },
+        ],
+      },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),

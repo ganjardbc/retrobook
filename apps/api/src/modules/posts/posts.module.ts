@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common'
 import { NotificationsModule } from '../notifications/notifications.module'
 import { UploadsModule } from '../uploads/uploads.module'
-import { FeedController, PostsController } from './posts.controller'
+import { FeedController, HashtagsController, PostsController } from './posts.controller'
 import { PostsService } from './posts.service'
 
 @Module({
   imports: [UploadsModule, NotificationsModule],
-  controllers: [PostsController, FeedController],
+  controllers: [PostsController, FeedController, HashtagsController],
   providers: [PostsService],
   exports: [PostsService],
 })

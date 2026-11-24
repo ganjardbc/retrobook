@@ -111,7 +111,8 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
     const post = await h.prisma.post.create({
       data: {
         authorId: owner.id,
-        content: 'isi rahasia',
+        content: 'isi rahasia #rahasia',
+        hashtags: { create: { hashtag: { create: { tag: 'rahasia' } } } },
         imageUrl: `/uploads/${'a'.repeat(32)}.png`,
         privacy: s.privacy,
         hidden: s.hidden ?? false,
@@ -147,6 +148,8 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
         const feed = await api.get('/feed?limit=50')
         const timeline = await api.get(`/users/${users.owner.username}/posts?limit=50`)
         const photos = await api.get(`/users/${users.owner.username}/photos?limit=50`)
+        const tagged = await api.get('/hashtags/rahasia/posts?limit=50')
+        const trending = await api.get('/trending')
 
         if (guard) {
           for (const [ep, r] of [
@@ -156,6 +159,8 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
             ['feed', feed],
             ['timeline', timeline],
             ['photos', photos],
+            ['hashtag', tagged],
+            ['trending', trending],
           ] as const) {
             if (r.status !== guard)
               problems.push(`${v} ${ep}: guard seharusnya ${guard}, dapat ${r.status}`)
@@ -172,7 +177,8 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
           if (r.status !== want) problems.push(`${v} ${ep}: seharusnya ${want}, dapat ${r.status}`)
         }
         if (see) {
-          if (detail.body.content !== 'isi rahasia') problems.push(`${v} detail: isi tidak sesuai`)
+          if (detail.body.content !== 'isi rahasia #rahasia')
+            problems.push(`${v} detail: isi tidak sesuai`)
         } else {
           // 404 harus identik dengan "post tidak ada" (tidak membocorkan keberadaan)
           const missing = await api.get('/posts/999999')
@@ -225,6 +231,22 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
             `${v} photos: foto ${inPhotos ? 'ada' : 'tidak ada'}, seharusnya ${see ? 'ada' : 'tidak ada'}`,
           )
 
+        // hashtag dan trending: hanya post PUBLIC yang terlihat dan tidak hidden (juga bagi penulisnya); profil penulis hilang tidak membuat 404
+        const wantTagged = see && state.privacy === 'PUBLIC' && !state.hidden
+        const inTagged = (tagged.body.items ?? []).some((p: { id: number }) => p.id === post.id)
+        const inTrending = (trending.body.items ?? []).some(
+          (i: { tag: string }) => i.tag === 'rahasia',
+        )
+        if (tagged.status !== 200) problems.push(`${v} hashtag: status ${tagged.status}`)
+        else if (inTagged !== wantTagged)
+          problems.push(
+            `${v} hashtag: post ${inTagged ? 'ada' : 'tidak ada'}, seharusnya ${wantTagged ? 'ada' : 'tidak ada'}`,
+          )
+        if (inTrending !== wantTagged)
+          problems.push(
+            `${v} trending: tag ${inTrending ? 'ada' : 'tidak ada'}, seharusnya ${wantTagged ? 'ada' : 'tidak ada'}`,
+          )
+
         // --- penulis (mutasi) ---
         const like = await api.put(`/posts/${post.id}/like`)
         if (see ? like.status !== 200 : (expect404(v, 'like', like.status), false))
@@ -234,7 +256,7 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
           .send({ content: `halo dari ${v}` })
         if (see ? comment.status !== 201 : (expect404(v, 'komentar baru', comment.status), false))
           problems.push(`${v} komentar baru: seharusnya 201, dapat ${comment.status}`)
-        const patch = await api.patch(`/posts/${post.id}`).send({ content: 'isi rahasia' })
+        const patch = await api.patch(`/posts/${post.id}`).send({ content: 'isi rahasia #rahasia' })
         const wantPatch = !see ? 404 : v === 'owner' ? 200 : 403
         if (patch.status !== wantPatch)
           problems.push(`${v} edit: seharusnya ${wantPatch}, dapat ${patch.status}`)
@@ -356,8 +378,6 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
     it.todo(
       'setelah blokir, pertemanan dan permintaan dihapus dan post FRIENDS langsung hilang (BR-11)',
     )
-    it.todo(
-      'hashtag memakai aturan yang sama (T-42); pencarian (T-39) dan notifikasi (T-32) diuji di spec masing-masing',
-    )
+    it.todo('pencarian (T-39) dan notifikasi (T-32) diuji di spec masing-masing')
   })
 })

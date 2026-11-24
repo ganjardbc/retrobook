@@ -6,6 +6,7 @@ import BirthdaysCard from '@/modules/friends/components/BirthdaysCard.vue'
 import PeopleYouMayKnow from '@/modules/friends/components/PeopleYouMayKnow.vue'
 import ChatDock from '@/modules/chat/components/ChatDock.vue'
 import ChatSidebar from '@/modules/chat/components/ChatSidebar.vue'
+import TrendingCard from '@/modules/search/components/TrendingCard.vue'
 import { useChatStore } from '@/modules/chat/stores'
 import { disconnectRealtime } from '@/plugins/realtime'
 import AppFooter from '@/components/AppFooter.vue'
@@ -40,8 +41,9 @@ async function logout() {
     <div class="layout__cols">
       <aside class="layout__left" :class="{ 'layout__left--open': menuOpen }"><LeftMenu /></aside>
       <main class="layout__main"><RouterView /></main>
-      <!-- Trending menyusul (T-42); kartu di atas, chat di dasar kolom (UI spec 3). -->
+      <!-- Kartu di atas, chat di dasar kolom (UI spec 3). -->
       <aside class="layout__right">
+        <TrendingCard />
         <BirthdaysCard />
         <PeopleYouMayKnow />
         <ChatSidebar />

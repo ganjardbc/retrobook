@@ -8,6 +8,7 @@ import { postsApi } from '@/modules/posts/services/api'
 import { useAuthStore } from '@/modules/auth/stores'
 import { formatTime } from '@/helpers/time'
 import Avatar from '@/components/Avatar.vue'
+import HashtagText from '@/modules/posts/components/HashtagText.vue'
 import CommentList from '@/modules/posts/components/CommentList.vue'
 import SharePanel from '@/modules/posts/components/SharePanel.vue'
 import SharedPostCard from '@/modules/posts/components/SharedPostCard.vue'
@@ -162,7 +163,7 @@ async function saveEdit() {
         <Button type="submit" :disabled="saving">{{ t('edit.save') }}</Button>
       </div>
     </form>
-    <p v-else-if="post.content" class="post__text">{{ post.content }}</p>
+    <p v-else-if="post.content" class="post__text"><HashtagText :text="post.content" /></p>
     <img
       v-if="post.imageUrl"
       class="post__image"
