@@ -60,6 +60,16 @@ export const useFriendsStore = defineStore('friends', () => {
     }
   }
 
+  /** Muat ulang permintaan masuk dari awal (mis. saat ada permintaan baru lewat realtime). */
+  async function refreshRequests() {
+    generation++
+    requests.value = []
+    requestsCursor.value = null
+    requestsDone.value = false
+    requestsLoading.value = false
+    await loadRequests()
+  }
+
   async function loadFriends() {
     if (friendsLoading.value || friendsDone.value) return
     friendsLoading.value = true
@@ -141,6 +151,7 @@ export const useFriendsStore = defineStore('friends', () => {
     ownerId,
     reset,
     loadRequests,
+    refreshRequests,
     loadFriends,
     search,
     accept,

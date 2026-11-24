@@ -129,7 +129,7 @@ Setiap komponen jadi satu Vue SFC: komponen global di `apps/web/src/components/`
 | Komponen | Spesifikasi |
 |---|---|
 | `NavBar` | Tinggi `--h-navbar`, latar `--c-brand`, border bawah `--c-brand-dark`. Logo kiri, kotak cari (putih, tanpa radius besar), tautan Home dan nama, tiga jewel (permintaan teman, pesan, notifikasi) |
-| `Jewel` | Ikon 16 px putih, badge merah `--c-danger` berisi angka di kanan atas, klik membuka dropdown 330 px dengan daftar dan tautan "See All" |
+| `Jewel` | Ikon 16 px putih, badge merah `--c-danger` berisi angka di kanan atas, klik membuka dropdown 330 px dengan daftar dan tautan "See All". Badge memakai `--c-badge`, tampil "99+" bila lebih dari 99 dan "N+" bila daftar belum termuat penuh. Dropdown tertutup oleh klik di luar dan Escape. Status T-33: jewel teman (daftar permintaan, Confirm dan Delete Request, See All ke `/friends`) dan notifikasi (membuka dropdown menandai terbaca; baris yang belum dibaca disorot sampai ditutup) aktif dan realtime; jewel pesan hanya menampilkan keadaan kosong sampai chat (T-36). Notifikasi bertipe post membawa ke profil aktor karena halaman `/posts/:id` belum ada di web |
 | `SearchBox` | Dropdown hasil maksimal 8 user dengan avatar 32 px dan nama, navigasi panah keyboard (SRC-01) |
 | `LeftMenu` | Foto 32 px dan nama di atas; daftar tautan dengan ikon kecil, hover `--c-hover-bg`; kelompok "Favorites", "Apps" (Events, Groups, Notes, Photos) |
 | `StatusBox` | Kartu putih; tab teks "Update Status", "Add Photo", "Life Event" (disabled sampai Fase 3); `textarea` 2 baris; tombol Post biru di kanan; selektor privasi (ikon bola dunia, dua orang, gembok) |

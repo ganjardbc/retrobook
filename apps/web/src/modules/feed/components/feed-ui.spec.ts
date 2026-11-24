@@ -166,11 +166,11 @@ describe('PostCard', () => {
     const confirm = vi.spyOn(window, 'confirm')
     await w.find('.post__dots').trigger('click')
     confirm.mockReturnValueOnce(false)
-    await w.find('.post__item').trigger('click')
+    await w.findAll('.post__item')[1]!.trigger('click') // [0] = Edit, [1] = Delete
     expect(w.emitted('delete')).toBeUndefined()
     await w.find('.post__dots').trigger('click')
     confirm.mockReturnValueOnce(true)
-    await w.find('.post__item').trigger('click')
+    await w.findAll('.post__item')[1]!.trigger('click') // [0] = Edit, [1] = Delete
     expect(w.emitted('delete')).toEqual([[7]])
   })
 

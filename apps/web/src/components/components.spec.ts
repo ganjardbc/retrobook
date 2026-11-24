@@ -8,6 +8,11 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
 
+vi.mock('@/plugins/realtime', () => ({
+  getSocket: () => ({ on() {}, off() {}, io: { on() {}, off() {} } }),
+  disconnectRealtime() {},
+}))
+
 const makeRouter = () =>
   createRouter({
     history: createMemoryHistory(),

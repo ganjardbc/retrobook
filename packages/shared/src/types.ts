@@ -78,6 +78,26 @@ export type Profile = UserSummary & {
 }
 
 /** Permintaan pertemanan masuk (GET /friends/requests). */
+/** Notifikasi dari API (`GET /notifications` dan event `notification:new`). */
+export type AppNotification = {
+  id: number
+  type:
+    | 'LIKE'
+    | 'COMMENT'
+    | 'FRIEND_REQUEST'
+    | 'FRIEND_ACCEPT'
+    | 'POKE'
+    | 'TAG'
+    | 'WALL_POST'
+    | 'ANNOUNCEMENT'
+  actor: UserSummary | null
+  postId: number | null
+  commentId: number | null
+  text: string
+  readAt: string | null
+  createdAt: string
+}
+
 export type FriendRequest = { user: UserSummary; createdAt: string }
 
 /** Daftar teman: Paged biasa ditambah jumlah total (tab Friends menampilkan jumlah, FRD-04). */

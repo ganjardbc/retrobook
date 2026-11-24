@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/modules/auth/stores'
+import { disconnectRealtime } from '@/plugins/realtime'
 import AppFooter from '@/components/AppFooter.vue'
 import LeftMenu from '@/components/LeftMenu.vue'
 import NavBar from '@/components/NavBar.vue'
@@ -10,6 +11,9 @@ const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const menuOpen = ref(false)
+
+// Koneksi realtime hidup selama shell member tampil (logout atau pindah ke tamu memutusnya).
+onBeforeUnmount(disconnectRealtime)
 
 // Menu kiri di layar sempit berupa panel tarik; tutup saat pindah halaman.
 router.afterEach(() => (menuOpen.value = false))
