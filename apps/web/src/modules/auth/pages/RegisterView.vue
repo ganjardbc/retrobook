@@ -6,6 +6,7 @@ import { ApiRequestError } from '@/plugins/http'
 import AppFooter from '@/components/AppFooter.vue'
 import Button from '@/components/Button.vue'
 import WordMark from '@/components/WordMark.vue'
+import { useCountdown } from '@/composables/countdown'
 import { useAuthStore } from '@/modules/auth/stores'
 
 const auth = useAuthStore()
@@ -14,16 +15,18 @@ const router = useRouter()
 const form = reactive({ displayName: '', username: '', email: '', password: '' })
 const busy = ref(false)
 const errors = ref<string[]>([])
+const wait = useCountdown()
 
 async function submit() {
-  if (busy.value) return
+  if (busy.value || wait.active.value) return
   busy.value = true
   errors.value = []
   try {
     await auth.register({ ...form })
     await router.replace('/')
   } catch (e) {
-    errors.value = e instanceof ApiRequestError ? e.messages : [t('error.network')]
+    if (e instanceof ApiRequestError && e.status === 429) wait.start(e.retryAfter ?? 60)
+    else errors.value = e instanceof ApiRequestError ? e.messages : [t('error.network')]
   } finally {
     busy.value = false
   }
@@ -44,6 +47,9 @@ async function submit() {
         <h1>{{ t('auth.register.title') }}</h1>
         <p class="muted">{{ t('auth.register.subtitle') }}</p>
 
+        <div v-if="wait.active.value" class="form-error" role="alert">
+          {{ t('error.rateLimited', { n: wait.remaining.value }) }}
+        </div>
         <div v-if="errors.length" class="form-error" role="alert">
           <div v-for="message in errors" :key="message">{{ message }}</div>
         </div>
@@ -84,7 +90,7 @@ async function submit() {
           />
         </label>
 
-        <Button variant="success" type="submit" :disabled="busy">{{
+        <Button variant="success" type="submit" :disabled="busy || wait.active.value">{{
           t('auth.register.submit')
         }}</Button>
         <p class="parody">{{ t('auth.register.parody') }}</p>

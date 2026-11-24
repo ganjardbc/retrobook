@@ -27,6 +27,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const statusCode = exception.getStatus()
       const code =
         exception instanceof AppException ? exception.code : (DEFAULT_CODES[statusCode] ?? 'ERROR')
+      if (exception instanceof AppException && exception.retryAfter !== undefined) {
+        res.setHeader('Retry-After', String(exception.retryAfter))
+      }
       res.status(statusCode).json({ statusCode, message: this.messageOf(exception), code })
       return
     }

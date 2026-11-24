@@ -7,6 +7,7 @@ import AppFooter from '@/components/AppFooter.vue'
 import Button from '@/components/Button.vue'
 import WordMark from '@/components/WordMark.vue'
 import { safeRedirect } from '@/core/global-routes'
+import { useCountdown } from '@/composables/countdown'
 import { useAuthStore } from '@/modules/auth/stores'
 
 const auth = useAuthStore()
@@ -17,6 +18,7 @@ const identifier = ref('')
 const password = ref('')
 const busy = ref(false)
 const error = ref('')
+const wait = useCountdown()
 
 const NOTICES = {
   expired: 'auth.login.reason.expired',
@@ -32,14 +34,15 @@ const notice = computed(() => {
 })
 
 async function submit() {
-  if (busy.value) return
+  if (busy.value || wait.active.value) return
   busy.value = true
   error.value = ''
   try {
     await auth.login(identifier.value, password.value)
     await router.replace(safeRedirect(route.query.redirect))
   } catch (e) {
-    error.value = e instanceof ApiRequestError ? e.messages.join(' ') : t('error.network')
+    if (e instanceof ApiRequestError && e.status === 429) wait.start(e.retryAfter ?? 60)
+    else error.value = e instanceof ApiRequestError ? e.messages.join(' ') : t('error.network')
   } finally {
     busy.value = false
   }
@@ -66,7 +69,7 @@ async function submit() {
               required
             />
           </label>
-          <Button variant="default" type="submit" :disabled="busy">{{
+          <Button variant="default" type="submit" :disabled="busy || wait.active.value">{{
             t('auth.login.submit')
           }}</Button>
         </form>
@@ -76,6 +79,9 @@ async function submit() {
     <main class="main">
       <p v-if="notice" class="form-error" role="status">{{ notice }}</p>
       <p v-if="error" class="form-error" role="alert">{{ error }}</p>
+      <p v-if="wait.active.value" class="form-error" role="alert">
+        {{ t('error.rateLimited', { n: wait.remaining.value }) }}
+      </p>
       <div class="main__cols">
         <section class="tagline">
           <h1>{{ t('auth.login.tagline.title') }}</h1>

@@ -8,6 +8,8 @@ export class ApiRequestError extends Error {
     public readonly status: number,
     public readonly code: string,
     public readonly messages: string[],
+    /** Detik dari header `Retry-After` (429). */
+    public readonly retryAfter?: number,
   ) {
     super(messages.join(' '))
   }
@@ -29,6 +31,7 @@ async function toError(res: Response): Promise<ApiRequestError> {
     res.status,
     body?.code ?? 'ERROR',
     Array.isArray(msg) ? msg : [msg ?? res.statusText],
+    Number(res.headers.get('Retry-After')) || undefined,
   )
 }
 

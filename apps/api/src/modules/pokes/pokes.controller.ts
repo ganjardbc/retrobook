@@ -9,6 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common'
+import { POKE_PER_USER, RateLimit } from '../../common/rate-limit'
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
 import { CursorQueryDto } from '../posts/dto/post.dto'
 import { PokeDto } from './dto/pokes.dto'
@@ -20,6 +21,7 @@ export class PokesController {
 
   @Post()
   @HttpCode(200)
+  @RateLimit(POKE_PER_USER)
   poke(@CurrentUser() user: AuthUser, @Body() dto: PokeDto) {
     return this.pokes.poke(user.id, dto.userId)
   }

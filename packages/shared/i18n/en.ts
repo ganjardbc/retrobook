@@ -240,6 +240,7 @@ export const en = {
   'notFound.body': "The page you're looking for isn't here.",
   'notFound.home': 'Go home',
 
+  'error.rateLimited': 'Too many attempts. Please try again in {n} seconds.',
   'error.network': 'Cannot reach the server. Please try again.',
   'error.generic': 'Something went wrong. Please try again.',
 } as const

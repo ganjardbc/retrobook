@@ -10,6 +10,7 @@ import {
   Res,
 } from '@nestjs/common'
 import type { Response } from 'express'
+import { MESSAGE_PER_USER, RateLimit } from '../../common/rate-limit'
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
 import { CursorQueryDto } from '../posts/dto/post.dto'
 import { SendMessageDto } from './dto/messages.dto'
@@ -51,6 +52,7 @@ export class MessagesController {
 
   /** REST cadangan bila socket putus. 201 pesan baru; 200 bila `clientId` sudah pernah dikirim. */
   @Post(':userId')
+  @RateLimit(MESSAGE_PER_USER)
   async send(
     @CurrentUser() user: AuthUser,
     @Param('userId', ParseIntPipe) userId: number,

@@ -82,7 +82,7 @@ Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan t
 | [x] T-37 | `ChatSidebar` dan `ChatDock` (maksimal tiga jendela) | L | CHT-02, 03 |
 | [x] T-38 | Indikator mengetik dan terbaca | M | CHT-04 |
 | [x] T-39 | Pencarian orang (dropdown di navbar) dan halaman hasil | M | SRC-01 |
-| [ ] T-40 | Rate limit login, register, pesan, poke | S | BR-10 |
+| [x] T-40 | Rate limit login, register, pesan, poke | S | BR-10 |
 
 ## Minggu 7: Pelengkap Fase 2 (gerbang R2)
 

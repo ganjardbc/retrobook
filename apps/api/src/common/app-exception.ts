@@ -6,6 +6,8 @@ export class AppException extends HttpException {
     status: number,
     public readonly code: string,
     message: string | string[],
+    /** Detik sampai boleh mencoba lagi; dikirim sebagai header `Retry-After` (429). */
+    public readonly retryAfter?: number,
   ) {
     super({ message }, status)
   }

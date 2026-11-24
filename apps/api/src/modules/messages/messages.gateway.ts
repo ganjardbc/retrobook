@@ -7,10 +7,11 @@ import {
 import type { ChatMessage } from '@retrobook/shared'
 import type { Socket } from 'socket.io'
 import { AppException } from '../../common/app-exception'
+import { MESSAGE_PER_USER, RateLimiter } from '../../common/rate-limit'
 import { MAX_MESSAGE_LENGTH } from './dto/messages.dto'
 import { MessagesService } from './messages.service'
 
-type Ack<T> = ({ ok: true } & T) | { ok: false; code: string; message: string }
+type Ack<T> = ({ ok: true } & T) | { ok: false; code: string; message: string; retryAfter?: number }
 
 const CLIENT_ID = /^[\w-]{1,64}$/
 
@@ -20,7 +21,10 @@ const CLIENT_ID = /^[\w-]{1,64}$/
  */
 @WebSocketGateway({ namespace: '/realtime' })
 export class MessagesGateway {
-  constructor(private readonly messages: MessagesService) {}
+  constructor(
+    private readonly messages: MessagesService,
+    private readonly limiter: RateLimiter,
+  ) {}
 
   @SubscribeMessage('message:send')
   send(
@@ -29,6 +33,8 @@ export class MessagesGateway {
   ): Promise<Ack<{ message: ChatMessage }>> {
     const b = (body ?? {}) as { toUserId?: unknown; content?: unknown; clientId?: unknown }
     return this.ack(async () => {
+      // Bucket yang sama dengan REST (BR-10): socket bukan jalan pintas melewati batas.
+      this.limiter.check(MESSAGE_PER_USER, socket.data.userId)
       if (!Number.isInteger(b.toUserId) || (b.toUserId as number) < 1)
         throw bad('toUserId tidak valid')
       if (typeof b.content !== 'string' || b.content.length > MAX_MESSAGE_LENGTH * 2)
@@ -81,6 +87,7 @@ export class MessagesGateway {
           ok: false,
           code: e.code,
           message: Array.isArray(message) ? message.join(' ') : message,
+          ...(e.retryAfter !== undefined ? { retryAfter: e.retryAfter } : {}),
         }
       }
       return { ok: false, code: 'INTERNAL', message: 'Terjadi kesalahan' }

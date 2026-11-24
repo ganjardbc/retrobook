@@ -1,24 +1,43 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common'
+import { AppException } from '../../common/app-exception'
+import { LOGIN_PER_IP, REGISTER_PER_IP, RateLimit } from '../../common/rate-limit'
 import { AuthService } from './auth.service'
 import { AuthUser, CurrentUser } from './current-user.decorator'
 import { LoginDto, RefreshDto, RegisterDto } from './dto/auth.dto'
+import { LoginLockout } from './login-lockout'
 import { Public } from './public.decorator'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly lockout: LoginLockout,
+  ) {}
 
   @Public()
+  @RateLimit(REGISTER_PER_IP)
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto)
   }
 
   @Public()
+  @RateLimit(LOGIN_PER_IP)
   @Post('login')
   @HttpCode(200)
-  login(@Body() dto: LoginDto) {
-    return this.auth.login(dto)
+  async login(@Body() dto: LoginDto) {
+    this.lockout.assertOpen(dto.identifier)
+    try {
+      const session = await this.auth.login(dto)
+      this.lockout.recordSuccess(dto.identifier)
+      return session
+    } catch (e) {
+      // Hanya kredensial salah yang dihitung; akun ditangguhkan dan sejenisnya bukan percobaan menebak.
+      if (e instanceof AppException && e.code === 'INVALID_CREDENTIALS') {
+        this.lockout.recordFailure(dto.identifier)
+      }
+      throw e
+    }
   }
 
   @Public()

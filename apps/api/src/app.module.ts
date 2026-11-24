@@ -15,6 +15,7 @@ import { BlocksModule } from './modules/blocks/blocks.module'
 import { NotificationsModule } from './modules/notifications/notifications.module'
 import { MessagesModule } from './modules/messages/messages.module'
 import { SearchModule } from './modules/search/search.module'
+import { RateLimitModule } from './common/rate-limit'
 import { PokesModule } from './modules/pokes/pokes.module'
 import { RealtimeModule } from './modules/realtime/realtime.module'
 
@@ -27,6 +28,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module'
       validate: validateEnv,
     }),
     PrismaModule,
+    RateLimitModule,
     AuthModule,
     UploadsModule,
     VisibilityModule,
