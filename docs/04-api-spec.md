@@ -1,0 +1,364 @@
+# API Specification: Retro Social Network 2015 + Admin Panel
+
+Dibuat 2026-11-24 · Ganjar Hadiatna · Status: draf 1
+
+Dokumen ini adalah kontrak antara `apps/api` (NestJS) dan dua frontend (`apps/web`, `apps/admin`). ID kebutuhan merujuk ke [PRD](02-prd.md); nama tabel dan kolom merujuk ke [ERD](03-erd.md). Bila ada selisih, PRD menang untuk perilaku dan ERD menang untuk data.
+
+## 1. Konvensi
+
+| Topik | Aturan |
+|---|---|
+| Base URL | `/api` (user) dan `/api/admin` (admin, dibatasi RolesGuard role ADMIN) |
+| Format | JSON, UTF-8; upload memakai `multipart/form-data` |
+| Auth | Header `Authorization: Bearer <accessToken>`; access token umur pendek (usulan 15 menit), refresh token usulan 30 hari |
+| Waktu | ISO 8601 UTC, contoh `2026-11-24T08:30:00.000Z`; konversi zona waktu di frontend |
+| ID | Integer (sesuai ERD); dikirim sebagai number |
+| Penamaan field | `camelCase` di API, `snake_case` di database (Prisma memetakan) |
+| Pagination | Cursor: `?limit=10&cursor=<id>`; respons `{ items, nextCursor }`, `nextCursor` null bila habis. Default limit 10, maksimum 50 |
+| Sort | Terbaru di atas (`createdAt desc, id desc`) kecuali disebut lain |
+| Soft delete | Data dengan `deleted_at` atau `hidden` tidak pernah muncul di respons user (BR-06, BR-07) |
+| Privasi | Diperiksa di server pada setiap query (BR-02 sampai BR-04, BR-11) |
+| Idempotensi | Like, poke, dan permintaan teman aman diulang; hasil akhir sama |
+
+### 1.1 Format error
+
+Semua error memakai bentuk yang sama:
+
+```json
+{ "statusCode": 400, "message": "Password minimal 8 karakter", "code": "VALIDATION_FAILED" }
+```
+
+`message` aman ditampilkan ke pengguna. Untuk validasi banyak field, `message` boleh berupa array string.
+
+| Status | Kapan | Kode contoh |
+|---|---|---|
+| 400 | Validasi DTO gagal | `VALIDATION_FAILED`, `CONTENT_BLOCKED_WORD` |
+| 401 | Token hilang, salah, atau kedaluwarsa | `UNAUTHORIZED`, `TOKEN_EXPIRED` |
+| 403 | Login tapi tidak berhak | `FORBIDDEN`, `ACCOUNT_SUSPENDED`, `ACCOUNT_BANNED`, `MAINTENANCE_MODE` |
+| 404 | Tidak ada, atau disembunyikan karena privasi atau blokir (sengaja sama agar tidak bocor) | `NOT_FOUND` |
+| 409 | Konflik state | `EMAIL_TAKEN`, `USERNAME_TAKEN`, `ALREADY_FRIENDS`, `REQUEST_PENDING` |
+| 413 | File terlalu besar | `FILE_TOO_LARGE` |
+| 415 | Tipe file tidak didukung | `UNSUPPORTED_MEDIA_TYPE` |
+| 422 | Aturan bisnis dilanggar | `SELF_ACTION_NOT_ALLOWED`, `LAST_ADMIN` |
+| 429 | Kena rate limit (BR-10) | `RATE_LIMITED` |
+
+### 1.2 Rate limit (BR-10)
+
+| Endpoint | Batas usulan |
+|---|---|
+| `POST /auth/login` | 10 per menit per IP, 5 gagal beruntun per akun memicu jeda 5 menit |
+| `POST /auth/register` | 5 per jam per IP |
+| `POST /messages` | 60 per menit per user |
+| `POST /pokes` | 20 per jam per user |
+
+Respons 429 menyertakan header `Retry-After` (detik).
+
+### 1.3 Objek bersama
+
+```ts
+type UserSummary = {
+  id: number; username: string; displayName: string;
+  avatarUrl: string | null; isBot: boolean;
+};
+
+type Post = {
+  id: number;
+  author: UserSummary;
+  wallOwner: UserSummary | null;      // terisi bila ditulis di dinding teman (WAL-01)
+  sharedFrom: Post | null;            // null bila bukan share; { unavailable: true } bila asal dihapus
+  content: string;
+  imageUrl: string | null;
+  feeling: string | null;
+  privacy: 'PUBLIC' | 'FRIENDS' | 'ONLY_ME';
+  tags: UserSummary[];                // teman yang di-tag (WAL-02)
+  likeCount: number;
+  commentCount: number;
+  likedByMe: boolean;
+  likedPreview: UserSummary[];        // sampai 2 nama untuk "A, B, and 3 others like this"
+  editedAt: string | null;
+  createdAt: string;
+};
+
+type Comment = {
+  id: number; postId: number; author: UserSummary;
+  content: string; imageUrl: string | null;
+  likeCount: number; likedByMe: boolean; createdAt: string;
+};
+
+type Paged<T> = { items: T[]; nextCursor: number | null };
+```
+
+## 2. Autentikasi dan akun (AUTH-01 sampai AUTH-06)
+
+| Method | Path | Auth | Fungsi | Sukses |
+|---|---|---|---|---|
+| POST | `/auth/register` | tidak | Daftar akun baru | 201 |
+| POST | `/auth/login` | tidak | Login dengan email atau username | 200 |
+| POST | `/auth/refresh` | refresh token | Tukar refresh token dengan pasangan baru (rotasi) | 200 |
+| POST | `/auth/logout` | ya | Cabut refresh token saat ini | 204 |
+| POST | `/auth/forgot-password` | tidak | Kirim tautan reset (Fase 3, AUTH-05) | 202 |
+| POST | `/auth/reset-password` | tidak | Setel password dengan token sekali pakai | 204 |
+| GET | `/me` | ya | Profil diri sendiri beserta jumlah notifikasi dan pesan belum dibaca | 200 |
+| PATCH | `/me` | ya | Ubah profil (PRF-02) | 200 |
+| PATCH | `/me/password` | ya | Ganti password (butuh password lama) | 204 |
+| DELETE | `/me` | ya | Hapus akun, soft delete dan anonimisasi sesuai BR-06 (AUTH-06) | 204 |
+
+**POST /auth/register**
+
+```json
+// request
+{ "email": "a@b.com", "username": "budi_01", "displayName": "Budi", "password": "minimal8kar" }
+// 201
+{ "user": { "id": 31, "username": "budi_01", "displayName": "Budi" }, "accessToken": "…", "refreshToken": "…" }
+```
+
+Aturan: email unik, username 3 sampai 30 karakter (huruf, angka, titik, garis bawah) dan unik, password minimal 8 karakter. Ditolak 403 `REGISTRATION_CLOSED` bila setting `registration_open` false (ADM-12). Password disimpan sebagai hash argon2 atau bcrypt, tidak pernah dikembalikan.
+
+**POST /auth/login**
+
+```json
+{ "identifier": "budi_01", "password": "…" }
+// 200 sama bentuk dengan register
+```
+
+Akun SUSPENDED atau BANNED mendapat 403 (`ACCOUNT_SUSPENDED` atau `ACCOUNT_BANNED`) dan tidak menerima token (AUTH-04, BR-05). Saat maintenance mode aktif, non-admin mendapat 403 `MAINTENANCE_MODE` (BR-12). Pesan salah password sengaja sama untuk email atau username yang tidak ada.
+
+**POST /auth/refresh**: rotasi; token lama dicabut (`revoked_at`) dan yang baru dikembalikan. Memakai refresh token yang sudah dicabut berarti kemungkinan pencurian: semua refresh token user tersebut dicabut dan 401 dikembalikan.
+
+**PATCH /me** menerima: `displayName`, `bio`, `birthday` (YYYY-MM-DD), `hometown`, `currentCity`, `workplace`, `school`. Semua opsional.
+
+## 3. Pengguna, profil, dan foto (PRF-01 sampai PRF-06)
+
+| Method | Path | Fungsi |
+|---|---|---|
+| GET | `/users/:username` | Profil publik sesuai privasi: info, jumlah teman, status hubungan dengan pemanggil |
+| GET | `/users/:username/posts` | Timeline profil (cursor); filter `?year=2014` untuk scroller tahun (PRF-05) |
+| GET | `/users/:username/friends` | Daftar teman (cursor), menyertakan `total` |
+| GET | `/users/:username/photos` | Foto dari post dan album (Fase 3) |
+| POST | `/me/avatar` | Unggah foto profil, field `file` (PRF-03) |
+| POST | `/me/cover` | Unggah cover (PRF-03) |
+| GET | `/users/:username/years` | Daftar tahun yang punya post, untuk scroller tahun |
+
+`relationship` pada profil bernilai salah satu: `SELF`, `FRIENDS`, `REQUEST_SENT`, `REQUEST_RECEIVED`, `NONE`. Bila pemanggil diblokir atau memblokir pemilik profil, respons 404 (BR-11).
+
+**Upload gambar**: JPG, PNG, atau WebP, maksimum 5 MB, isi file diperiksa (bukan hanya ekstensi). Server menyimpan di disk lokal dan mengembalikan `{ "url": "/uploads/…" }`. Foto lama tetap tersimpan.
+
+## 4. Post, feed, like, komentar (POST-01 sampai POST-10, INT-01 sampai INT-05)
+
+### 4.1 Feed dan post
+
+| Method | Path | Fungsi |
+|---|---|---|
+| GET | `/feed` | News feed: post teman dan diri sendiri (cursor). `?sort=recent` (default) atau `?sort=top` (POST-09) |
+| POST | `/posts` | Buat post |
+| GET | `/posts/:id` | Satu post (untuk tautan notifikasi) |
+| PATCH | `/posts/:id` | Edit; hanya pemilik; mengisi `editedAt` |
+| DELETE | `/posts/:id` | Soft delete; pemilik, atau pemilik dinding pada wall post (BR-04) |
+| POST | `/posts/:id/share` | Buat post baru yang merujuk post asal (POST-07) |
+| POST | `/uploads/post-image` | Unggah gambar lebih dulu, hasilnya `imageUrl` untuk dipakai di POST /posts |
+
+**POST /posts**
+
+```json
+{
+  "content": "Lagi nostalgia 2015",
+  "imageUrl": "/uploads/abc.jpg",
+  "privacy": "FRIENDS",
+  "feeling": "feeling nostalgic",
+  "wallOwnerUsername": null,
+  "taggedUserIds": [4, 9]
+}
+```
+
+Aturan: `content` maksimal 5.000 karakter; boleh kosong hanya bila `imageUrl` ada; mengandung kata terlarang menghasilkan 400 `CONTENT_BLOCKED_WORD` (BR-08, konten tidak disimpan, kejadian dicatat untuk antrean moderasi); hashtag (`#kata`) diekstrak ke `hashtags` dan `post_hashtags`. `wallOwnerUsername` hanya sah untuk teman; wall post mengikuti BR-04. Tag hanya untuk teman dan memicu notifikasi `TAG`.
+
+**Visibilitas di feed** (BR-02, BR-03, BR-05, BR-11): post terlihat bila pemanggil adalah penulis, atau privasi PUBLIC, atau privasi FRIENDS dan penulis adalah teman, dan penulis tidak BANNED, dan tidak ada blokir dua arah, dan `hidden` false dan `deleted_at` null.
+
+### 4.2 Like (INT-01, INT-03)
+
+| Method | Path | Fungsi |
+|---|---|---|
+| PUT | `/posts/:id/like` | Like (idempoten) |
+| DELETE | `/posts/:id/like` | Unlike |
+| PUT | `/comments/:id/like` | Like komentar |
+| DELETE | `/comments/:id/like` | Unlike komentar |
+| GET | `/posts/:id/likes` | Daftar penyuka (cursor) |
+
+Hanya satu jenis reaksi, yaitu Like (BR-13). Respons semua endpoint like: `{ "likeCount": 12, "likedByMe": true }`.
+
+### 4.3 Komentar (INT-02, INT-05)
+
+| Method | Path | Fungsi |
+|---|---|---|
+| GET | `/posts/:id/comments` | Urut lama ke baru (cursor) |
+| POST | `/posts/:id/comments` | Tambah komentar `{ content, imageUrl? }`, maksimal 2.000 karakter |
+| DELETE | `/comments/:id` | Pemilik komentar atau pemilik post |
+
+Kata terlarang berlaku sama seperti post.
+
+### 4.4 Laporan (INT-04)
+
+| Method | Path | Fungsi |
+|---|---|---|
+| POST | `/reports` | `{ targetType: 'POST'|'COMMENT'|'USER', targetId, reason: 'SPAM'|'HARASSMENT'|'INAPPROPRIATE'|'OTHER', note? }` |
+
+Satu laporan per pelapor per target; mengulang mengembalikan 409 `ALREADY_REPORTED`. `targetId` divalidasi di service karena tidak ada FK (ERD).
+
+## 5. Pertemanan, poke, blokir (FRD-01 sampai FRD-07, POK-01)
+
+| Method | Path | Fungsi |
+|---|---|---|
+| POST | `/friends/requests` | `{ userId }` kirim permintaan (FRD-01) |
+| GET | `/friends/requests` | Permintaan masuk yang PENDING |
+| POST | `/friends/requests/:userId/accept` | Terima (FRD-02) |
+| DELETE | `/friends/requests/:userId` | Tolak, atau batalkan bila pemanggil pengirim |
+| DELETE | `/friends/:userId` | Unfriend, hapus baris (FRD-03) |
+| GET | `/friends` | Daftar teman sendiri; `?q=` untuk filter nama |
+| GET | `/friends/suggestions` | People You May Know (FRD-05), berdasarkan teman bersama, tanpa yang sudah teman atau diblokir |
+| GET | `/friends/birthdays` | Teman yang berulang tahun hari ini (FRD-07) |
+| POST | `/pokes` | `{ userId }` poke atau poke balik (POK-01) |
+| GET | `/pokes` | Poke aktif yang diterima dan belum dibalas |
+| POST | `/blocks` | `{ userId }` blokir (FRD-06, Fase 3) |
+| DELETE | `/blocks/:userId` | Buka blokir |
+| GET | `/blocks` | Daftar yang diblokir |
+
+Aturan (BR-01, BR-11):
+
+- Tidak bisa berteman dengan diri sendiri (422 `SELF_ACTION_NOT_ALLOWED`) atau dengan user yang saling memblokir (404).
+- Satu baris per pasangan; service mengisi `pair_low_id` dan `pair_high_id` dengan min dan max dari dua id. Permintaan silang (A kirim ke B saat B sudah kirim ke A) langsung menjadi ACCEPTED di satu transaksi.
+- Memblokir menghapus pertemanan dan permintaan yang ada dalam satu transaksi.
+- Poke ulang memperbarui `created_at` dan mengosongkan `seen_at`; poke hanya antar teman atau semua user (diputuskan di PRD; usulan: hanya antar teman).
+
+## 6. Pencarian dan trending (SRC-01, SRC-02)
+
+| Method | Path | Fungsi |
+|---|---|---|
+| GET | `/search?q=bud` | Maksimal 8 hasil user untuk dropdown; menghormati blokir dan akun BANNED. Minimal 2 karakter |
+| GET | `/trending` | Hashtag terbanyak 24 jam terakhir, maksimal 10, tanpa yang `hidden` (ADM-17) |
+| GET | `/hashtags/:tag/posts` | Post publik dengan hashtag tersebut (cursor) |
+
+## 7. Notifikasi (NTF-01, NTF-02)
+
+| Method | Path | Fungsi |
+|---|---|---|
+| GET | `/notifications` | Daftar (cursor), terbaru di atas |
+| GET | `/notifications/unread-count` | `{ count }` untuk badge jewel |
+| POST | `/notifications/read` | `{ ids?: number[] }` tandai terbaca; tanpa `ids` berarti semua |
+
+Tipe: `LIKE`, `COMMENT`, `FRIEND_REQUEST`, `FRIEND_ACCEPT`, `POKE`, `TAG`, `WALL_POST`, `ANNOUNCEMENT`. Aksi pada konten sendiri tidak membuat notifikasi. Bentuk item:
+
+```json
+{ "id": 5, "type": "COMMENT", "actor": { "id": 4, "displayName": "Sari" }, "postId": 12, "commentId": 40, "text": "Sari commented on your post", "readAt": null, "createdAt": "…" }
+```
+
+## 8. Chat (CHT-01 sampai CHT-04)
+
+| Method | Path | Fungsi |
+|---|---|---|
+| GET | `/messages/conversations` | Daftar percakapan dengan pesan terakhir dan jumlah belum dibaca |
+| GET | `/messages/:userId` | Riwayat dengan satu user (cursor ke arah lebih lama) |
+| POST | `/messages/:userId` | Kirim `{ content }` (REST sebagai cadangan bila socket putus) |
+| POST | `/messages/:userId/read` | Tandai semua pesan dari user itu sebagai terbaca |
+| GET | `/chat/friends` | Daftar teman untuk sidebar chat beserta status online |
+
+Chat hanya antar teman dan tidak antar user yang saling blokir (BR-11). Pesan maksimal 2.000 karakter; filter kata terlarang berlaku.
+
+## 9. Realtime (Socket.IO)
+
+Namespace `/realtime`. Klien terhubung dengan `auth: { token: <accessToken> }`; token tidak valid memutus koneksi dengan error `UNAUTHORIZED`. Setiap user masuk room `user:<id>`. Satu instance saja pada awalnya, Redis adapter hanya bila nanti perlu (R-06).
+
+**Server ke klien**
+
+| Event | Payload | Untuk |
+|---|---|---|
+| `notification:new` | objek notifikasi | NTF-02 |
+| `message:new` | objek pesan | CHT-01 |
+| `message:read` | `{ byUserId, upToMessageId }` | CHT-04 |
+| `typing` | `{ userId, isTyping }` | CHT-04 |
+| `presence` | `{ userId, online }` | CHT-02, dikirim ke teman |
+| `friend:request` | `{ from: UserSummary }` | FRD-01 |
+| `poke:new` | `{ from: UserSummary }` | POK-01 |
+
+**Klien ke server**
+
+| Event | Payload | Fungsi |
+|---|---|---|
+| `message:send` | `{ toUserId, content, clientId }` | Kirim; server membalas ack `{ ok, message }`; `clientId` mencegah dobel |
+| `typing` | `{ toUserId, isTyping }` | Indikator mengetik, dibatasi satu per detik |
+| `message:read` | `{ fromUserId }` | Tandai terbaca |
+
+Presence: online bila minimal satu koneksi aktif; `users.last_seen_at` diperbarui saat koneksi terakhir putus. Label Web atau Mobile diambil dari `auth.client` saat koneksi. Pemeriksaan teman dan blokir dilakukan di server untuk setiap event, bukan hanya saat connect.
+
+## 10. Fase 3 dan bonus
+
+| Method | Path | Fungsi | ID |
+|---|---|---|---|
+| GET/POST | `/albums` | Daftar dan buat album | ALB-01 |
+| POST | `/albums/:id/photos` | Unggah beberapa foto (`files[]`, maksimal 10) | ALB-01 |
+| GET/POST | `/groups` | Daftar dan buat grup | GRP-01 |
+| POST | `/groups/:id/join`, `/groups/:id/leave` | Gabung dan keluar | GRP-01 |
+| GET/POST | `/groups/:id/posts` | Post di grup (anggota saja) | GRP-01 |
+| GET/POST | `/events` | Daftar dan buat event | EVT-01 |
+| PUT | `/events/:id/rsvp` | `{ status: 'GOING'|'MAYBE'|'DECLINED' }` | EVT-01 |
+| GET/POST/PATCH/DELETE | `/notes`, `/notes/:id` | Catatan panjang | NOT-01 |
+| GET/POST/DELETE | `/life-events` | Milestone di timeline | LIF-01 |
+| GET | `/me/activity` | Activity log sendiri; `DELETE /me/activity/:type/:id` menghapus item | ACT-01 |
+| GET | `/sponsored` | Satu promosi aktif untuk kolom kanan | SPN-01 |
+| GET | `/announcements/active` | Banner pengumuman aktif | ADM-13 |
+| GET | `/settings/public` | `{ registrationOpen, maintenanceMode }` untuk halaman login | ADM-12 |
+
+Akun bot (BOT-01) tidak punya endpoint khusus; bot berjalan sebagai job di API yang memanggil service post dan komentar langsung.
+
+## 11. Admin (`/api/admin/*`, semua butuh role ADMIN)
+
+Setiap aksi tulis menyimpan satu baris `audit_logs` dalam transaksi yang sama (ADM-14). Daftar memakai pagination cursor yang sama; admin boleh melihat konten `hidden`.
+
+| Method | Path | Fungsi | ID |
+|---|---|---|---|
+| GET | `/admin/stats` | Total user, post, komentar; user aktif hari ini; pendaftar 7 hari; laporan pending | ADM-02 |
+| GET | `/admin/stats/series?days=14` | Deret harian pendaftaran dan post untuk grafik | ADM-02 |
+| GET | `/admin/users` | `?q=&status=&role=&cursor=` | ADM-03 |
+| GET | `/admin/users/:id` | Detail termasuk jumlah laporan terhadapnya | ADM-03 |
+| PATCH | `/admin/users/:id/status` | `{ status: 'ACTIVE'|'SUSPENDED'|'BANNED', reason }`; mencabut semua refresh token bila bukan ACTIVE | ADM-04 |
+| PATCH | `/admin/users/:id/role` | `{ role }`; menolak menurunkan diri sendiri bila admin terakhir (422 `LAST_ADMIN`) | ADM-07, BR-14 |
+| POST | `/admin/users/:id/reset-password` | Hasilkan password sementara atau tautan reset | ADM-06 |
+| DELETE | `/admin/users/:id` | Soft delete; konfirmasi dua langkah di UI; menolak admin terakhir | ADM-05, BR-14 |
+| GET | `/admin/posts` | `?filter=hidden|reported|deleted&q=` | ADM-08 |
+| PATCH | `/admin/posts/:id` | `{ hidden: boolean }` sembunyikan atau tampilkan lagi | ADM-08 |
+| DELETE | `/admin/posts/:id` | Soft delete | ADM-08 |
+| GET | `/admin/comments` | Sama seperti post | ADM-09 |
+| PATCH | `/admin/comments/:id` | `{ hidden }` | ADM-09 |
+| POST | `/admin/comments/bulk` | `{ ids, action: 'hide'|'delete' }` | ADM-09 |
+| GET | `/admin/reports` | `?status=PENDING` dengan pratinjau target | ADM-10 |
+| PATCH | `/admin/reports/:id` | `{ status: 'REVIEWED'|'DISMISSED', action?: 'HIDE_CONTENT'|'DELETE_CONTENT'|'SUSPEND_USER', note? }`; satu panggilan memutuskan dan mencatat (target tiga klik) | ADM-10 |
+| GET/POST/DELETE | `/admin/blocked-words` | Kelola kata terlarang; kata disimpan huruf kecil dan unik | ADM-11 |
+| GET/PATCH | `/admin/settings` | `maintenance_mode`, `registration_open` | ADM-12 |
+| GET/POST/PATCH/DELETE | `/admin/announcements` | Kelola pengumuman; membuat satu akan membuat notifikasi `ANNOUNCEMENT` ke semua user aktif | ADM-13 |
+| GET | `/admin/audit-logs` | `?adminId=&action=&from=&to=`; hanya baca, tanpa PATCH atau DELETE | ADM-14 |
+| GET/PATCH | `/admin/bots`, `/admin/bots/:userId` | Aktif atau nonaktif, persona, frekuensi | ADM-15 |
+| GET/POST/PATCH/DELETE | `/admin/sponsored` | Kelola promosi | ADM-16 |
+| GET/PATCH | `/admin/hashtags`, `/admin/hashtags/:id` | `{ hidden }` | ADM-17 |
+
+## 12. Pemetaan kebutuhan ke endpoint
+
+Setiap ID Must di PRD punya setidaknya satu baris di dokumen ini; daftar lengkap pemetaan dipakai sebagai dasar [test plan](07-test-plan.md).
+
+| Kelompok PRD | Bagian dokumen |
+|---|---|
+| AUTH-01 sampai 06 | 2 |
+| POST-01 sampai 10 | 4.1 |
+| INT-01 sampai 05 | 4.2 sampai 4.4 |
+| PRF-01 sampai 06 | 3 |
+| FRD-01 sampai 07, POK-01 | 5 |
+| SRC-01, 02, WAL-01, 02 | 4.1, 6 |
+| NTF-01, 02 | 7, 9 |
+| CHT-01 sampai 04 | 8, 9 |
+| ADM-01 sampai 17 | 11 |
+| ALB, GRP, EVT, NOT, LIF, ACT, BOT, SPN | 10 |
+
+## 13. Keputusan terbuka untuk API
+
+- Poke: hanya antar teman atau terbuka untuk semua user (usulan: antar teman).
+- Umur token: 15 menit access dan 30 hari refresh adalah usulan awal.
+- Reset password tanpa penyedia email: admin menghasilkan password sementara (ADM-06) sampai penyedia email dipilih.
+- Versi API: tidak diberi prefix `/v1` sampai ada klien di luar monorepo.
