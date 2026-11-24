@@ -144,6 +144,7 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
         const comments = await api.get(`/posts/${post.id}/comments`)
         const likes = await api.get(`/posts/${post.id}/likes`)
         const feed = await api.get('/feed?limit=50')
+        const timeline = await api.get(`/users/${users.owner.username}/posts?limit=50`)
 
         if (guard) {
           for (const [ep, r] of [
@@ -188,6 +189,21 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
         else if (inFeed !== wantInFeed)
           problems.push(
             `${v} feed: post ${inFeed ? 'ada' : 'tidak ada'}, seharusnya ${wantInFeed ? 'ada' : 'tidak ada'}`,
+          )
+
+        // timeline profil: profil penulis BANNED/terhapus 404; selain itu hanya berisi post yang terlihat
+        const authorGone = state.authorStatus === 'BANNED' || state.authorDeleted
+        const inTimeline = (timeline.body.items ?? []).some((p: { id: number }) => p.id === post.id)
+        if (authorGone) {
+          if (timeline.status !== 404)
+            problems.push(
+              `${v} timeline: profil penulis hilang seharusnya 404, dapat ${timeline.status}`,
+            )
+        } else if (timeline.status !== 200)
+          problems.push(`${v} timeline: status ${timeline.status}`)
+        else if (inTimeline !== see)
+          problems.push(
+            `${v} timeline: post ${inTimeline ? 'ada' : 'tidak ada'}, seharusnya ${see ? 'ada' : 'tidak ada'}`,
           )
 
         // --- penulis (mutasi) ---

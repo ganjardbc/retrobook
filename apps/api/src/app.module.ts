@@ -8,6 +8,7 @@ import { FriendsModule } from './modules/friends/friends.module'
 import { LikesModule } from './modules/likes/likes.module'
 import { PostsModule } from './modules/posts/posts.module'
 import { UploadsModule } from './modules/uploads/uploads.module'
+import { UsersModule } from './modules/users/users.module'
 import { VisibilityModule } from './modules/visibility/visibility.module'
 import { HealthModule } from './modules/health/health.module'
 
@@ -27,6 +28,7 @@ import { HealthModule } from './modules/health/health.module'
     LikesModule,
     CommentsModule,
     FriendsModule,
+    UsersModule,
     HealthModule,
   ],
 })

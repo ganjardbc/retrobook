@@ -106,6 +106,27 @@ export class PostsService {
     }
   }
 
+  /** Timeline profil: post `authorId` yang boleh dibaca viewer (aturan yang sama dengan feed). */
+  async timeline(
+    viewerId: number,
+    authorId: number,
+    limit: number,
+    cursor?: number,
+  ): Promise<Paged<PostDto>> {
+    const rows = await this.prisma.post.findMany({
+      where: { AND: [this.visibility.postWhere(viewerId), { authorId }] },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      include: this.include(viewerId),
+    })
+    const page = rows.slice(0, limit)
+    return {
+      items: await this.toDtos(viewerId, page),
+      nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+    }
+  }
+
   /** Post yang boleh dibaca viewer, atau 404 yang sama untuk semua sebab (tidak membocorkan keberadaan). */
   private async findVisible(viewerId: number, id: number): Promise<PostRow> {
     const row = await this.prisma.post.findFirst({

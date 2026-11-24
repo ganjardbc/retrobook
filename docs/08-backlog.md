@@ -45,7 +45,7 @@ Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan t
 |---|---|---|---|
 | [x] T-18 | API pertemanan: kirim, terima, tolak, batalkan, unfriend; baris tunggal per pasangan (min dan max) | L | FRD-01 sampai 03, BR-01 |
 | [x] T-19 | Halaman `/friends` dan daftar teman dengan pagination | M | FRD-02, 04 |
-| [ ] T-20 | API profil dan timeline profil; hubungan dengan pemanggil | M | PRF-01 |
+| [x] T-20 | API profil dan timeline profil; hubungan dengan pemanggil | M | PRF-01 |
 | [ ] T-21 | `ProfileHeader`, `ProfileTabs`, `InfoCards` (tab Timeline dan About) | L | PRF-01, 04 |
 | [ ] T-22 | Edit profil; unggah foto profil dan cover | M | PRF-02, 03 |
 | [ ] T-23 | Share post; wall post dasar belum (Fase 2) | M | POST-07 |

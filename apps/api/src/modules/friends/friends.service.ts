@@ -5,6 +5,7 @@ import type {
   FriendsPage,
   FriendshipResult,
   Paged,
+  Relationship,
   UserSummary,
 } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
@@ -118,8 +119,8 @@ export class FriendsService {
     }
   }
 
-  /** FRD-04: teman (ACCEPTED, kedua arah), terbaru dulu, `q` memfilter nama atau username. */
-  async list(viewerId: number, limit: number, cursor?: number, q?: string): Promise<FriendsPage> {
+  /** Syarat Friendship: teman ACCEPTED milik `userId` (kedua arah), pihak lain tidak BANNED/terhapus dan cocok `q`. */
+  private acceptedWhere(userId: number, q?: string): Prisma.FriendshipWhereInput {
     const other = (): Prisma.UserWhereInput => ({
       ...this.visibility.userWhere(),
       ...(q
@@ -131,13 +132,35 @@ export class FriendsService {
           }
         : {}),
     })
-    const where: Prisma.FriendshipWhereInput = {
+    return {
       status: 'ACCEPTED',
       OR: [
-        { requesterId: viewerId, addressee: other() },
-        { addresseeId: viewerId, requester: other() },
+        { requesterId: userId, addressee: other() },
+        { addresseeId: userId, requester: other() },
       ],
     }
+  }
+
+  /** Jumlah teman yang boleh terlihat (profil, FRD-04). */
+  count(userId: number): Promise<number> {
+    return this.prisma.friendship.count({ where: this.acceptedWhere(userId) })
+  }
+
+  /** Hubungan `viewerId` dengan `otherId` untuk profil. */
+  async relationshipOf(viewerId: number, otherId: number): Promise<Relationship> {
+    if (viewerId === otherId) return 'SELF'
+    const row = await this.prisma.friendship.findUnique({
+      where: { pairLowId_pairHighId: pairOf(viewerId, otherId) },
+      select: { status: true, requesterId: true },
+    })
+    if (!row) return 'NONE'
+    if (row.status === 'ACCEPTED') return 'FRIENDS'
+    return row.requesterId === viewerId ? 'REQUEST_SENT' : 'REQUEST_RECEIVED'
+  }
+
+  /** FRD-04: teman (ACCEPTED, kedua arah), terbaru dulu, `q` memfilter nama atau username. */
+  async list(viewerId: number, limit: number, cursor?: number, q?: string): Promise<FriendsPage> {
+    const where = this.acceptedWhere(viewerId, q)
     const [rows, total] = await Promise.all([
       this.prisma.friendship.findMany({
         where,
