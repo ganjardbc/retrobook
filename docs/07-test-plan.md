@@ -76,6 +76,8 @@ Satu tabel keputusan diuji sebagai tes berparameter terhadap **setiap endpoint p
 | soft-deleted | tidak | tidak | tidak | tidak | tidak |
 | alice BANNED | n/a | tidak | tidak | tidak | tidak |
 
+Status implementasi (T-17): `apps/api/src/modules/visibility/visibility.matrix.spec.ts` menguji 13 keadaan post (privasi, hidden, soft-deleted, penulis BANNED/SUSPENDED/terhapus) terhadap 6 jenis penonton (pemilik, teman dari dua arah, peminta PENDING dari dua arah, orang asing) di endpoint detail, daftar komentar, daftar penyuka, feed, like, komentar baru, dan edit, ditambah tamu (401) dan transisi (ubah privasi, terima teman, unfriend, hidden, ban). Ekspektasi ditulis dari tabel aturan, bukan dari implementasi; tes ini sudah dibuktikan gagal bila filter `hidden`, pertemanan, atau status penulis dilepas. Penonton "memblokir" dan "diblokir", wall post, pencarian, hashtag, dan notifikasi tercatat sebagai `it.todo` sampai fiturnya ada.
+
 Admin melihat semua termasuk `hidden` lewat `/api/admin/*` saja. Kasus tambahan: wall post terlihat oleh pemilik dinding dan penulis (BR-04), pemilik dinding dapat menghapusnya; setelah unfriend, FRIENDS yang tadinya terlihat langsung hilang; setelah blokir, pertemanan dan permintaan dihapus (BR-11).
 
 ### 3.4 Pertemanan, poke, blokir

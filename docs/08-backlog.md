@@ -35,7 +35,7 @@ Keluaran minggu 1: bisa daftar dan masuk dari browser, token diperbarui otomatis
 | [x] T-14 | `StatusBox`, `PostCard`, feed dengan infinite scroll | L | POST-01, 04 |
 | [x] T-15 | Like dan unlike post; `LikeSummary` | M | INT-01 |
 | [x] T-16 | Komentar: API, `CommentList`, hapus | M | INT-02 |
-| [ ] T-17 | Tes privasi berparameter (tabel Test 3.3) untuk feed dan post tunggal | M | R-03 |
+| [x] T-17 | Tes privasi berparameter (tabel Test 3.3) untuk feed dan post tunggal | M | R-03 |
 
 Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan teruji.
 
