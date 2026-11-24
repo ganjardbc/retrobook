@@ -261,6 +261,8 @@ Status implementasi (T-34): `POST /pokes` 200 `{ userId, createdAt }`; diri send
 | GET | `/trending` | Hashtag terbanyak 24 jam terakhir, maksimal 10, tanpa yang `hidden` (ADM-17) |
 | GET | `/hashtags/:tag/posts` | Post publik dengan hashtag tersebut (cursor) |
 
+Status implementasi (T-39): `GET /search?q=&limit=&cursor=` mengembalikan `{ items: UserSummary[], nextCursor }`. `q` di-trim, 2 sampai 80 karakter (selain itu 400 `VALIDATION_FAILED`); `limit` bawaan 8 (dropdown), maksimal 50 (halaman hasil memakai 10). Mencocokkan nama atau username yang mengandung kata kunci, tanpa membedakan huruf besar kecil; `%` dan `_` dicocokkan apa adanya. Hasil disaring `VisibilityService.userWhere`: akun terhapus, BANNED, dan pasangan saling blokir tidak muncul (SUSPENDED tetap muncul seperti di profil). Urutan abjad nama lalu id, belum berdasarkan relevansi (awalan atau teman dulu); hanya field ringkasan yang dikembalikan. `/trending` dan `/hashtags/:tag/posts` menyusul di T-42.
+
 ## 7. Notifikasi (NTF-01, NTF-02)
 
 | Method | Path | Fungsi |

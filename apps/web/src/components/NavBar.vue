@@ -4,6 +4,7 @@ import { Icon } from '@iconify/vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/modules/auth/stores'
 import Avatar from '@/components/Avatar.vue'
+import SearchBox from '@/modules/search/components/SearchBox.vue'
 import MessagesJewel from '@/modules/chat/components/MessagesJewel.vue'
 import FriendRequestsJewel from '@/modules/friends/components/FriendRequestsJewel.vue'
 import NotificationsJewel from '@/modules/notifications/components/NotificationsJewel.vue'
@@ -11,7 +12,6 @@ import WordMark from '@/components/WordMark.vue'
 
 defineEmits<{ 'toggle-menu': []; logout: [] }>()
 const auth = useAuthStore()
-// Kotak cari (T-39) ditambahkan saat fiturnya dikerjakan.
 </script>
 
 <template>
@@ -26,6 +26,7 @@ const auth = useAuthStore()
         <Icon icon="mdi:menu" aria-hidden="true" />
       </button>
       <RouterLink class="navbar__brand" to="/"><WordMark /></RouterLink>
+      <SearchBox v-if="auth.user" />
       <span class="navbar__spacer" />
       <template v-if="auth.user">
         <RouterLink class="navbar__link navbar__me" :to="`/${auth.user.username}`">
@@ -37,7 +38,7 @@ const auth = useAuthStore()
           />
           <span>{{ auth.user.displayName }}</span>
         </RouterLink>
-        <RouterLink class="navbar__link" to="/">{{ t('nav.home') }}</RouterLink>
+        <RouterLink class="navbar__link navbar__home" to="/">{{ t('nav.home') }}</RouterLink>
         <div class="navbar__jewels">
           <FriendRequestsJewel />
           <MessagesJewel />
@@ -127,8 +128,16 @@ const auth = useAuthStore()
   .navbar__menu {
     display: block;
   }
-  .navbar__me span {
-    display: none;
+  .navbar__me span,
+  .navbar__home,
+  .navbar__spacer {
+    display: none; /* Home tetap lewat logo; ruang diberikan ke kotak cari */
+  }
+  .navbar__inner {
+    gap: var(--sp-2);
+  }
+  .navbar__logout {
+    white-space: nowrap;
   }
 }
 </style>

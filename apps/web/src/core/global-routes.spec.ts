@@ -11,6 +11,7 @@ describe('global-routes', () => {
     expect(name('/login')).toBe('login')
     expect(name('/privacy')).toBe('privacy')
     expect(name('/pokes')).toBe('pokes')
+    expect(name('/search')).toBe('search')
   })
 
   it('username jatuh ke profil dan tab-nya; sisanya 404', () => {

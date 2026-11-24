@@ -356,6 +356,8 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
     it.todo(
       'setelah blokir, pertemanan dan permintaan dihapus dan post FRIENDS langsung hilang (BR-11)',
     )
-    it.todo('pencarian, hashtag, dan notifikasi memakai aturan yang sama (T-39, T-42, T-32)')
+    it.todo(
+      'hashtag memakai aturan yang sama (T-42); pencarian (T-39) dan notifikasi (T-32) diuji di spec masing-masing',
+    )
   })
 })
