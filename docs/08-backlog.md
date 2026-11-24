@@ -55,7 +55,7 @@ Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan t
 
 | ID | Tugas | Ukuran | PRD |
 |---|---|---|---|
-| [ ] T-25 | Halaman 404 dan "konten tidak tersedia", status kosong feed | S | User flow 5 |
+| [x] T-25 | Halaman 404 dan "konten tidak tersedia", status kosong feed | S | User flow 5 |
 | [ ] T-26 | Seeder dasar: 10 user, post, teman, like untuk demo | M | seed |
 | [ ] T-27 | E2E-01 sampai 05 (Playwright) | L | Test 4 |
 | [ ] T-28 | Pencocokan visual dengan referensi feed dan profil; catat selisih | M | UI 7 |

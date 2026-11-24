@@ -225,7 +225,7 @@ Target ukuran keberhasilan: dari membuka antrean sampai keputusan tercatat tidak
 
 | Situasi | Tampilan |
 |---|---|
-| Feed kosong | Kartu saran teman dan ajakan menulis status |
+| Feed kosong | Kartu ajakan menulis status dan tautan mencari teman; rekomendasi teman tampil saat T-41 |
 | Belum punya teman di sidebar chat | Teks "Tambah teman untuk mulai mengobrol" |
 | Hasil pencarian kosong | "Tidak ada hasil untuk ..." |
 | Profil tidak tersedia (privasi, blokir, BANNED) | Halaman "Konten ini tidak tersedia" |

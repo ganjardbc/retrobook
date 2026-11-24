@@ -18,6 +18,14 @@ const previewUrl = ref<string | null>(null)
 const busy = ref(false)
 const error = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
+const draftInput = ref<HTMLTextAreaElement | null>(null)
+
+function focusDraft() {
+  draftInput.value?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+  draftInput.value?.focus({ preventScroll: true })
+}
+
+defineExpose({ focusDraft })
 
 const canPost = computed(
   () => !busy.value && (content.value.trim() !== '' || imageUrl.value !== null),
@@ -89,6 +97,7 @@ async function submit() {
 
     <div class="status__body">
       <textarea
+        ref="draftInput"
         v-model="content"
         class="status__text"
         rows="2"

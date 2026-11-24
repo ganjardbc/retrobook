@@ -151,7 +151,10 @@ export const en = {
   'profile.photos.alt': 'Photo from {name}',
   'profile.more': 'Load more',
 
-  'feed.empty': 'No posts yet. Write something or add some friends to fill your News Feed.',
+  'feed.empty.title': 'Your News Feed is empty',
+  'feed.empty.body': 'Write your first post or find friends to see their updates here.',
+  'feed.empty.write': 'Write your first post',
+  'feed.empty.friends': 'Find friends',
   'feed.loadMore': 'Load more posts',
   'feed.end': "You're all caught up.",
   'feed.error': 'Could not load your News Feed.',

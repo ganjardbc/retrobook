@@ -11,7 +11,12 @@ import { useFeedStore } from '../stores/feed'
 const auth = useAuthStore()
 const feed = useFeedStore()
 const sentinel = ref<HTMLElement | null>(null)
+const statusBox = ref<InstanceType<typeof StatusBox> | null>(null)
 let observer: IntersectionObserver | undefined
+
+function focusStatusDraft() {
+  statusBox.value?.focusDraft()
+}
 
 async function onDelete(id: number) {
   try {
@@ -55,7 +60,7 @@ watch(
 
 <template>
   <div class="home">
-    <StatusBox />
+    <StatusBox ref="statusBox" />
     <p v-if="likeFailed" class="form-error" role="alert">{{ t('like.error') }}</p>
     <PostCard
       v-for="post in feed.items"
@@ -67,12 +72,18 @@ watch(
       @shared="feed.prepend"
     />
 
-    <p
+    <section
       v-if="!feed.loading && !feed.failed && feed.done && feed.items.length === 0"
-      class="home__note"
+      class="home__empty"
+      :aria-label="t('feed.empty.title')"
     >
-      {{ t('feed.empty') }}
-    </p>
+      <h2 class="home__empty-title">{{ t('feed.empty.title') }}</h2>
+      <p class="home__empty-body">{{ t('feed.empty.body') }}</p>
+      <div class="home__empty-actions">
+        <Button @click="focusStatusDraft">{{ t('feed.empty.write') }}</Button>
+        <Button variant="default" to="/friends">{{ t('feed.empty.friends') }}</Button>
+      </div>
+    </section>
     <p v-else-if="feed.done && feed.items.length" class="home__note">{{ t('feed.end') }}</p>
     <p v-if="feed.loading" class="home__note" role="status">{{ t('common.loading') }}</p>
     <div v-if="feed.failed" class="home__note" role="alert">
@@ -97,6 +108,28 @@ watch(
   padding: var(--sp-3);
   color: var(--c-text-muted);
   text-align: center;
+}
+.home__empty {
+  padding: var(--sp-4);
+  background: var(--c-card);
+  border: var(--card-border);
+  border-radius: var(--radius);
+  text-align: center;
+}
+.home__empty-title {
+  margin: 0;
+  color: var(--c-text);
+  font-size: var(--fs-title);
+}
+.home__empty-body {
+  margin: var(--sp-2) 0 var(--sp-3);
+  color: var(--c-text-muted);
+}
+.home__empty-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
 }
 .home__more {
   text-align: center;
