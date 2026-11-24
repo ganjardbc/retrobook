@@ -86,3 +86,13 @@ export class FeedQueryDto extends CursorQueryDto {
   @IsIn(FEED_SORTS, { message: 'sort harus recent atau top' })
   sort: FeedSort = 'recent'
 }
+
+/** GET /users/:username/posts: `year` (UTC) menyaring timeline ke satu tahun (scroller tahun, PRF-05). */
+export class TimelineQueryDto extends CursorQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1970)
+  @Max(2100)
+  year?: number
+}

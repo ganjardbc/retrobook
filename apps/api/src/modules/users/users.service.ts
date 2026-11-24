@@ -89,9 +89,16 @@ export class UsersService {
     username: string,
     limit: number,
     cursor?: number,
+    year?: number,
   ): Promise<Paged<Post>> {
     const u = await this.findProfileUser(viewerId, username)
-    return this.posts.timeline(viewerId, u.id, limit, cursor)
+    return this.posts.timeline(viewerId, u.id, limit, cursor, year)
+  }
+
+  /** PRF-05: tahun yang punya post terlihat di timeline profil ini (untuk scroller tahun). */
+  async years(viewerId: number, username: string): Promise<{ items: number[] }> {
+    const u = await this.findProfileUser(viewerId, username)
+    return { items: await this.posts.timelineYears(viewerId, u.id) }
   }
 
   /** Daftar teman pemilik profil (PRF-01 tab Friends). Terlihat oleh semua member sampai PRF-06 (Fase 3). */

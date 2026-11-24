@@ -63,6 +63,10 @@ const publicPost: Prisma.PostWhereInput = { privacy: 'PUBLIC', wallOwnerId: null
 
 const empty = () => new AppException(400, 'VALIDATION_FAILED', 'Post tidak boleh kosong')
 
+const yearRange = (year: number): Prisma.PostWhereInput => ({
+  createdAt: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) },
+})
+
 const hashtagLinks = (tags: string[]) =>
   tags.map((tag) => ({ hashtag: { connectOrCreate: { where: { tag }, create: { tag } } } }))
 
@@ -277,12 +281,14 @@ export class PostsService {
     authorId: number,
     limit: number,
     cursor?: number,
+    year?: number,
   ): Promise<Paged<PostDto>> {
     const rows = await this.prisma.post.findMany({
       where: {
         AND: [
           this.visibility.postWhere(viewerId),
           { OR: [{ authorId }, { wallOwnerId: authorId }] },
+          ...(year === undefined ? [] : [yearRange(year)]),
         ],
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
@@ -295,6 +301,34 @@ export class PostsService {
       items: await this.toDtos(viewerId, page),
       nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
     }
+  }
+
+  /**
+   * PRF-05: tahun (UTC) yang punya post pemilik profil yang boleh dibaca viewer, terbaru dulu. Yang dihitung
+   * hanya yang lolos aturan terpusat, jadi tahun yang isinya tersembunyi tidak muncul di scroller.
+   * shortcut: satu cek per tahun antara post tertua dan terbaru (paling banyak puluhan); ganti ke satu
+   * query agregat bila rentang tahun membengkak.
+   */
+  async timelineYears(viewerId: number, authorId: number): Promise<number[]> {
+    const where: Prisma.PostWhereInput = {
+      AND: [this.visibility.postWhere(viewerId), { OR: [{ authorId }, { wallOwnerId: authorId }] }],
+    }
+    const { _min, _max } = await this.prisma.post.aggregate({
+      where,
+      _min: { createdAt: true },
+      _max: { createdAt: true },
+    })
+    if (!_min.createdAt || !_max.createdAt) return []
+    const years: number[] = []
+    for (let y = _max.createdAt.getUTCFullYear(); y >= _min.createdAt.getUTCFullYear(); y--) {
+      years.push(y)
+    }
+    const has = await Promise.all(
+      years.map((y) =>
+        this.prisma.post.findFirst({ where: { AND: [where, yearRange(y)] }, select: { id: true } }),
+      ),
+    )
+    return years.filter((_, i) => has[i])
   }
 
   /** Pemilik dinding harus teman penulis; selain itu 404 yang sama (tidak membocorkan keberadaan). */

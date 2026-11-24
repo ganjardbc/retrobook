@@ -19,7 +19,12 @@ export const useProfileStore = defineStore('profile', () => {
   const profile = ref<Profile | null>(null)
   const state = ref<ProfileState>('idle')
   const actionFailed = ref(false)
-  const timeline = usePostList((cursor) => usersApi.timeline(username.value, cursor))
+  /** Scroller tahun (PRF-05): tahun yang punya post, dan tahun terpilih (null = semua, terbaru dulu). */
+  const years = ref<number[]>([])
+  const year = ref<number | null>(null)
+  const timeline = usePostList((cursor) =>
+    usersApi.timeline(username.value, cursor, undefined, year.value),
+  )
   const friends = usePaged<UserSummary>(
     (cursor) => usersApi.friends(username.value, cursor),
     (u) => u.id,
@@ -42,6 +47,8 @@ export const useProfileStore = defineStore('profile', () => {
     profile.value = null
     state.value = 'loading'
     actionFailed.value = false
+    years.value = []
+    year.value = null
     timeline.reset()
     friends.reset()
     photos.reset()
@@ -51,6 +58,10 @@ export const useProfileStore = defineStore('profile', () => {
       profile.value = p
       state.value = 'ready'
       void timeline.loadMore()
+      void usersApi.years(name).then(
+        (r) => gen === generation && (years.value = r.items),
+        () => undefined, // scroller hanyalah bantuan navigasi; gagal berarti tidak tampil
+      )
       void friends.loadMore() // grid enam teman di kartu info dan tab Friends memakai daftar yang sama
     } catch (e) {
       if (gen !== generation) return
@@ -64,9 +75,19 @@ export const useProfileStore = defineStore('profile', () => {
     username.value = ''
     profile.value = null
     state.value = 'idle'
+    years.value = []
+    year.value = null
     timeline.reset()
     friends.reset()
     photos.reset()
+  }
+
+  /** Pilih tahun (null = kembali ke semua): daftar dikosongkan lalu dimuat ulang dari awal. */
+  async function setYear(next: number | null) {
+    if (next === year.value) return
+    year.value = next
+    timeline.reset()
+    await timeline.loadMore()
   }
 
   /** Mengubah hubungan lewat API pertemanan lalu memperbarui profil di tempat (tanpa muat ulang). */
@@ -128,8 +149,11 @@ export const useProfileStore = defineStore('profile', () => {
     state,
     actionFailed,
     timeline,
+    years,
+    year,
     friends,
     photos,
+    setYear,
     load,
     reset,
     relate,

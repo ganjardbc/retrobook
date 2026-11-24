@@ -186,6 +186,8 @@ export const en = {
   'profile.tab.friends': 'Friends',
   'profile.tab.photos': 'Photos',
   'profile.tab.more': 'More',
+  'profile.years.label': 'Timeline years',
+  'profile.years.recent': 'Recent',
   'profile.tabs': 'Profile sections',
   'profile.info.studied': 'Studied at {v}',
   'profile.info.lives': 'Lives in {v}',

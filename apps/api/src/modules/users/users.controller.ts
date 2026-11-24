@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common'
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
 import { FriendsQueryDto } from '../friends/dto/friends.dto'
-import { CursorQueryDto } from '../posts/dto/post.dto'
+import { CursorQueryDto, TimelineQueryDto } from '../posts/dto/post.dto'
 import { UsersService } from './users.service'
 
 @Controller('users')
@@ -17,9 +17,14 @@ export class UsersController {
   timeline(
     @CurrentUser() user: AuthUser,
     @Param('username') username: string,
-    @Query() q: CursorQueryDto,
+    @Query() q: TimelineQueryDto,
   ) {
-    return this.users.timeline(user.id, username, q.limit, q.cursor)
+    return this.users.timeline(user.id, username, q.limit, q.cursor, q.year)
+  }
+
+  @Get(':username/years')
+  years(@CurrentUser() user: AuthUser, @Param('username') username: string) {
+    return this.users.years(user.id, username)
   }
 
   @Get(':username/friends')

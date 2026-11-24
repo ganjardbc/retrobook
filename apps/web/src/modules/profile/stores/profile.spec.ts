@@ -38,6 +38,45 @@ describe('profile store', () => {
     vi.restoreAllMocks()
   })
 
+  it('years: dimuat bersama profil; gagal memuat tidak merusak profil', async () => {
+    vi.spyOn(usersApi, 'profile').mockResolvedValue(profile())
+    vi.spyOn(usersApi, 'timeline').mockResolvedValue(page([1]))
+    const years = vi.spyOn(usersApi, 'years').mockResolvedValue({ items: [2015, 2014] })
+    const s = useProfileStore()
+    await s.load('siti')
+    await vi.waitFor(() => expect(s.years).toEqual([2015, 2014]))
+    expect(years).toHaveBeenCalledWith('siti')
+
+    years.mockRejectedValue(new Error('x'))
+    s.reset()
+    await s.load('siti')
+    await vi.waitFor(() => expect(s.timeline.items).toHaveLength(1))
+    expect(s.state).toBe('ready')
+    expect(s.years).toEqual([])
+  })
+
+  it('setYear: mengosongkan timeline dan memuat ulang dari awal dengan tahun itu; null kembali ke semua', async () => {
+    vi.spyOn(usersApi, 'profile').mockResolvedValue(profile())
+    vi.spyOn(usersApi, 'years').mockResolvedValue({ items: [2015, 2014] })
+    const tl = vi
+      .spyOn(usersApi, 'timeline')
+      .mockResolvedValueOnce(page([5, 4], 4))
+      .mockResolvedValueOnce(page([2]))
+      .mockResolvedValueOnce(page([5, 4]))
+    const s = useProfileStore()
+    await s.load('siti')
+    await vi.waitFor(() => expect(s.timeline.items).toHaveLength(2))
+    await s.setYear(2014)
+    expect(s.year).toBe(2014)
+    expect(s.timeline.items.map((p) => p.id)).toEqual([2])
+    expect(tl).toHaveBeenLastCalledWith('siti', null, undefined, 2014)
+    await s.setYear(2014) // sama: tidak memuat lagi
+    expect(tl).toHaveBeenCalledTimes(2)
+    await s.setYear(null)
+    expect(s.timeline.items.map((p) => p.id)).toEqual([5, 4])
+    expect(tl).toHaveBeenLastCalledWith('siti', null, undefined, null)
+  })
+
   it('load: memuat profil lalu timeline dengan username yang benar', async () => {
     vi.spyOn(usersApi, 'profile').mockResolvedValue(profile())
     const tl = vi.spyOn(usersApi, 'timeline').mockResolvedValue(page([2, 1]))
@@ -45,7 +84,7 @@ describe('profile store', () => {
     await s.load('siti')
     await vi.waitFor(() => expect(s.timeline.items.map((p) => p.id)).toEqual([2, 1]))
     expect(s.state).toBe('ready')
-    expect(tl).toHaveBeenCalledWith('siti', null)
+    expect(tl).toHaveBeenCalledWith('siti', null, undefined, null)
   })
 
   it('404: unavailable tanpa memuat timeline; galat lain: error', async () => {

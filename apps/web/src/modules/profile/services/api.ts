@@ -3,10 +3,13 @@ import { request } from '@/plugins/http'
 
 export const usersApi = {
   profile: (username: string) => request<Profile>(`/users/${encodeURIComponent(username)}`),
-  timeline: (username: string, cursor?: number | null, limit = 10) =>
+  timeline: (username: string, cursor?: number | null, limit = 10, year?: number | null) =>
     request<Paged<Post>>(
-      `/users/${encodeURIComponent(username)}/posts?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`,
+      `/users/${encodeURIComponent(username)}/posts?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}${year ? `&year=${year}` : ''}`,
     ),
+  /** PRF-05: tahun yang punya post terlihat, terbaru dulu. */
+  years: (username: string) =>
+    request<{ items: number[] }>(`/users/${encodeURIComponent(username)}/years`),
   friends: (username: string, cursor?: number | null, limit = 10) =>
     request<FriendsPage>(
       `/users/${encodeURIComponent(username)}/friends?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`,

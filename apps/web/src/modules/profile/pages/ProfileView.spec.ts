@@ -79,6 +79,30 @@ describe('ProfileView', () => {
     })
   })
 
+  it('scroller tahun: tampil bila ada lebih dari satu tahun; klik tahun memuat post tahun itu', async () => {
+    vi.spyOn(usersApi, 'profile').mockResolvedValue(profile())
+    vi.spyOn(usersApi, 'years').mockResolvedValue({ items: [2015, 2014] })
+    const { w } = await mountAt('/siti')
+    const years = w.find('nav.years')
+    expect(years.exists()).toBe(true)
+    vi.mocked(usersApi.timeline).mockResolvedValue({
+      items: [mkPost(7, 'dari 2014')],
+      nextCursor: null,
+    })
+    await years.findAll('button')[2]!.trigger('click')
+    await flushPromises()
+    expect(usersApi.timeline).toHaveBeenLastCalledWith('siti', null, undefined, 2014)
+    expect(w.text()).toContain('dari 2014')
+    expect(w.text()).not.toContain('halo dunia')
+  })
+
+  it('scroller tahun: tersembunyi bila hanya satu tahun atau tidak ada', async () => {
+    vi.spyOn(usersApi, 'profile').mockResolvedValue(profile())
+    vi.spyOn(usersApi, 'years').mockResolvedValue({ items: [2015] })
+    const { w } = await mountAt('/siti')
+    expect(w.find('nav.years').exists()).toBe(false)
+  })
+
   it('menampilkan nama, jumlah teman di tab, info yang terisi, dan timeline', async () => {
     vi.spyOn(usersApi, 'profile').mockResolvedValue(
       profile({
