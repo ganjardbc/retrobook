@@ -34,7 +34,7 @@ const RESERVED_USERNAMES = new Set([
 const INVALID_CREDENTIALS = () =>
   new AppException(401, 'INVALID_CREDENTIALS', 'Email/username atau password salah')
 
-type TokenUser = Pick<User, 'id' | 'username' | 'displayName' | 'role'>
+type TokenUser = Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl' | 'role'>
 
 @Injectable()
 export class AuthService {
@@ -154,7 +154,12 @@ export class AuthService {
     })
     const accessToken = await this.jwt.signAsync({ sub: user.id, role: user.role })
     return {
-      user: { id: user.id, username: user.username, displayName: user.displayName },
+      user: {
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+      },
       accessToken,
       refreshToken,
     }

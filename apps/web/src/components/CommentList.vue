@@ -135,7 +135,7 @@ defineExpose({ focusInput: () => input.value?.focus() })
     <p v-if="error" class="form-error" role="alert">{{ error }}</p>
 
     <form v-if="auth.user" class="comments__form" @submit.prevent="send">
-      <Avatar :name="auth.user.displayName" size="s" />
+      <Avatar :name="auth.user.displayName" :src="auth.user.avatarUrl" size="s" />
       <input
         ref="input"
         v-model="draft"

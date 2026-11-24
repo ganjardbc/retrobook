@@ -109,7 +109,12 @@ describe('ProfileView', () => {
     vi.spyOn(usersApi, 'profile').mockResolvedValueOnce(profile({ relationship: 'SELF' }))
     const own = await mountAt('/siti')
     expect(own.w.find('.status').exists()).toBe(true)
-    expect(own.w.find('.header__actions button, .header__actions a').exists()).toBe(false) // tanpa tombol aksi pada profil sendiri
+    // profil sendiri: Update Info dan kontrol foto, tanpa tombol pertemanan
+    expect(own.w.find('.header__actions a').attributes('href')).toBe('/me/edit')
+    expect(own.w.find('.header__actions').text()).toBe('Update Info')
+    expect(own.w.find('.header__photo--avatar').exists()).toBe(true)
+    expect(own.w.find('.header__photo--cover').exists()).toBe(true)
+    expect(other.w.find('.header__photo').exists()).toBe(false) // orang lain: tanpa kontrol foto
   })
 
   it('404: pesan "tidak tersedia" tanpa membedakan sebab, tidak ada header', async () => {

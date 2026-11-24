@@ -125,6 +125,8 @@ Akun SUSPENDED atau BANNED mendapat 403 (`ACCOUNT_SUSPENDED` atau `ACCOUNT_BANNE
 
 **POST /auth/refresh**: rotasi; token lama dicabut (`revoked_at`) dan yang baru dikembalikan. Memakai refresh token yang sudah dicabut berarti kemungkinan pencurian: semua refresh token user tersebut dicabut dan 401 dikembalikan.
 
+Status implementasi (T-22): `PATCH /me`, `POST /me/avatar`, dan `POST /me/cover` sudah ada dan mengembalikan objek Profile milik sendiri (`relationship: "SELF"`); `GET /me`, ganti password, dan hapus akun menyusul. Field yang tidak dikirim tidak berubah; `null` atau teks kosong mengosongkan kolom opsional (bio, kota, tempat kerja, sekolah, tanggal lahir); `displayName` tidak boleh kosong. Batas: nama 80, kota 80, tempat kerja dan sekolah 120, bio 2.000 karakter; tanggal lahir `YYYY-MM-DD` yang ada di kalender, antara 1900-01-01 dan hari ini. Field lain (role, status, email, username, avatarUrl, coverUrl, isBot) ditolak 400. Ganti foto hanya mengganti URL; berkas lama tetap di disk. Respons login, register, dan refresh kini juga menyertakan `avatarUrl` pada `user` (untuk navbar).
+
 **PATCH /me** menerima: `displayName`, `bio`, `birthday` (YYYY-MM-DD), `hometown`, `currentCity`, `workplace`, `school`. Semua opsional.
 
 ## 3. Pengguna, profil, dan foto (PRF-01 sampai PRF-06)

@@ -32,6 +32,7 @@ const notice = computed(() => {
 })
 
 async function submit() {
+  if (busy.value) return
   busy.value = true
   error.value = ''
   try {

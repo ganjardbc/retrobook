@@ -16,6 +16,7 @@ const busy = ref(false)
 const errors = ref<string[]>([])
 
 async function submit() {
+  if (busy.value) return
   busy.value = true
   errors.value = []
   try {

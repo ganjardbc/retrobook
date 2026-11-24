@@ -21,6 +21,11 @@ export const router = createRouter({
       children: [
         { path: '', name: 'home', component: () => import('../views/HomeView.vue') },
         { path: 'friends', name: 'friends', component: () => import('../views/FriendsView.vue') },
+        {
+          path: 'me/edit',
+          name: 'profile-edit',
+          component: () => import('../views/EditProfileView.vue'),
+        },
         // Harus setelah rute akar lain: `/:username` menangkap semua segmen (karena itu daftar username terlarang).
         {
           path: ':username',

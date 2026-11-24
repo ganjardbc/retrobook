@@ -15,7 +15,7 @@ const auth = useAuthStore()
 <template>
   <nav class="menu" :aria-label="t('nav.menu')">
     <RouterLink v-if="auth.user" class="menu__row menu__me" :to="`/${auth.user.username}`">
-      <Avatar :name="auth.user.displayName" size="s" />
+      <Avatar :name="auth.user.displayName" :src="auth.user.avatarUrl" size="s" />
       <strong>{{ auth.user.displayName }}</strong>
     </RouterLink>
     <ul class="menu__list">

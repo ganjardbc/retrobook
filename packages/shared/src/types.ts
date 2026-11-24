@@ -68,7 +68,7 @@ export type FriendsPage = Paged<UserSummary> & { total: number }
 export type FriendshipResult = { userId: number; status: 'PENDING' | 'ACCEPTED' }
 
 export type AuthSession = {
-  user: Pick<UserSummary, 'id' | 'username' | 'displayName'>
+  user: Pick<UserSummary, 'id' | 'username' | 'displayName'> & { avatarUrl?: string | null }
   accessToken: string
   refreshToken: string
 }

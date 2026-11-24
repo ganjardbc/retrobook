@@ -1,10 +1,14 @@
 import type { Profile, Relationship } from '@retrobook/shared'
+import { t } from '@retrobook/shared/i18n'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { ApiRequestError } from '../api/http'
 import { friendsApi } from '../api/friends'
 import { usersApi } from '../api/users'
 import { usePostList } from '../composables/postList'
+import { meApi } from '../api/me'
+import { imageProblem } from '../utils/image'
+import { useAuthStore } from './auth'
 
 export type ProfileState = 'idle' | 'loading' | 'ready' | 'unavailable' | 'error'
 
@@ -84,5 +88,25 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
-  return { username, profile, state, actionFailed, timeline, load, reset, relate }
+  /**
+   * Ganti foto profil atau cover sendiri. Mengembalikan kunci pesan galat (validasi klien) atau
+   * teks galat server; null bila berhasil. Sesi (navbar) ikut diperbarui untuk foto profil.
+   */
+  async function uploadPhoto(kind: 'avatar' | 'cover', file: File): Promise<string | null> {
+    const problem = imageProblem(file)
+    if (problem) return t(problem)
+    try {
+      const updated = await (kind === 'avatar' ? meApi.uploadAvatar(file) : meApi.uploadCover(file))
+      if (profile.value && profile.value.id === updated.id) {
+        profile.value.avatarUrl = updated.avatarUrl
+        profile.value.coverUrl = updated.coverUrl
+      }
+      if (kind === 'avatar') useAuthStore().patchUser({ avatarUrl: updated.avatarUrl })
+      return null
+    } catch (e) {
+      return e instanceof ApiRequestError ? e.messages.join(' ') : t('error.network')
+    }
+  }
+
+  return { username, profile, state, actionFailed, timeline, load, reset, relate, uploadPhoto }
 })

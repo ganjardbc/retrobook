@@ -44,10 +44,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  /** Menyelaraskan sesi dengan perubahan profil (nama, foto) tanpa login ulang. */
+  function patchUser(patch: Partial<NonNullable<typeof user.value>>) {
+    if (user.value) user.value = { ...user.value, ...patch }
+  }
+
   function clear() {
     session.clear()
     user.value = null
   }
 
-  return { user, isLoggedIn, init, login, register, logout, clear }
+  return { user, isLoggedIn, init, login, register, logout, patchUser, clear }
 })

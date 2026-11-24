@@ -6,7 +6,7 @@ Panduan untuk Claude Code di repo **retrobook**. Baca ini dulu, lalu buka dokume
 
 retrobook adalah jejaring sosial **parodi** bertampilan 2014 sampai Maret 2015: user app, admin panel, dan satu API. Ini fun project (pembelajaran, demo, bahan konten Coderium), bukan produk komersial. Pemilik: Ganjar, yang memutuskan arsitektur.
 
-Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), T-04 (kerangka NestJS), T-05 (modul Auth), T-06 (tokens.css, tipe bersama), T-07 (app Vue dasar, login, register), T-08 (token terukur), T-09 (CI dasar), T-10 (layout tiga kolom), T-11 (upload gambar), T-12 (API post, feed, `VisibilityService`), T-14 (StatusBox, PostCard, feed), T-15 (like), T-16 (komentar), T-17 (matriks privasi), T-18 (API pertemanan), T-19 (halaman /friends), T-20 (API profil, timeline), dan T-21 (UI profil: header, tab Timeline dan About, info) selesai. T-13 sebagian (sisa: blokir). Lanjut: T-22 (edit profil, foto profil dan cover).
+Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), T-04 (kerangka NestJS), T-05 (modul Auth), T-06 (tokens.css, tipe bersama), T-07 (app Vue dasar, login, register), T-08 (token terukur), T-09 (CI dasar), T-10 (layout tiga kolom), T-11 (upload gambar), T-12 (API post, feed, `VisibilityService`), T-14 (StatusBox, PostCard, feed), T-15 (like), T-16 (komentar), T-17 (matriks privasi), T-18 (API pertemanan), T-19 (halaman /friends), T-20 (API profil, timeline), T-21 (UI profil), dan T-22 (edit profil, foto profil dan cover) selesai. T-13 sebagian (sisa: blokir). Lanjut: T-23 (share post).
 
 ## Dokumen (sumber kebenaran)
 

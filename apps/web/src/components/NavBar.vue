@@ -25,7 +25,12 @@ const auth = useAuthStore()
       <span class="navbar__spacer" />
       <template v-if="auth.user">
         <RouterLink class="navbar__link navbar__me" :to="`/${auth.user.username}`">
-          <Avatar :name="auth.user.displayName" size="s" class="navbar__avatar" />
+          <Avatar
+            :name="auth.user.displayName"
+            :src="auth.user.avatarUrl"
+            size="s"
+            class="navbar__avatar"
+          />
           <span>{{ auth.user.displayName }}</span>
         </RouterLink>
         <RouterLink class="navbar__link" to="/">{{ t('nav.home') }}</RouterLink>

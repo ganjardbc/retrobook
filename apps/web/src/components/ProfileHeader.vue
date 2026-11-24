@@ -1,19 +1,31 @@
 <script setup lang="ts">
 import type { Profile } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
+import { ref } from 'vue'
 import { useProfileStore } from '../stores/profile'
 import Avatar from './Avatar.vue'
 import Button from './Button.vue'
 
 const props = defineProps<{ profile: Profile }>()
 const store = useProfileStore()
+const photoError = ref('')
+const avatarInput = ref<HTMLInputElement | null>(null)
+const coverInput = ref<HTMLInputElement | null>(null)
+
+async function onPhoto(kind: 'avatar' | 'cover', e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  photoError.value = (await store.uploadPhoto(kind, file)) ?? ''
+}
 
 function unfriend() {
   if (window.confirm(t('profile.action.unfriend.confirm', { name: props.profile.displayName }))) {
     void store.relate('unfriend')
   }
 }
-// Message (T-36), Update Info (T-22), dan View Activity Log (Fase 3) ditambahkan bersama fiturnya.
+// Message (T-36) dan View Activity Log (Fase 3) ditambahkan bersama fiturnya.
 </script>
 
 <template>
@@ -25,13 +37,50 @@ function unfriend() {
         :alt="t('profile.cover')"
         class="header__img"
       />
+      <template v-if="profile.relationship === 'SELF'">
+        <button
+          class="header__photo header__photo--cover"
+          type="button"
+          @click="coverInput?.click()"
+        >
+          📷 {{ t('profile.photo.cover') }}
+        </button>
+        <input
+          ref="coverInput"
+          class="header__file"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          @change="onPhoto('cover', $event)"
+        />
+      </template>
     </div>
     <div class="header__avatar">
       <Avatar :name="profile.displayName" :src="profile.avatarUrl" size="l" />
+      <template v-if="profile.relationship === 'SELF'">
+        <button
+          class="header__photo header__photo--avatar"
+          type="button"
+          :aria-label="t('profile.photo.avatar')"
+          :title="t('profile.photo.avatar')"
+          @click="avatarInput?.click()"
+        >
+          📷
+        </button>
+        <input
+          ref="avatarInput"
+          class="header__file"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          @change="onPhoto('avatar', $event)"
+        />
+      </template>
     </div>
     <h1 class="header__name">{{ profile.displayName }}</h1>
 
     <div class="header__actions">
+      <Button v-if="profile.relationship === 'SELF'" variant="default" to="/me/edit">{{
+        t('profile.action.updateInfo')
+      }}</Button>
       <Button v-if="profile.relationship === 'NONE'" @click="store.relate('send')">{{
         t('profile.action.add')
       }}</Button>
@@ -54,7 +103,8 @@ function unfriend() {
         ✓ {{ t('profile.action.friends') }}
       </Button>
     </div>
-    <p v-if="store.actionFailed" class="form-error header__error" role="alert">
+    <p v-if="photoError" class="form-error header__error" role="alert">{{ photoError }}</p>
+    <p v-else-if="store.actionFailed" class="form-error header__error" role="alert">
       {{ t('profile.action.error') }}
     </p>
   </header>
@@ -126,5 +176,27 @@ function unfriend() {
     top: var(--sp-2);
     bottom: auto;
   }
+}
+.header__file {
+  display: none;
+}
+.header__photo {
+  padding: var(--sp-1) var(--sp-2);
+  border: 0;
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--c-text-on-brand);
+  font: inherit;
+  cursor: pointer;
+}
+.header__photo--cover {
+  position: absolute;
+  top: var(--sp-3);
+  left: var(--sp-3);
+}
+.header__photo--avatar {
+  position: absolute;
+  left: var(--sp-2);
+  bottom: var(--sp-2);
 }
 </style>

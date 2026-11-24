@@ -5,10 +5,8 @@ import { computed, ref } from 'vue'
 import { ApiRequestError } from '../api/http'
 import { postsApi } from '../api/posts'
 import { useFeedStore } from '../stores/feed'
+import { imageProblem } from '../utils/image'
 import Button from './Button.vue'
-
-const MAX_BYTES = 5 * 1024 * 1024
-const TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 const emit = defineEmits<{ posted: [post: Post] }>()
 const feed = useFeedStore()
@@ -30,9 +28,8 @@ async function onFile(e: Event) {
   input.value = ''
   if (!file) return
   error.value = ''
-  // Pemeriksaan sungguhan ada di server; ini hanya agar umpan balik cepat.
-  if (!TYPES.includes(file.type)) return void (error.value = t('statusBox.error.type'))
-  if (file.size > MAX_BYTES) return void (error.value = t('statusBox.error.size'))
+  const problem = imageProblem(file)
+  if (problem) return void (error.value = t(problem))
   busy.value = true
   try {
     imageUrl.value = (await postsApi.uploadImage(file)).url

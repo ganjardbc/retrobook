@@ -2,6 +2,8 @@ import type { Paged, Post, Profile } from '@retrobook/shared'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { friendsApi } from '../api/friends'
+import { meApi } from '../api/me'
+import { useAuthStore } from './auth'
 import { ApiRequestError } from '../api/http'
 import { usersApi } from '../api/users'
 import { useProfileStore } from './profile'
@@ -141,6 +143,67 @@ describe('profile store', () => {
       expect(await s.relate('send')).toBe(false)
       expect(s.profile?.relationship).toBe('NONE')
       expect(s.actionFailed).toBe(true)
+    })
+  })
+
+  describe('uploadPhoto', () => {
+    const png = () => new File([new Uint8Array(10)], 'a.png', { type: 'image/png' })
+    const ready = async () => {
+      vi.spyOn(usersApi, 'profile').mockResolvedValue(
+        profile({ id: 1, username: 'me', relationship: 'SELF' }),
+      )
+      vi.spyOn(usersApi, 'timeline').mockResolvedValue(page([]))
+      useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
+      const s = useProfileStore()
+      await s.load('me')
+      return s
+    }
+
+    it('avatar: memperbarui profil dan sesi (navbar), mengembalikan null', async () => {
+      const up = vi
+        .spyOn(meApi, 'uploadAvatar')
+        .mockResolvedValue(profile({ id: 1, avatarUrl: '/uploads/a.png' }))
+      const s = await ready()
+      expect(await s.uploadPhoto('avatar', png())).toBeNull()
+      expect(up).toHaveBeenCalled()
+      expect(s.profile?.avatarUrl).toBe('/uploads/a.png')
+      expect(useAuthStore().user?.avatarUrl).toBe('/uploads/a.png')
+    })
+
+    it('cover: memperbarui cover saja; sesi tidak berubah', async () => {
+      vi.spyOn(meApi, 'uploadCover').mockResolvedValue(
+        profile({ id: 1, coverUrl: '/uploads/c.png' }),
+      )
+      const s = await ready()
+      expect(await s.uploadPhoto('cover', png())).toBeNull()
+      expect(s.profile?.coverUrl).toBe('/uploads/c.png')
+      expect(useAuthStore().user?.avatarUrl).toBeUndefined()
+    })
+
+    it('tipe salah atau terlalu besar: pesan galat tanpa memanggil server', async () => {
+      const up = vi.spyOn(meApi, 'uploadAvatar')
+      const s = await ready()
+      expect(
+        await s.uploadPhoto('avatar', new File(['x'], 'a.gif', { type: 'image/gif' })),
+      ).toContain('JPG, PNG, or WebP')
+      expect(
+        await s.uploadPhoto(
+          'avatar',
+          new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'b.png', { type: 'image/png' }),
+        ),
+      ).toContain('5 MB')
+      expect(up).not.toHaveBeenCalled()
+    })
+
+    it('galat server: mengembalikan pesannya dan tidak mengubah apa pun', async () => {
+      vi.spyOn(meApi, 'uploadAvatar').mockRejectedValue(
+        new ApiRequestError(415, 'UNSUPPORTED_MEDIA_TYPE', [
+          'Hanya JPG, PNG, atau WebP yang diizinkan',
+        ]),
+      )
+      const s = await ready()
+      expect(await s.uploadPhoto('avatar', png())).toBe('Hanya JPG, PNG, atau WebP yang diizinkan')
+      expect(s.profile?.avatarUrl).toBeNull()
     })
   })
 })
