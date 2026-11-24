@@ -6,7 +6,7 @@ Panduan untuk Claude Code di repo **retrobook**. Baca ini dulu, lalu buka dokume
 
 retrobook adalah jejaring sosial **parodi** bertampilan 2014 sampai Maret 2015: user app, admin panel, dan satu API. Ini fun project (pembelajaran, demo, bahan konten Coderium), bukan produk komersial. Pemilik: Ganjar, yang memutuskan arsitektur.
 
-Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), dan T-04 (kerangka NestJS) selesai. Lanjut dari `docs/08-backlog.md` (T-05).
+Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), T-04 (kerangka NestJS), dan T-05 (modul Auth) selesai. Lanjut dari `docs/08-backlog.md` (T-06).
 
 ## Dokumen (sumber kebenaran)
 
@@ -53,6 +53,7 @@ pnpm test:e2e       # Playwright
 pnpm --filter @retrobook/db migrate
 pnpm --filter @retrobook/db seed          # belum ada (T-26)
 pnpm --filter @retrobook/db migrate:deploy # terapkan migrasi tanpa prompt
+pnpm --filter @retrobook/db migrate:test   # migrasi ke DB uji (TEST_DATABASE_URL); wajib sebelum tes API
 # default dev TANPA Docker: pakai MySQL lokal (brew), DATABASE_URL di .env
 # docker compose up -d mysql mysql-test   # opsional
 ```

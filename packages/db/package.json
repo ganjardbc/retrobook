@@ -9,7 +9,8 @@
     "generate": "dotenv -e ../../.env -- prisma generate",
     "validate": "dotenv -e ../../.env -- prisma validate",
     "migrate": "dotenv -e ../../.env -- prisma migrate dev",
-    "migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy"
+    "migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
+    "migrate:test": "dotenv -e ../../.env -- sh -c 'DATABASE_URL=$TEST_DATABASE_URL prisma migrate deploy'"
   },
   "devDependencies": {
     "dotenv-cli": "^11.1.0",

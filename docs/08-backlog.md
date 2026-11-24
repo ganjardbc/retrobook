@@ -16,7 +16,7 @@ Backlog awal yang diturunkan dari [PRD](02-prd.md) dan [Roadmap](01-roadmap.md):
 | [x] T-02 | Docker Compose dev: MySQL, MySQL uji; variabel lingkungan dan `.env.example` | S | n/a |
 | [x] T-03 | Skema Prisma inti Fase 1 dan 2 (users, refresh_tokens, posts, comments, likes, post_tags, hashtags, post_hashtags, friendships, pokes, messages, notifications); migrasi pertama; lengkapi relasi balik | L | ERD |
 | [x] T-04 | NestJS: struktur modul per domain, filter error `{ statusCode, message, code }`, validasi global, config | M | API 1.1 |
-| [ ] T-05 | Modul Auth: register, login, refresh (rotasi), logout; argon2; JWT guard | L | AUTH-01 sampai 03 |
+| [x] T-05 | Modul Auth: register, login, refresh (rotasi), logout; argon2; JWT guard | L | AUTH-01 sampai 03 |
 | [ ] T-06 | `packages/shared`: `tokens.css` dari UI spec, tipe bersama (`UserSummary`, `Post`, enum) | S | UX-09 |
 | [ ] T-07 | Vue 3 app dasar: router, Pinia, klien HTTP dengan interceptor refresh, halaman login dan register | M | AUTH-01 sampai 03 |
 | [ ] T-08 | Pengukuran referensi: ambil hex dan dimensi dari tangkapan layar, kunci `tokens.css` | S | UI 10, R-07 |
