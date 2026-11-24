@@ -1,0 +1,82 @@
+import {
+  ConnectedSocket,
+  MessageBody,
+  SubscribeMessage,
+  WebSocketGateway,
+} from '@nestjs/websockets'
+import type { ChatMessage } from '@retrobook/shared'
+import type { Socket } from 'socket.io'
+import { AppException } from '../../common/app-exception'
+import { MAX_MESSAGE_LENGTH } from './dto/messages.dto'
+import { MessagesService } from './messages.service'
+
+type Ack<T> = ({ ok: true } & T) | { ok: false; code: string; message: string }
+
+const CLIENT_ID = /^[\w-]{1,64}$/
+
+/**
+ * Event klien ke server di namespace `/realtime` (API spec 9). Autentikasi dilakukan middleware
+ * RealtimeGateway; setiap event tetap memeriksa pertemanan dan blokir lewat MessagesService.
+ */
+@WebSocketGateway({ namespace: '/realtime' })
+export class MessagesGateway {
+  constructor(private readonly messages: MessagesService) {}
+
+  @SubscribeMessage('message:send')
+  send(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: unknown,
+  ): Promise<Ack<{ message: ChatMessage }>> {
+    const b = (body ?? {}) as { toUserId?: unknown; content?: unknown; clientId?: unknown }
+    return this.ack(async () => {
+      if (!Number.isInteger(b.toUserId) || (b.toUserId as number) < 1)
+        throw bad('toUserId tidak valid')
+      if (typeof b.content !== 'string' || b.content.length > MAX_MESSAGE_LENGTH * 2)
+        throw bad('Pesan tidak valid')
+      if (
+        b.clientId !== undefined &&
+        (typeof b.clientId !== 'string' || !CLIENT_ID.test(b.clientId))
+      ) {
+        throw bad('clientId tidak valid')
+      }
+      const { message } = await this.messages.send(
+        socket.data.userId,
+        b.toUserId as number,
+        b.content,
+        b.clientId as string | undefined,
+      )
+      return { message }
+    })
+  }
+
+  @SubscribeMessage('message:read')
+  read(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: unknown,
+  ): Promise<Ack<{ updated: number }>> {
+    const fromUserId = (body as { fromUserId?: unknown } | null)?.fromUserId
+    return this.ack(async () => {
+      if (!Number.isInteger(fromUserId) || (fromUserId as number) < 1)
+        throw bad('fromUserId tidak valid')
+      return this.messages.markRead(socket.data.userId, fromUserId as number)
+    })
+  }
+
+  private async ack<T extends object>(fn: () => Promise<T>): Promise<Ack<T>> {
+    try {
+      return { ok: true, ...(await fn()) }
+    } catch (e) {
+      if (e instanceof AppException) {
+        const { message } = e.getResponse() as { message: string | string[] }
+        return {
+          ok: false,
+          code: e.code,
+          message: Array.isArray(message) ? message.join(' ') : message,
+        }
+      }
+      return { ok: false, code: 'INTERNAL', message: 'Terjadi kesalahan' }
+    }
+  }
+}
+
+const bad = (message: string) => new AppException(400, 'VALIDATION_FAILED', message)

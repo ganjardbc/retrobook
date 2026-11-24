@@ -98,6 +98,19 @@ export type AppNotification = {
   createdAt: string
 }
 
+/** Pesan chat 1-ke-1 (`/messages` dan event `message:new`). */
+export type ChatMessage = {
+  id: number
+  senderId: number
+  receiverId: number
+  content: string
+  readAt: string | null
+  createdAt: string
+}
+
+/** Satu baris daftar percakapan (`GET /messages/conversations`). */
+export type Conversation = { user: UserSummary; lastMessage: ChatMessage; unreadCount: number }
+
 /** Poke aktif yang diterima (`GET /pokes`). */
 export type PokeItem = { user: UserSummary; createdAt: string }
 

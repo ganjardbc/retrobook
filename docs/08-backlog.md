@@ -78,7 +78,7 @@ Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan t
 
 | ID | Tugas | Ukuran | PRD |
 |---|---|---|---|
-| [ ] T-36 | Pesan: API riwayat, kirim, tandai terbaca; event socket, `clientId`, cek teman dan blokir | L | CHT-01 |
+| [x] T-36 | Pesan: API riwayat, kirim, tandai terbaca; event socket, `clientId`, cek teman dan blokir | L | CHT-01 |
 | [ ] T-37 | `ChatSidebar` dan `ChatDock` (maksimal tiga jendela) | L | CHT-02, 03 |
 | [ ] T-38 | Indikator mengetik dan terbaca | M | CHT-04 |
 | [ ] T-39 | Pencarian orang (dropdown di navbar) dan halaman hasil | M | SRC-01 |

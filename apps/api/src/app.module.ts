@@ -13,6 +13,7 @@ import { VisibilityModule } from './modules/visibility/visibility.module'
 import { HealthModule } from './modules/health/health.module'
 import { BlocksModule } from './modules/blocks/blocks.module'
 import { NotificationsModule } from './modules/notifications/notifications.module'
+import { MessagesModule } from './modules/messages/messages.module'
 import { PokesModule } from './modules/pokes/pokes.module'
 import { RealtimeModule } from './modules/realtime/realtime.module'
 
@@ -37,6 +38,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module'
     RealtimeModule,
     NotificationsModule,
     PokesModule,
+    MessagesModule,
     HealthModule,
   ],
 })

@@ -280,12 +280,15 @@ Tipe: `LIKE`, `COMMENT`, `FRIEND_REQUEST`, `FRIEND_ACCEPT`, `POKE`, `TAG`, `WALL
 | Method | Path | Fungsi |
 |---|---|---|
 | GET | `/messages/conversations` | Daftar percakapan dengan pesan terakhir dan jumlah belum dibaca |
+| GET | `/messages/unread-count` | `{ count }` pesan belum dibaca dari teman (badge jewel pesan; T-36) |
 | GET | `/messages/:userId` | Riwayat dengan satu user (cursor ke arah lebih lama) |
 | POST | `/messages/:userId` | Kirim `{ content }` (REST sebagai cadangan bila socket putus) |
 | POST | `/messages/:userId/read` | Tandai semua pesan dari user itu sebagai terbaca |
 | GET | `/chat/friends` | Daftar teman untuk sidebar chat beserta status online |
 
 Chat hanya antar teman dan tidak antar user yang saling blokir (BR-11). Pesan maksimal 2.000 karakter; filter kata terlarang berlaku.
+
+Status implementasi (T-36): semua endpoint di atas kecuali `/chat/friends` (T-37). Bentuk pesan `{ id, senderId, receiverId, content, readAt, createdAt }` (`ChatMessage` di `packages/shared`). `content` di-trim; kosong atau lebih dari 2.000 karakter: 400 `VALIDATION_FAILED`. Lawan yang bukan teman ACCEPTED, saling blokir, BANNED, terhapus, atau tidak ada: 404 yang sama pada setiap endpoint (REST dan socket, dicek per permintaan); diri sendiri 422. `POST /messages/:userId` 201 untuk pesan baru, 200 bila `clientId` sudah pernah dikirim (pesan yang sama dikembalikan, tidak ada baris baru). Idempotensi `clientId` disimpan di memori 10 menit, satu instance (belum kolom database; naik ke kolom `client_id` UNIQUE bila ada lebih dari satu instance). `GET /messages/:userId` terbaru dulu, `nextCursor` menuju pesan lebih lama. `GET /messages/conversations` hanya memuat teman saat ini (`{ user, lastMessage, unreadCount }`, terbaru dulu, cursor id pesan terakhir); unfriend, blokir, atau BANNED menyembunyikan percakapannya. `POST /messages/:userId/read` 200 `{ updated }` dan memberi tahu pengirim lewat `message:read`. Filter kata terlarang (BR-08) belum diterapkan; menyusul bersama moderasi. Rate limit 60 per menit menyusul di T-40.
 
 ## 9. Realtime (Socket.IO)
 
@@ -310,6 +313,8 @@ Namespace `/realtime`. Klien terhubung dengan `auth: { token: <accessToken> }`; 
 | `message:send` | `{ toUserId, content, clientId }` | Kirim; server membalas ack `{ ok, message }`; `clientId` mencegah dobel |
 | `typing` | `{ toUserId, isTyping }` | Indikator mengetik, dibatasi satu per detik |
 | `message:read` | `{ fromUserId }` | Tandai terbaca |
+
+Status implementasi (T-36): `message:send` membalas ack `{ ok: true, message }` atau `{ ok: false, code, message }` (kode sama dengan REST, payload tidak valid `VALIDATION_FAILED`); `message:new` dikirim ke penerima dan ke semua koneksi pengirim (klien membuang duplikat berdasarkan `id`); `message:read` ack `{ ok: true, updated }` dan hanya memicu event ke pengirim bila ada pesan yang berubah. `typing` menyusul di T-38.
 
 Presence: online bila minimal satu koneksi aktif; `users.last_seen_at` diperbarui saat koneksi terakhir putus. Label Web atau Mobile diambil dari `auth.client` saat koneksi. Pemeriksaan teman dan blokir dilakukan di server untuk setiap event, bukan hanya saat connect.
 
