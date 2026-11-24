@@ -1,4 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "isolatedModules": false,
+    "noEmit": false,
+    "outDir": "dist",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "incremental": true,
+    "types": ["node", "jest"]
+  },
   "include": ["src"]
 }
