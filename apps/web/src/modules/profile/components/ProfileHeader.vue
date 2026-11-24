@@ -3,6 +3,7 @@ import type { Profile } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { ref } from 'vue'
+import { useChatStore } from '@/modules/chat/stores'
 import { pokesApi } from '@/modules/pokes/services/api'
 import { useProfileStore } from '@/modules/profile/stores'
 import Avatar from '@/components/Avatar.vue'
@@ -27,6 +28,7 @@ function unfriend() {
     void store.relate('unfriend')
   }
 }
+const chat = useChatStore()
 const poked = ref(false)
 const pokeFailed = ref(false)
 async function poke() {
@@ -38,7 +40,7 @@ async function poke() {
     pokeFailed.value = true
   }
 }
-// Message (T-36) dan View Activity Log (Fase 3) ditambahkan bersama fiturnya.
+// View Activity Log (Fase 3) ditambahkan bersama fiturnya.
 </script>
 
 <template>
@@ -115,6 +117,9 @@ async function poke() {
       </template>
       <template v-else-if="profile.relationship === 'FRIENDS'">
         <Button variant="default" @click="unfriend">✓ {{ t('profile.action.friends') }}</Button>
+        <Button variant="default" @click="chat.openWindow(profile)">{{
+          t('profile.action.message')
+        }}</Button>
         <Button variant="default" @click="poke">{{
           poked ? t('profile.action.poked') : t('profile.action.poke')
         }}</Button>

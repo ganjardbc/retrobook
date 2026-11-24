@@ -108,6 +108,14 @@ export type ChatMessage = {
   createdAt: string
 }
 
+/** Teman di sidebar chat (`GET /chat/friends`); `client` terisi bila online. */
+export type ChatFriend = {
+  user: UserSummary
+  online: boolean
+  client: 'WEB' | 'MOBILE' | null
+  unreadCount: number
+}
+
 /** Satu baris daftar percakapan (`GET /messages/conversations`). */
 export type Conversation = { user: UserSummary; lastMessage: ChatMessage; unreadCount: number }
 

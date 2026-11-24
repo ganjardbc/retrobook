@@ -305,6 +305,85 @@ describe('Pesan (integrasi)', () => {
     })
   })
 
+  describe('GET /chat/friends (sidebar)', () => {
+    const connectAs = async (u: User, client?: string) => {
+      const s = io(url, {
+        auth: { token: h.tokenOf(u), ...(client ? { client } : {}) },
+        transports: ['websocket'],
+        reconnection: false,
+      })
+      open.push(s)
+      await new Promise<void>((res, rej) => {
+        s.on('connect', () => res())
+        s.on('connect_error', rej)
+      })
+      return s
+    }
+    const items = async (u: User) => (await h.as(u).get('/chat/friends')).body.items
+
+    it('tanpa teman: kosong', async () => {
+      const a = await h.mkUser('a')
+      expect(await items(a)).toEqual([])
+    })
+
+    it('hanya teman ACCEPTED yang terlihat; PENDING, orang asing, diblokir, BANNED tidak', async () => {
+      const me = await h.mkUser('me')
+      const ok = await h.mkUser('ok')
+      const pending = await h.mkUser('pending')
+      const stranger = await h.mkUser('stranger')
+      const blocked = await h.mkUser('blocked')
+      const banned = await h.mkUser('banned')
+      await h.befriend(me, ok)
+      await h.befriend(me, pending, 'PENDING')
+      await h.befriend(me, blocked)
+      await h.befriend(me, banned)
+      await h.prisma.block.create({ data: { blockerId: me.id, blockedId: blocked.id } })
+      await h.prisma.user.update({ where: { id: banned.id }, data: { status: 'BANNED' } })
+      void stranger
+      expect((await items(me)).map((i: { user: User }) => i.user.id)).toEqual([ok.id])
+    })
+
+    it('online dulu (label Web atau Mobile), lalu offline; nama terurut di tiap kelompok; belum dibaca', async () => {
+      const me = await h.mkUser('me')
+      const [amy, ben, cal, dan] = await Promise.all(
+        ['amy', 'ben', 'cal', 'dan'].map((n) => h.mkUser(n)),
+      )
+      for (const f of [amy!, ben!, cal!, dan!]) await h.befriend(me, f)
+      await connectAs(dan!) // WEB
+      await connectAs(ben!, 'mobile') // MOBILE saja
+      await connectAs(cal!, 'mobile')
+      await connectAs(cal!) // web + mobile: WEB
+      await send(amy!, me, 'a1')
+      await send(amy!, me, 'a2')
+
+      const list = await items(me)
+      expect(
+        list.map((i: { user: User; client: string | null }) => [i.user.displayName, i.client]),
+      ).toEqual([
+        ['ben', 'MOBILE'],
+        ['cal', 'WEB'],
+        ['dan', 'WEB'],
+        ['amy', null],
+      ])
+      expect(list.map((i: { online: boolean }) => i.online)).toEqual([true, true, true, false])
+      expect(list.find((i: { user: User }) => i.user.id === amy!.id).unreadCount).toBe(2)
+      expect(list.find((i: { user: User }) => i.user.id === ben!.id).unreadCount).toBe(0)
+    })
+
+    it('offline setelah koneksi terakhir putus; payload presence membawa label klien', async () => {
+      const { a, b } = await pair()
+      const sb = await connect(b)
+      const presence = next<{ userId: number; online: boolean; client?: string }>(sb, 'presence')
+      const sa = await connectAs(a, 'mobile')
+      expect(await presence).toEqual({ userId: a.id, online: true, client: 'MOBILE' })
+      expect((await items(b))[0]).toMatchObject({ online: true, client: 'MOBILE' })
+      const off = next(sb, 'presence')
+      sa.close()
+      await off
+      expect((await items(b))[0]).toMatchObject({ online: false, client: null })
+    })
+  })
+
   describe('realtime', () => {
     it('REST: penerima dan tab lain pengirim mendapat message:new', async () => {
       const { a, b } = await pair()

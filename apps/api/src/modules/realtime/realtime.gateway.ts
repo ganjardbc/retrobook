@@ -55,7 +55,9 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
   async handleConnection(socket: Socket) {
     const userId: number = socket.data.userId
     await socket.join(userRoom(userId))
-    if ((await this.connectionCount(userId)) === 1) await this.broadcastPresence(userId, true)
+    if ((await this.connectionCount(userId)) === 1) {
+      await this.broadcastPresence(userId, true, socket.data.client as ClientKind)
+    }
   }
 
   async handleDisconnect(socket: Socket) {
@@ -81,16 +83,34 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     return sockets.map((s) => s.data.client as ClientKind)
   }
 
+  /**
+   * Teman yang sedang online beserta labelnya, dari semua koneksi namespace ini (satu instance, R-06).
+   * Label MOBILE hanya bila semua koneksi user itu mobile; selain itu WEB.
+   */
+  async onlineClients(userIds: number[]): Promise<Map<number, ClientKind>> {
+    const wanted = new Set(userIds)
+    const kinds = new Map<number, Set<ClientKind>>()
+    for (const s of await this.server.fetchSockets()) {
+      const id = s.data.userId as number | undefined
+      if (id === undefined || !wanted.has(id)) continue
+      kinds.set(id, (kinds.get(id) ?? new Set()).add(s.data.client as ClientKind))
+    }
+    return new Map(
+      [...kinds].map(([id, k]) => [id, k.size === 1 && k.has('MOBILE') ? 'MOBILE' : 'WEB']),
+    )
+  }
+
   private async connectionCount(userId: number) {
     return (await this.server.in(userRoom(userId)).fetchSockets()).length
   }
 
   /** Presence hanya untuk teman ACCEPTED yang tidak saling blokir (BR-11). */
-  private async broadcastPresence(userId: number, online: boolean) {
+  private async broadcastPresence(userId: number, online: boolean, client?: ClientKind) {
     const friends = await this.prisma.user.findMany({
       where: { AND: [this.visibility.userWhere(userId), this.visibility.friendOf(userId)] },
       select: { id: true },
     })
-    for (const f of friends) this.emitToUser(f.id, 'presence', { userId, online })
+    for (const f of friends)
+      this.emitToUser(f.id, 'presence', { userId, online, ...(client ? { client } : {}) })
   }
 }

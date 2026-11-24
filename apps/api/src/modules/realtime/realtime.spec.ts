@@ -113,7 +113,7 @@ describe('Realtime /realtime (integrasi)', () => {
       const online = next(sf, 'presence')
       const strangerQuiet = silent(ss, 'presence')
       const sa = await asUser(a)
-      expect(await online).toEqual({ userId: a.id, online: true })
+      expect(await online).toEqual({ userId: a.id, online: true, client: 'WEB' })
       expect(await strangerQuiet).toBe(true)
 
       const offline = next(sf, 'presence')

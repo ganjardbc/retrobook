@@ -1,0 +1,217 @@
+<script setup lang="ts">
+import { t } from '@retrobook/shared/i18n'
+import { nextTick, onMounted, ref, watch } from 'vue'
+import { formatTime } from '@/helpers/time'
+import { type ChatWindow, useChatStore } from '@/modules/chat/stores'
+
+const props = defineProps<{ win: ChatWindow }>()
+const chat = useChatStore()
+const draft = ref('')
+const log = ref<HTMLElement | null>(null)
+const input = ref<HTMLInputElement | null>(null)
+
+const thread = () => chat.thread(props.win.user.id)
+
+function scrollToEnd() {
+  void nextTick(() => log.value && (log.value.scrollTop = log.value.scrollHeight))
+}
+// Pesan baru di ujung bawah menggulir ke bawah; memuat yang lama (prepend) tidak.
+watch(() => thread().messages.at(-1)?.id, scrollToEnd)
+watch(
+  () => thread().loaded,
+  (loaded) => loaded && scrollToEnd(),
+)
+watch(
+  () => props.win.minimized,
+  (min) => {
+    if (!min) {
+      scrollToEnd()
+      void nextTick(() => input.value?.focus())
+    }
+  },
+)
+onMounted(() => {
+  scrollToEnd()
+  input.value?.focus()
+})
+
+function submit() {
+  const text = draft.value
+  draft.value = ''
+  void chat.send(props.win.user.id, text)
+}
+</script>
+
+<template>
+  <section class="win" :class="{ 'win--min': win.minimized }">
+    <header class="win__head">
+      <button
+        class="win__title"
+        type="button"
+        :aria-expanded="!win.minimized"
+        :aria-label="t('chat.toggle', { name: win.user.displayName })"
+        @click="chat.toggleMinimize(win.user.id)"
+      >
+        {{ win.user.displayName }}
+      </button>
+      <button
+        class="win__close"
+        type="button"
+        :aria-label="t('chat.close', { name: win.user.displayName })"
+        @click="chat.closeWindow(win.user.id)"
+      >
+        ×
+      </button>
+    </header>
+
+    <template v-if="!win.minimized">
+      <div ref="log" class="win__log" role="log" aria-live="polite">
+        <p v-if="thread().failed && !thread().messages.length" class="win__note" role="alert">
+          {{ t('chat.error.load') }}
+        </p>
+        <button
+          v-if="thread().nextCursor !== null"
+          class="win__older"
+          type="button"
+          :disabled="thread().loading"
+          @click="chat.loadOlder(win.user.id)"
+        >
+          {{ t('chat.older') }}
+        </button>
+        <p v-if="thread().loaded && !thread().messages.length" class="win__note">
+          {{ t('chat.thread.empty') }}
+        </p>
+        <!-- Isi pesan selalu teks, tidak pernah HTML. -->
+        <div
+          v-for="m in thread().messages"
+          :key="m.id"
+          class="msg"
+          :class="{ 'msg--mine': m.senderId !== win.user.id, 'msg--pending': m.pending }"
+        >
+          <span class="msg__text" :title="formatTime(m.createdAt)">{{ m.content }}</span>
+          <span v-if="m.failed" class="msg__failed">
+            {{ t('chat.failed') }}
+            <button type="button" @click="chat.retry(win.user.id, m.id)">
+              {{ t('chat.retry') }}
+            </button>
+          </span>
+        </div>
+      </div>
+      <form class="win__form" @submit.prevent="submit">
+        <input
+          ref="input"
+          v-model="draft"
+          maxlength="2000"
+          autocomplete="off"
+          :placeholder="t('chat.input')"
+          :aria-label="t('chat.input')"
+        />
+      </form>
+    </template>
+  </section>
+</template>
+
+<style scoped>
+.win {
+  display: flex;
+  flex-direction: column;
+  width: 260px;
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-bottom: 0;
+}
+.win__head {
+  display: flex;
+  background: var(--c-brand);
+  border-bottom: 1px solid var(--c-brand-dark);
+}
+.win__title,
+.win__close {
+  border: 0;
+  background: none;
+  color: var(--c-text-on-brand);
+  font: inherit;
+  font-weight: bold;
+  cursor: pointer;
+}
+.win__title {
+  flex: 1;
+  padding: var(--sp-2) var(--sp-3);
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.win__close {
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-title);
+}
+.win__head:hover {
+  background: var(--c-brand-dark);
+}
+.win__log {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  height: 260px;
+  padding: var(--sp-2);
+  overflow-y: auto;
+}
+.win__note {
+  margin: 0;
+  color: var(--c-text-muted);
+  text-align: center;
+}
+.win__older {
+  align-self: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-link);
+  font: inherit;
+  cursor: pointer;
+}
+.msg {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.msg--mine {
+  align-items: flex-end;
+}
+.msg__text {
+  max-width: 85%;
+  padding: var(--sp-1) var(--sp-2);
+  background: var(--c-card-subtle);
+  border: 1px solid var(--c-border-soft);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.msg--mine .msg__text {
+  background: var(--c-brand);
+  border-color: var(--c-brand-dark);
+  color: var(--c-text-on-brand);
+}
+.msg--pending {
+  opacity: 0.6;
+}
+.msg__failed {
+  color: var(--c-danger);
+  font-size: var(--fs-small);
+}
+.msg__failed button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-link);
+  font: inherit;
+  cursor: pointer;
+}
+.win__form {
+  padding: var(--sp-1);
+  border-top: 1px solid var(--c-border);
+}
+.win__form input {
+  width: 100%;
+}
+</style>

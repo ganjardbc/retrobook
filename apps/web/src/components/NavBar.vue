@@ -4,14 +4,14 @@ import { Icon } from '@iconify/vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/modules/auth/stores'
 import Avatar from '@/components/Avatar.vue'
-import Jewel from '@/components/Jewel.vue'
+import MessagesJewel from '@/modules/chat/components/MessagesJewel.vue'
 import FriendRequestsJewel from '@/modules/friends/components/FriendRequestsJewel.vue'
 import NotificationsJewel from '@/modules/notifications/components/NotificationsJewel.vue'
 import WordMark from '@/components/WordMark.vue'
 
 defineEmits<{ 'toggle-menu': []; logout: [] }>()
 const auth = useAuthStore()
-// Kotak cari (T-39) ditambahkan saat fiturnya dikerjakan. Jewel pesan menyusul bersama chat (T-36).
+// Kotak cari (T-39) ditambahkan saat fiturnya dikerjakan.
 </script>
 
 <template>
@@ -40,9 +40,7 @@ const auth = useAuthStore()
         <RouterLink class="navbar__link" to="/">{{ t('nav.home') }}</RouterLink>
         <div class="navbar__jewels">
           <FriendRequestsJewel />
-          <Jewel icon="mdi:message-text" :label="t('jewel.messages')">
-            <p class="navbar__empty">{{ t('jewel.messages.empty') }}</p>
-          </Jewel>
+          <MessagesJewel />
           <NotificationsJewel />
         </div>
         <button class="navbar__link navbar__logout" type="button" @click="$emit('logout')">

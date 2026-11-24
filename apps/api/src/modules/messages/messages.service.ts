@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
-import type { ChatMessage, Conversation, Paged } from '@retrobook/shared'
+import type { ChatFriend, ChatMessage, Conversation, Paged } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
 import { RealtimeGateway } from '../realtime/realtime.gateway'
@@ -167,6 +167,38 @@ export class MessagesService {
       }),
       nextCursor: latest.length > limit ? page[page.length - 1]! : null,
     }
+  }
+
+  /**
+   * CHT-02: teman untuk sidebar chat. Online dulu, lalu nama; sampai 200 teman (sidebar menyaring sendiri).
+   * Teman BANNED, terhapus, atau terblokir tidak ikut (aturan terpusat).
+   */
+  async chatFriends(viewerId: number): Promise<{ items: ChatFriend[] }> {
+    const users = await this.prisma.user.findMany({
+      where: { AND: [this.visibility.userWhere(viewerId), this.visibility.friendOf(viewerId)] },
+      orderBy: { displayName: 'asc' },
+      take: 200,
+      select: userSummary,
+    })
+    if (users.length === 0) return { items: [] }
+    const ids = users.map((u) => u.id)
+    const [online, unread] = await Promise.all([
+      this.realtime.onlineClients(ids),
+      this.prisma.message.groupBy({
+        by: ['senderId'],
+        where: { receiverId: viewerId, readAt: null, deletedAt: null, senderId: { in: ids } },
+        _count: { _all: true },
+      }),
+    ])
+    const unreadBy = new Map(unread.map((u) => [u.senderId, u._count._all]))
+    const items = users.map((user) => ({
+      user,
+      online: online.has(user.id),
+      client: online.get(user.id) ?? null,
+      unreadCount: unreadBy.get(user.id) ?? 0,
+    }))
+    // sort stabil: urutan nama dari query dipertahankan di dalam kelompok online dan offline
+    return { items: [...items.filter((i) => i.online), ...items.filter((i) => !i.online)] }
   }
 
   /** Total pesan belum dibaca dari teman (badge jewel pesan). */

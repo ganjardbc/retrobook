@@ -15,6 +15,16 @@ import { CursorQueryDto } from '../posts/dto/post.dto'
 import { SendMessageDto } from './dto/messages.dto'
 import { MessagesService } from './messages.service'
 
+@Controller('chat')
+export class ChatController {
+  constructor(private readonly messages: MessagesService) {}
+
+  @Get('friends')
+  friends(@CurrentUser() user: AuthUser) {
+    return this.messages.chatFriends(user.id)
+  }
+}
+
 @Controller('messages')
 export class MessagesController {
   constructor(private readonly messages: MessagesService) {}

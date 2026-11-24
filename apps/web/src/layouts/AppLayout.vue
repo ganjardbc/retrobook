@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/modules/auth/stores'
+import ChatDock from '@/modules/chat/components/ChatDock.vue'
+import ChatSidebar from '@/modules/chat/components/ChatSidebar.vue'
+import { useChatStore } from '@/modules/chat/stores'
 import { disconnectRealtime } from '@/plugins/realtime'
 import AppFooter from '@/components/AppFooter.vue'
 import LeftMenu from '@/components/LeftMenu.vue'
@@ -13,7 +16,12 @@ const route = useRoute()
 const menuOpen = ref(false)
 
 // Koneksi realtime hidup selama shell member tampil (logout atau pindah ke tamu memutusnya).
-onBeforeUnmount(disconnectRealtime)
+const chat = useChatStore()
+onMounted(() => chat.start())
+onBeforeUnmount(() => {
+  chat.stop()
+  disconnectRealtime()
+})
 
 // Menu kiri di layar sempit berupa panel tarik; tutup saat pindah halaman.
 router.afterEach(() => (menuOpen.value = false))
@@ -30,9 +38,10 @@ async function logout() {
     <div class="layout__cols">
       <aside class="layout__left" :class="{ 'layout__left--open': menuOpen }"><LeftMenu /></aside>
       <main class="layout__main"><RouterView /></main>
-      <!-- Kolom kanan (trending, saran teman, chat) diisi di T-33, T-37, T-41. -->
-      <aside class="layout__right" />
+      <!-- Trending dan saran teman menyusul (T-41, T-42); chat di dasar kolom (T-37). -->
+      <aside class="layout__right"><ChatSidebar /></aside>
     </div>
+    <ChatDock />
     <AppFooter />
   </div>
 </template>
