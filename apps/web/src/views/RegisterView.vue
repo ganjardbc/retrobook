@@ -4,6 +4,7 @@ import { reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { ApiRequestError } from '../api/http'
 import AppFooter from '../components/AppFooter.vue'
+import Button from '../components/Button.vue'
 import WordMark from '../components/WordMark.vue'
 import { useAuthStore } from '../stores/auth'
 
@@ -82,9 +83,9 @@ async function submit() {
           />
         </label>
 
-        <button class="btn btn--success" type="submit" :disabled="busy">
-          {{ t('auth.register.submit') }}
-        </button>
+        <Button variant="success" type="submit" :disabled="busy">{{
+          t('auth.register.submit')
+        }}</Button>
         <p class="parody">{{ t('auth.register.parody') }}</p>
       </form>
     </main>

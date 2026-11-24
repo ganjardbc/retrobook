@@ -29,6 +29,12 @@ export const en = {
   'auth.register.parody':
     'Fun project / parody. This is not the real thing, so please do not use a real password.',
 
+  'nav.home': 'Home',
+  'nav.menu': 'Menu',
+  'nav.main': 'Main navigation',
+  'menu.newsFeed': 'News Feed',
+  'avatar.alt': "{name}'s photo",
+
   'home.welcome': 'Welcome, {name}!',
   'home.soon': 'Your news feed will show up here.',
 

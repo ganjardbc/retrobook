@@ -133,7 +133,7 @@ Setiap komponen jadi satu Vue SFC di `apps/web/src/components/`. Penamaan mengik
 | `SearchBox` | Dropdown hasil maksimal 8 user dengan avatar 32 px dan nama, navigasi panah keyboard (SRC-01) |
 | `LeftMenu` | Foto 32 px dan nama di atas; daftar tautan dengan ikon kecil, hover `--c-hover-bg`; kelompok "Favorites", "Apps" (Events, Groups, Notes, Photos) |
 | `StatusBox` | Kartu putih; tab teks "Update Status", "Add Photo", "Life Event" (disabled sampai Fase 3); `textarea` 2 baris; tombol Post biru di kanan; selektor privasi (ikon bola dunia, dua orang, gembok) |
-| `PostCard` | Kartu putih, border `--c-border`, radius `--radius`, jarak antar kartu `--sp-3`. Header: avatar 50 px, nama (`--c-link`, tebal), "Nama ▸ Nama" bila wall post, waktu `--c-text-muted`, ikon privasi, menu "…" (edit, hapus, report). Isi `--fs-post`. Gambar selebar kartu. |
+| `PostCard` | Kartu putih, border `--c-border`, radius `--radius`, jarak antar kartu `--sp-3`. Header: avatar `--avatar-m` (40 px, terukur), nama (`--c-link`, tebal), "Nama ▸ Nama" bila wall post, waktu `--c-text-muted`, ikon privasi, menu "…" (edit, hapus, report). Isi `--fs-post`. Gambar selebar kartu. |
 | `PostActions` | Baris tautan teks: "Like · Comment · Share". Saat sudah like, "Like" berubah menjadi "Unlike" (UX-04). Bukan tombol ikon besar |
 | `LikeSummary` | Ikon jempol kecil + "Sari, Budi, and 3 others like this." Nama adalah tautan |
 | `CommentList` | Avatar 32 px kiri, nama tebal + teks `--fs-base`, di bawahnya "Like · 2 hrs"; tautan "View more comments" di atas bila ada lebih banyak; kotak input "Write a comment..." dengan ikon kamera (INT-05) |

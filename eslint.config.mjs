@@ -14,6 +14,8 @@ export default tseslint.config(
   },
   // CLAUDE.md: jangan pakai v-html untuk konten pengguna.
   { files: ['**/*.vue'], rules: { 'vue/no-v-html': 'error' } },
+  // Nama komponen mengikuti docs/06-ui-ux-spec.md bagian 4 (Button, Avatar, Modal, ...).
+  { files: ['**/*.vue'], rules: { 'vue/multi-word-component-names': 'off' } },
   // Prettier yang mengatur format; aturan gaya Vue dimatikan.
   {
     files: ['**/*.vue'],

@@ -30,26 +30,6 @@ input {
   color: var(--c-text);
 }
 
-.btn {
-  font: inherit;
-  font-weight: bold;
-  padding: var(--sp-2) var(--sp-4);
-  border: 1px solid var(--c-brand-dark);
-  border-radius: var(--radius);
-  background: var(--c-brand);
-  color: var(--c-text-on-brand);
-  cursor: pointer;
-}
-.btn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-.btn--success {
-  background: var(--c-success);
-  border-color: var(--c-success-dark);
-  font-size: var(--fs-post);
-}
-
 .form-error {
   margin: 0 0 var(--sp-3);
   padding: var(--sp-2) var(--sp-3);

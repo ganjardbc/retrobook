@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { t, type MessageKey } from '@retrobook/shared/i18n'
 import { computed, ref } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ApiRequestError } from '../api/http'
 import AppFooter from '../components/AppFooter.vue'
+import Button from '../components/Button.vue'
 import WordMark from '../components/WordMark.vue'
 import { safeRedirect } from '../router'
 import { useAuthStore } from '../stores/auth'
@@ -64,9 +65,9 @@ async function submit() {
               required
             />
           </label>
-          <button class="btn btn--light" type="submit" :disabled="busy">
-            {{ t('auth.login.submit') }}
-          </button>
+          <Button variant="default" type="submit" :disabled="busy">{{
+            t('auth.login.submit')
+          }}</Button>
         </form>
       </div>
     </header>
@@ -82,9 +83,7 @@ async function submit() {
         <section class="signup">
           <h2>{{ t('auth.login.signupTitle') }}</h2>
           <p>{{ t('auth.login.signupBody') }}</p>
-          <RouterLink class="btn btn--success" to="/register">{{
-            t('auth.login.signupCta')
-          }}</RouterLink>
+          <Button variant="success" to="/register">{{ t('auth.login.signupCta') }}</Button>
         </section>
       </div>
     </main>
@@ -120,9 +119,6 @@ async function submit() {
   color: var(--c-text-on-brand);
   font-size: var(--fs-small);
 }
-.btn--light {
-  background: var(--c-brand-dark);
-}
 .main {
   max-width: var(--w-page);
   margin: 0 auto;
@@ -150,9 +146,5 @@ async function submit() {
   background: var(--c-card);
   border: var(--card-border);
   border-radius: var(--radius);
-}
-.signup a {
-  display: inline-block;
-  text-decoration: none;
 }
 </style>
