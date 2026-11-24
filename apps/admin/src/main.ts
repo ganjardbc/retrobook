@@ -11,7 +11,12 @@ async function bootstrap() {
   const app = createApp(App)
   const pinia = createPinia()
   app.use(pinia)
-  await useAdminAuthStore(pinia).init()
+  const auth = useAdminAuthStore(pinia)
+  window.addEventListener('admin:session-expired', () => {
+    auth.clear()
+    void router.replace({ name: 'admin-login', query: { reason: 'expired' } })
+  })
+  await auth.init()
   app.use(router)
   await router.isReady()
   app.mount('#app')
