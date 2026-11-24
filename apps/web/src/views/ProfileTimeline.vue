@@ -22,6 +22,12 @@ async function onDelete(id: number) {
     /* gagal: kartu tetap ada */
   }
 }
+// Share yang dibuat dari timeline: masuk feed, dan masuk timeline ini bila ini profil sendiri.
+function onShared(post: Parameters<typeof list.prepend>[0]) {
+  feed.prepend(post)
+  if (isSelf.value) list.prepend(post)
+}
+
 // Post tertulis di timeline sendiri juga masuk ke feed, dan sebaliknya.
 const onPosted = (post: Parameters<typeof list.prepend>[0]) => list.prepend(post)
 </script>
@@ -35,6 +41,7 @@ const onPosted = (post: Parameters<typeof list.prepend>[0]) => list.prepend(post
       :key="post.id"
       :post="post"
       @delete="onDelete"
+      @shared="onShared"
       @toggle-like="list.toggleLike"
       @comment-count="list.adjustComments"
     />

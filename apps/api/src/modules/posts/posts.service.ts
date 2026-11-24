@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
-import type { Paged, Post as PostDto, UserSummary } from '@retrobook/shared'
+import type { Paged, Post as PostDto, SharedPost, UserSummary } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
 import { UploadsService } from '../uploads/uploads.service'
 import { VisibilityService } from '../visibility/visibility.service'
-import type { CreatePostDto, UpdatePostDto } from './dto/post.dto'
+import type { CreatePostDto, SharePostDto, UpdatePostDto } from './dto/post.dto'
 
 const userSummary = {
   id: true,
@@ -56,7 +56,7 @@ export class PostsService {
       data: { authorId: viewerId, content, imageUrl, privacy: dto.privacy ?? 'FRIENDS' },
       include: this.include(viewerId),
     })
-    return this.toDto(row, new Set())
+    return this.toDto(row, new Set(), new Map())
   }
 
   async get(viewerId: number, id: number): Promise<PostDto> {
@@ -72,7 +72,12 @@ export class PostsService {
     const content = dto.content ?? current.content
     // `imageUrl: null` menghapus foto; tidak dikirim berarti tidak berubah.
     const imageUrl = dto.imageUrl === undefined ? current.imageUrl : dto.imageUrl
-    if (!content.trim() && !imageUrl) throw empty()
+    const isShare = current.sharedFromId !== null
+    if (isShare && dto.imageUrl) {
+      throw new AppException(400, 'VALIDATION_FAILED', 'Share tidak bisa memiliki foto')
+    }
+    // Share boleh tanpa teks: isinya adalah post asal.
+    if (!content.trim() && !imageUrl && !isShare) throw empty()
     if (imageUrl !== current.imageUrl) await this.assertUpload(imageUrl)
 
     const row = await this.prisma.post.update({
@@ -89,6 +94,36 @@ export class PostsService {
       throw new AppException(403, 'FORBIDDEN', 'Hanya pemilik yang bisa menghapus post')
     }
     await this.prisma.post.update({ where: { id }, data: { deletedAt: new Date() } })
+  }
+
+  /**
+   * POST-07: buat post baru yang merujuk post asal. Pembagi harus bisa melihat post asal. Share dari
+   * share merujuk post asal pertamanya (tanpa rantai). Siapa yang boleh melihat isi asal ditentukan
+   * saat dibaca (toDtos), jadi membagikan post FRIENDS ke publik tidak membocorkan isinya.
+   */
+  async share(viewerId: number, id: number, dto: SharePostDto): Promise<PostDto> {
+    const original = await this.findVisible(viewerId, id)
+    let rootId = original.id
+    if (original.sharedFromId !== null) {
+      const root = await this.prisma.post.findFirst({
+        where: { AND: [{ id: original.sharedFromId }, this.visibility.postWhere(viewerId)] },
+        select: { id: true },
+      })
+      if (!root) {
+        throw new AppException(422, 'UNPROCESSABLE', 'Post asal tidak tersedia untuk dibagikan')
+      }
+      rootId = root.id
+    }
+    const row = await this.prisma.post.create({
+      data: {
+        authorId: viewerId,
+        content: dto.content ?? '',
+        privacy: dto.privacy ?? 'FRIENDS',
+        sharedFromId: rootId,
+      },
+      include: this.include(viewerId),
+    })
+    return (await this.toDtos(viewerId, [row]))[0]!
   }
 
   async feed(viewerId: number, limit: number, cursor?: number): Promise<Paged<PostDto>> {
@@ -157,15 +192,47 @@ export class PostsService {
       select: { postId: true },
     })
     const likedIds = new Set(liked.map((l) => l.postId))
-    return rows.map((r) => this.toDto(r, likedIds))
+
+    // Post asal untuk share: hanya yang boleh dilihat pembaca ini (aturan terpusat); selebihnya "tidak tersedia".
+    const sharedIds = [
+      ...new Set(rows.map((r) => r.sharedFromId).filter((x): x is number => x !== null)),
+    ]
+    const shared = new Map<number, SharedPost>()
+    if (sharedIds.length > 0) {
+      const originals = await this.prisma.post.findMany({
+        where: { AND: [{ id: { in: sharedIds } }, this.visibility.postWhere(viewerId)] },
+        select: {
+          id: true,
+          content: true,
+          imageUrl: true,
+          createdAt: true,
+          author: { select: userSummary },
+        },
+      })
+      for (const o of originals) {
+        shared.set(o.id, {
+          id: o.id,
+          author: o.author as UserSummary,
+          content: o.content,
+          imageUrl: o.imageUrl,
+          createdAt: o.createdAt.toISOString(),
+        })
+      }
+    }
+    return rows.map((r) => this.toDto(r, likedIds, shared))
   }
 
-  private toDto(row: PostRow, likedIds: Set<number | null>): PostDto {
+  private toDto(
+    row: PostRow,
+    likedIds: Set<number | null>,
+    shared: Map<number, SharedPost>,
+  ): PostDto {
     return {
       id: row.id,
       author: row.author as UserSummary,
       wallOwner: null, // wall post: T-35
-      sharedFrom: null, // share: T-23
+      sharedFrom:
+        row.sharedFromId === null ? null : (shared.get(row.sharedFromId) ?? { unavailable: true }),
       content: row.content,
       imageUrl: row.imageUrl,
       feeling: row.feeling,

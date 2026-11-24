@@ -9,12 +9,27 @@ export type UserSummary = {
   isBot: boolean
 }
 
+/**
+ * Post asal yang disematkan pada share (POST-07). Hanya isi yang perlu ditampilkan: jumlah like dan
+ * komentar milik share itu sendiri, bukan milik post asal.
+ */
+export type SharedPost = {
+  id: number
+  author: UserSummary
+  content: string
+  imageUrl: string | null
+  createdAt: string
+}
+
 export type Post = {
   id: number
   author: UserSummary
   wallOwner: UserSummary | null
-  /** null bila bukan share; { unavailable: true } bila post asal dihapus. */
-  sharedFrom: Post | { unavailable: true } | null
+  /**
+   * null bila bukan share. `{ unavailable: true }` bila post asal dihapus, disembunyikan, atau tidak boleh
+   * dilihat pembaca ini (aturan visibilitas dicek saat dibaca, bukan saat dibagikan).
+   */
+  sharedFrom: SharedPost | { unavailable: true } | null
   content: string
   imageUrl: string | null
   feeling: string | null

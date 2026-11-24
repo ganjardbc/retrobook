@@ -161,6 +161,8 @@ Status implementasi (T-20): `GET /users/:username` dan `GET /users/:username/pos
 | POST | `/posts/:id/share` | Buat post baru yang merujuk post asal (POST-07) |
 | POST | `/uploads/post-image` | Unggah gambar lebih dulu, hasilnya `imageUrl` untuk dipakai di POST /posts |
 
+Status implementasi (T-23): `POST /posts/:id/share` menerima `{ content?, privacy? }` (teks opsional sampai 5.000 karakter, privasi default FRIENDS, tanpa foto) dan mengembalikan 201 dengan Post baru. Post asal harus terlihat oleh pembagi (404 yang sama bila tidak). Share dari share merujuk post asal pertamanya (tanpa rantai); bila post asal itu tidak lagi terlihat oleh pembagi: 422. Pada Post, `sharedFrom` bernilai `null` untuk post biasa, objek ringkas `{ id, author, content, imageUrl, createdAt }` bila asal terlihat oleh PEMBACA, dan `{ unavailable: true }` bila asal dihapus, disembunyikan, penulisnya BANNED, atau tidak boleh dilihat pembaca itu. Visibilitas asal dicek saat dibaca, bukan saat dibagikan, sehingga membagikan post FRIENDS ke publik tidak membocorkan isinya (itu menyimpang dari tipe 1.3 yang menyebut `sharedFrom: Post`; jumlah like dan komentar milik share itu sendiri). Isi share boleh dikosongkan lewat PATCH, tetapi foto tidak bisa ditambahkan.
+
 **POST /posts**
 
 ```json

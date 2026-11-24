@@ -57,6 +57,14 @@ export const en = {
   'post.delete.confirm': 'Delete this post? This cannot be undone.',
   'post.image.alt': 'Photo posted by {name}',
 
+  'share.action': 'Share',
+  'share.placeholder': 'Say something about this...',
+  'share.submit': 'Share',
+  'share.cancel': 'Cancel',
+  'share.error': 'Could not share this post.',
+  'share.unavailable': "This post isn't available.",
+  'share.label': 'Share this post',
+
   'like.action': 'Like',
   'like.unlike': 'Unlike',
   'like.you': 'You',

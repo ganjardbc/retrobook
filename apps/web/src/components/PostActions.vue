@@ -3,7 +3,7 @@ import { t } from '@retrobook/shared/i18n'
 
 // Bukan tombol ikon besar: tautan teks seperti era 2015 (UX-04). Comment dan Share menyusul di T-16 dan T-23.
 defineProps<{ liked: boolean; busy?: boolean }>()
-defineEmits<{ 'toggle-like': []; comment: [] }>()
+defineEmits<{ 'toggle-like': []; comment: []; share: [] }>()
 </script>
 
 <template>
@@ -19,6 +19,9 @@ defineEmits<{ 'toggle-like': []; comment: [] }>()
     </button>
     <button class="actions__link" type="button" @click="$emit('comment')">
       {{ t('comment.action') }}
+    </button>
+    <button class="actions__link" type="button" @click="$emit('share')">
+      {{ t('share.action') }}
     </button>
   </div>
 </template>

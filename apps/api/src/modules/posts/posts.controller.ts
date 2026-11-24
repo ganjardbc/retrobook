@@ -11,7 +11,7 @@ import {
   Query,
 } from '@nestjs/common'
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
-import { CreatePostDto, CursorQueryDto, UpdatePostDto } from './dto/post.dto'
+import { CreatePostDto, CursorQueryDto, SharePostDto, UpdatePostDto } from './dto/post.dto'
 import { PostsService } from './posts.service'
 
 @Controller('posts')
@@ -35,6 +35,15 @@ export class PostsController {
     @Body() dto: UpdatePostDto,
   ) {
     return this.posts.update(user.id, id, dto)
+  }
+
+  @Post(':id/share')
+  share(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SharePostDto,
+  ) {
+    return this.posts.share(user.id, id, dto)
   }
 
   @Delete(':id')

@@ -22,6 +22,18 @@ export class CreatePostDto {
 
 export class UpdatePostDto extends CreatePostDto {}
 
+/** POST /posts/:id/share: komentar sendiri opsional; foto tidak ada karena isinya post asal. */
+export class SharePostDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000, { message: 'Post maksimal 5.000 karakter' })
+  content?: string
+
+  @IsOptional()
+  @IsEnum(Privacy, { message: 'Privasi harus PUBLIC, FRIENDS, atau ONLY_ME' })
+  privacy?: Privacy
+}
+
 export class CursorQueryDto {
   @IsOptional()
   @Type(() => Number)

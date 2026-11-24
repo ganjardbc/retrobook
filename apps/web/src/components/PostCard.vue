@@ -7,6 +7,8 @@ import { useAuthStore } from '../stores/auth'
 import { formatTime } from '../utils/time'
 import Avatar from './Avatar.vue'
 import CommentList from './CommentList.vue'
+import SharePanel from './SharePanel.vue'
+import SharedPostCard from './SharedPostCard.vue'
 import LikeSummary from './LikeSummary.vue'
 import PostActions from './PostActions.vue'
 
@@ -15,7 +17,9 @@ const emit = defineEmits<{
   delete: [id: number]
   'toggle-like': [id: number]
   'comment-count': [id: number, delta: number]
+  shared: [post: Post]
 }>()
+const sharing = ref(false)
 const comments = ref<InstanceType<typeof CommentList> | null>(null)
 
 const auth = useAuthStore()
@@ -77,10 +81,24 @@ function remove() {
       loading="lazy"
     />
 
+    <SharedPostCard v-if="post.sharedFrom" :original="post.sharedFrom" />
+
     <PostActions
       :liked="post.likedByMe"
       @toggle-like="emit('toggle-like', post.id)"
       @comment="comments?.focusInput()"
+      @share="sharing = !sharing"
+    />
+    <SharePanel
+      v-if="sharing"
+      :post-id="post.id"
+      @cancel="sharing = false"
+      @shared="
+        (p) => {
+          sharing = false
+          emit('shared', p)
+        }
+      "
     />
     <LikeSummary :post="post" />
     <CommentList

@@ -48,7 +48,7 @@ Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan t
 | [x] T-20 | API profil dan timeline profil; hubungan dengan pemanggil | M | PRF-01 |
 | [x] T-21 | `ProfileHeader`, `ProfileTabs`, `InfoCards` (tab Timeline dan About) | L | PRF-01, 04 |
 | [x] T-22 | Edit profil; unggah foto profil dan cover | M | PRF-02, 03 |
-| [ ] T-23 | Share post; wall post dasar belum (Fase 2) | M | POST-07 |
+| [x] T-23 | Share post; wall post dasar belum (Fase 2) | M | POST-07 |
 | [ ] T-24 | Tab Friends dan Photos pada profil | M | PRF-01 |
 
 ## Minggu 4: Penutup Fase 1 (gerbang R1)

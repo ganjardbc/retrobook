@@ -64,6 +64,7 @@ watch(
       @delete="onDelete"
       @toggle-like="onLike"
       @comment-count="feed.adjustComments"
+      @shared="feed.prepend"
     />
 
     <p

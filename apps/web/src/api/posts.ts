@@ -10,6 +10,8 @@ export const postsApi = {
     request<{ likeCount: number; likedByMe: boolean }>(`/posts/${id}/like`, { method: 'PUT' }),
   unlike: (id: number) =>
     request<{ likeCount: number; likedByMe: boolean }>(`/posts/${id}/like`, { method: 'DELETE' }),
+  share: (id: number, input: { content?: string; privacy: Privacy }) =>
+    request<Post>(`/posts/${id}/share`, { method: 'POST', body: input }),
   remove: (id: number) => request<void>(`/posts/${id}`, { method: 'DELETE' }),
   uploadImage: (file: File) => {
     const form = new FormData()
