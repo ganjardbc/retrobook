@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { t } from '@retrobook/shared/i18n'
+import { Icon } from '@iconify/vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import Avatar from './Avatar.vue'
@@ -19,7 +20,7 @@ const auth = useAuthStore()
         :aria-label="t('nav.menu')"
         @click="$emit('toggle-menu')"
       >
-        ☰
+        <Icon icon="mdi:menu" aria-hidden="true" />
       </button>
       <RouterLink class="navbar__brand" to="/"><WordMark /></RouterLink>
       <span class="navbar__spacer" />

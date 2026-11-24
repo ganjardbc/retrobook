@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Profile } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
+import { Icon } from '@iconify/vue'
 import { ref } from 'vue'
 import { useProfileStore } from '../stores/profile'
 import Avatar from './Avatar.vue'
@@ -43,7 +44,8 @@ function unfriend() {
           type="button"
           @click="coverInput?.click()"
         >
-          📷 {{ t('profile.photo.cover') }}
+          <Icon icon="mdi:camera" inline aria-hidden="true" />
+          {{ t('profile.photo.cover') }}
         </button>
         <input
           ref="coverInput"
@@ -64,7 +66,7 @@ function unfriend() {
           :title="t('profile.photo.avatar')"
           @click="avatarInput?.click()"
         >
-          📷
+          <Icon icon="mdi:camera" aria-hidden="true" />
         </button>
         <input
           ref="avatarInput"
@@ -181,6 +183,9 @@ function unfriend() {
   display: none;
 }
 .header__photo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
   padding: var(--sp-1) var(--sp-2);
   border: 0;
   border-radius: var(--radius);

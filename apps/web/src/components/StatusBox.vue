@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PRIVACIES, type Post, type Privacy } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
+import { Icon } from '@iconify/vue'
 import { computed, ref } from 'vue'
 import { ApiRequestError } from '../api/http'
 import { postsApi } from '../api/posts'
@@ -103,7 +104,7 @@ async function submit() {
           :aria-label="t('statusBox.removePhoto')"
           @click="removePhoto"
         >
-          ×
+          <Icon icon="mdi:close" aria-hidden="true" />
         </button>
       </div>
       <p v-if="error" class="form-error" role="alert">{{ error }}</p>
