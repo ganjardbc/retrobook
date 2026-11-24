@@ -8,6 +8,7 @@ import { pokesApi } from '@/modules/pokes/services/api'
 import { useProfileStore } from '@/modules/profile/stores'
 import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
+import ReportDialog from '@/modules/posts/components/ReportDialog.vue'
 
 const props = defineProps<{ profile: Profile }>()
 const store = useProfileStore()
@@ -29,6 +30,7 @@ function unfriend() {
   }
 }
 const chat = useChatStore()
+const reporting = ref(false)
 const poked = ref(false)
 const pokeFailed = ref(false)
 async function poke() {
@@ -124,7 +126,16 @@ async function poke() {
           poked ? t('profile.action.poked') : t('profile.action.poke')
         }}</Button>
       </template>
+      <Button v-if="profile.relationship !== 'SELF'" variant="default" @click="reporting = true">{{
+        t('report.action')
+      }}</Button>
     </div>
+    <ReportDialog
+      v-if="reporting"
+      target-type="USER"
+      :target-id="profile.id"
+      @close="reporting = false"
+    />
     <p v-if="photoError" class="form-error header__error" role="alert">{{ photoError }}</p>
     <p v-else-if="pokeFailed" class="form-error header__error" role="alert">
       {{ t('profile.action.error') }}

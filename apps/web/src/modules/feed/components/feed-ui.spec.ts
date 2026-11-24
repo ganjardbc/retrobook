@@ -144,7 +144,7 @@ describe('PostCard', () => {
     expect(w.text()).toContain('Edited')
   })
 
-  it('menu hapus hanya untuk post sendiri', () => {
+  it('menu hapus dan edit hanya untuk post sendiri; post orang lain hanya punya Report', async () => {
     const mine = mount(PostCard, { props: { post: mkPost() }, global: { plugins: [router()] } })
     expect(mine.find('.post__dots').exists()).toBe(true)
     const theirs = mount(PostCard, {
@@ -155,7 +155,8 @@ describe('PostCard', () => {
       },
       global: { plugins: [router()] },
     })
-    expect(theirs.find('.post__dots').exists()).toBe(false)
+    await theirs.find('.post__dots').trigger('click')
+    expect(theirs.findAll('.post__item').map((b) => b.text())).toEqual(['Report'])
   })
 
   it('hapus: emit hanya setelah konfirmasi', async () => {

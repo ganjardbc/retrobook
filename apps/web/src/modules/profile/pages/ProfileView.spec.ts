@@ -180,14 +180,32 @@ describe('ProfileView', () => {
   })
 
   it.each([
-    ['NONE', ['Add Friend']],
-    ['REQUEST_SENT', ['Cancel Request']],
-    ['REQUEST_RECEIVED', ['Confirm', 'Delete Request']],
-    ['FRIENDS', ['✓ Friends', 'Message', 'Poke']],
+    ['NONE', ['Add Friend', 'Report']],
+    ['REQUEST_SENT', ['Cancel Request', 'Report']],
+    ['REQUEST_RECEIVED', ['Confirm', 'Delete Request', 'Report']],
+    ['FRIENDS', ['✓ Friends', 'Message', 'Poke', 'Report']],
   ] as const)('relationship %s menampilkan tombol yang sesuai', async (rel, labels) => {
     vi.spyOn(usersApi, 'profile').mockResolvedValue(profile({ relationship: rel }))
     const { w } = await mountAt('/siti')
     expect(w.findAll('.header__actions button').map((b) => b.text())).toEqual(labels)
+  })
+
+  it('Report di profil orang lain membuka dialog untuk user itu; profil sendiri tanpa Report', async () => {
+    vi.spyOn(usersApi, 'profile').mockResolvedValue(profile({ relationship: 'NONE' }))
+    const { w } = await mountAt('/siti')
+    const report = w.findAll('.header__actions button').find((b) => b.text() === 'Report')!
+    await report.trigger('click')
+    await flushPromises()
+    const dialog = document.body.querySelector('[role="dialog"]')
+    expect(dialog?.querySelector('h2')?.textContent).toBe('Report this profile')
+    w.unmount()
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull()
+
+    setActivePinia(createPinia()) // store profil menyimpan username yang sama
+    useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
+    vi.spyOn(usersApi, 'profile').mockResolvedValue(profile({ relationship: 'SELF' }))
+    const own = await mountAt('/siti')
+    expect(own.w.findAll('.header__actions button').map((b) => b.text())).not.toContain('Report')
   })
 
   it('Add Friend: memanggil API dan tombol berubah menjadi Cancel Request', async () => {

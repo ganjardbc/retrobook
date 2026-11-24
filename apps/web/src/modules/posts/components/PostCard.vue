@@ -9,6 +9,7 @@ import { useAuthStore } from '@/modules/auth/stores'
 import { formatTime } from '@/helpers/time'
 import Avatar from '@/components/Avatar.vue'
 import HashtagText from '@/modules/posts/components/HashtagText.vue'
+import ReportDialog from '@/modules/posts/components/ReportDialog.vue'
 import CommentList from '@/modules/posts/components/CommentList.vue'
 import SharePanel from '@/modules/posts/components/SharePanel.vue'
 import SharedPostCard from '@/modules/posts/components/SharedPostCard.vue'
@@ -34,6 +35,7 @@ const editError = ref('')
 
 const auth = useAuthStore()
 const menuOpen = ref(false)
+const reporting = ref(false)
 const isMine = computed(() => auth.user?.id === props.post.author.id)
 // BR-04: pemilik dinding boleh menghapus wall post dari dindingnya, tetapi tidak mengeditnya.
 const isWallOwner = computed(() => auth.user?.id === props.post.wallOwner?.id)
@@ -118,7 +120,7 @@ async function saveEdit() {
           <span v-if="post.editedAt">· {{ t('post.edited') }}</span>
         </div>
       </div>
-      <div v-if="isMine || isWallOwner" class="post__menu">
+      <div class="post__menu">
         <button
           class="post__dots"
           type="button"
@@ -133,7 +135,17 @@ async function saveEdit() {
           <button v-if="isMine" type="button" class="post__item" @click="startEdit">
             {{ t('post.edit') }}
           </button>
-          <button type="button" class="post__item" @click="remove">{{ t('post.delete') }}</button>
+          <button v-if="isMine || isWallOwner" type="button" class="post__item" @click="remove">
+            {{ t('post.delete') }}
+          </button>
+          <button
+            v-if="!isMine"
+            type="button"
+            class="post__item"
+            @click="((reporting = true), (menuOpen = false))"
+          >
+            {{ t('report.action') }}
+          </button>
         </div>
       </div>
     </header>
@@ -198,6 +210,12 @@ async function saveEdit() {
       :post-author-id="post.author.id"
       :comment-count="post.commentCount"
       @count-change="(d) => emit('comment-count', post.id, d)"
+    />
+    <ReportDialog
+      v-if="reporting"
+      target-type="POST"
+      :target-id="post.id"
+      @close="reporting = false"
     />
   </article>
 </template>

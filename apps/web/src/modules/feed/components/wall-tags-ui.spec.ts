@@ -79,7 +79,7 @@ describe('PostCard: wall post dan tag', () => {
     expect(w.find('.post__with').html()).toContain(' — with ') // spasi sebelum tanda pisah
   })
 
-  it('menu: penulis mengedit dan menghapus; pemilik dinding hanya menghapus; lainnya tanpa menu', async () => {
+  it('menu: penulis mengedit dan menghapus; pemilik dinding menghapus dan melaporkan; lainnya hanya melaporkan', async () => {
     const post = mkPost({ wallOwner: user(2, 'Bob') })
     const author = mountCard(post, user(1, 'Alice'))
     await author.find('.post__dots').trigger('click')
@@ -87,9 +87,11 @@ describe('PostCard: wall post dan tag', () => {
 
     const owner = mountCard(post, user(2, 'Bob'))
     await owner.find('.post__dots').trigger('click')
-    expect(owner.findAll('.post__item').map((b) => b.text())).toEqual(['Delete'])
+    expect(owner.findAll('.post__item').map((b) => b.text())).toEqual(['Delete', 'Report'])
 
-    expect(mountCard(post, user(3, 'Carol')).find('.post__dots').exists()).toBe(false)
+    const other = mountCard(post, user(3, 'Carol'))
+    await other.find('.post__dots').trigger('click')
+    expect(other.findAll('.post__item').map((b) => b.text())).toEqual(['Report'])
   })
 
   it('edit wall post tidak menampilkan pilihan privasi', async () => {

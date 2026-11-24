@@ -92,7 +92,7 @@ Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan t
 | [x] T-42 | Hashtag, trending 24 jam, halaman hashtag | M | POST-10, SRC-02 |
 | [x] T-43 | Sort feed (Most Recent, Top Stories berdasar like) | S | POST-09 |
 | [x] T-44 | `YearScroller` dan endpoint tahun | M | PRF-05 |
-| [ ] T-45 | Tombol Report dan API laporan | M | INT-04 |
+| [x] T-45 | Tombol Report dan API laporan | M | INT-04 |
 | [ ] T-46 | Tes realtime dua browser: E2E-06, E2E-07; stabilkan | L | Test 4 |
 | [ ] T-47 | Pencocokan visual Fase 2; rekam demo Fase 2 | M | UI 7 |
 

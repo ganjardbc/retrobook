@@ -224,6 +224,8 @@ Status implementasi (T-16): `imageUrl` pada komentar (INT-05) dan kata terlarang
 
 Satu laporan per pelapor per target; mengulang mengembalikan 409 `ALREADY_REPORTED`. `targetId` divalidasi di service karena tidak ada FK (ERD).
 
+Status implementasi (T-45): `POST /reports` 201 `{ id, targetType, targetId, reason, createdAt }`; laporan tersimpan berstatus `PENDING` dan langsung dihitung di `pendingReports` admin. Target harus terlihat bagi pelapor menurut `VisibilityService` (post: privasi, pertemanan, blokir, `hidden`, terhapus, penulis BANNED; komentar: aturan komentar dan post induknya terlihat; profil: bukan terhapus, BANNED, atau pasangan blokir); selain itu 404 `NOT_FOUND` yang sama dengan id yang tidak ada dan tidak ada baris tersimpan. Melaporkan konten atau profil sendiri: 422 `SELF_ACTION_NOT_ALLOWED`. `note` opsional, di-trim, maksimal 500 karakter; `targetType` atau `reason` di luar daftar, `targetId` bukan bilangan positif, dan field asing: 400. Duplikat diputuskan oleh kendala UNIQUE (dua permintaan bersamaan: tepat satu 201, sisanya 409). Belum ada rate limit khusus (BR-10 tidak mencantumkan laporan). UI: item "Report" di menu "…" post (post orang lain), tautan Report di komentar orang lain, dan tombol Report di profil orang lain; semuanya membuka dialog alasan dan catatan. Antrean dan keputusan admin menyusul di T-55.
+
 ## 5. Pertemanan, poke, blokir (FRD-01 sampai FRD-07, POK-01)
 
 | Method | Path | Fungsi |

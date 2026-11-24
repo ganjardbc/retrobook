@@ -1,5 +1,5 @@
 // Objek bersama antara API dan frontend (docs/04-api-spec.md 1.3).
-import type { Privacy } from './enums'
+import type { Privacy, ReportReason, ReportTargetType } from './enums'
 
 export type UserSummary = {
   id: number
@@ -121,6 +121,15 @@ export type Conversation = { user: UserSummary; lastMessage: ChatMessage; unread
 
 /** Satu baris trending (`GET /trending`): hashtag dan jumlah post publik 24 jam terakhir. */
 export type TrendingTag = { tag: string; count: number }
+
+/** Tanda terima `POST /reports` (INT-04). */
+export type ReportReceipt = {
+  id: number
+  targetType: ReportTargetType
+  targetId: number
+  reason: ReportReason
+  createdAt: string
+}
 
 /** Poke aktif yang diterima (`GET /pokes`). */
 export type PokeItem = { user: UserSummary; createdAt: string }

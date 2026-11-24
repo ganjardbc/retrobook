@@ -23,6 +23,12 @@ export const NOTIF_TYPES = [
 ] as const
 export type NotifType = (typeof NOTIF_TYPES)[number]
 
+export const REPORT_TARGET_TYPES = ['POST', 'COMMENT', 'USER'] as const
+export type ReportTargetType = (typeof REPORT_TARGET_TYPES)[number]
+
+export const REPORT_REASONS = ['SPAM', 'HARASSMENT', 'INAPPROPRIATE', 'OTHER'] as const
+export type ReportReason = (typeof REPORT_REASONS)[number]
+
 /** Urutan News Feed (POST-09): terbaru, atau Top Stories (jumlah like). */
 export const FEED_SORTS = ['recent', 'top'] as const
 export type FeedSort = (typeof FEED_SORTS)[number]

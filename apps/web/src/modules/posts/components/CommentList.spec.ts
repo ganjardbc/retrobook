@@ -142,7 +142,8 @@ describe('CommentList', () => {
     const asCommenter = mount_({ commentCount: 2, postAuthorId: 9 })
     await asCommenter.find('.comments__link').trigger('click')
     await flushPromises()
-    const del = (w: typeof asCommenter) => w.findAll('.comment__meta .comments__link')
+    const del = (w: typeof asCommenter) =>
+      w.findAll('.comment__meta .comments__link').filter((b) => b.text() === 'Delete')
     expect(del(asCommenter)).toHaveLength(1) // hanya komentar milik saya (id 5)
 
     useAuthStore().user = { id: 9, username: 'owner', displayName: 'Owner' }

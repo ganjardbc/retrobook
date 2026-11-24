@@ -14,6 +14,7 @@ import { HealthModule } from './modules/health/health.module'
 import { BlocksModule } from './modules/blocks/blocks.module'
 import { NotificationsModule } from './modules/notifications/notifications.module'
 import { MessagesModule } from './modules/messages/messages.module'
+import { ReportsModule } from './modules/reports/reports.module'
 import { SearchModule } from './modules/search/search.module'
 import { RateLimitModule } from './common/rate-limit'
 import { PokesModule } from './modules/pokes/pokes.module'
@@ -42,6 +43,7 @@ import { AdminModule } from './modules/admin/admin.module'
     RealtimeModule,
     NotificationsModule,
     PokesModule,
+    ReportsModule,
     SearchModule,
     MessagesModule,
     HealthModule,

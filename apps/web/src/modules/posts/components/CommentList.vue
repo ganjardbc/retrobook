@@ -8,6 +8,7 @@ import { commentsApi } from '@/modules/posts/services/comments'
 import { useAuthStore } from '@/modules/auth/stores'
 import { formatTime } from '@/helpers/time'
 import Avatar from '@/components/Avatar.vue'
+import ReportDialog from '@/modules/posts/components/ReportDialog.vue'
 
 const props = defineProps<{ postId: number; postAuthorId: number; commentCount: number }>()
 const emit = defineEmits<{ 'count-change': [delta: number] }>()
@@ -27,6 +28,8 @@ const viewLabel = computed(() =>
     ? t('comments.view.one')
     : t('comments.view.many', { n: props.commentCount }),
 )
+const reportingId = ref<number | null>(null)
+const canReport = (c: Comment) => auth.user?.id !== c.author.id
 const canDelete = (c: Comment) =>
   auth.user?.id === c.author.id || auth.user?.id === props.postAuthorId
 
@@ -101,6 +104,13 @@ defineExpose({ focusInput: () => input.value?.focus() })
       {{ viewLabel }}
     </button>
 
+    <ReportDialog
+      v-if="reportingId !== null"
+      target-type="COMMENT"
+      :target-id="reportingId"
+      @close="reportingId = null"
+    />
+
     <ul v-if="comments.length" class="comments__list">
       <li v-for="c in comments" :key="c.id" class="comment">
         <Avatar :name="c.author.displayName" :src="c.author.avatarUrl" size="s" />
@@ -116,6 +126,14 @@ defineExpose({ focusInput: () => input.value?.focus() })
             <span>{{ formatTime(c.createdAt) }}</span>
             <button v-if="canDelete(c)" class="comments__link" type="button" @click="remove(c)">
               {{ t('comments.delete') }}
+            </button>
+            <button
+              v-if="canReport(c)"
+              class="comments__link"
+              type="button"
+              @click="reportingId = c.id"
+            >
+              {{ t('report.action') }}
             </button>
           </div>
         </div>
