@@ -141,7 +141,7 @@ Akun SUSPENDED atau BANNED mendapat 403 (`ACCOUNT_SUSPENDED` atau `ACCOUNT_BANNE
 
 `relationship` pada profil bernilai salah satu: `SELF`, `FRIENDS`, `REQUEST_SENT`, `REQUEST_RECEIVED`, `NONE`. Bila pemanggil diblokir atau memblokir pemilik profil, respons 404 (BR-11).
 
-**Upload gambar**: JPG, PNG, atau WebP, maksimum 5 MB, isi file diperiksa (bukan hanya ekstensi). Server menyimpan di disk lokal dan mengembalikan `{ "url": "/uploads/…" }`. Foto lama tetap tersimpan.
+**Upload gambar**: JPG, PNG, atau WebP, maksimum 5 MB, isi file diperiksa (bukan hanya ekstensi). Server menyimpan di disk lokal (`UPLOAD_DIR`) dan mengembalikan `{ "url": "/uploads/…" }`. Foto lama tetap tersimpan. Tipe dikenali dari byte awal berkas (JPG, PNG, WebP) dan ekstensi mengikuti isi; nama berkas diacak (32 hex). Kode: 413 `FILE_TOO_LARGE` bila lebih dari 5 MB, 415 `UNSUPPORTED_MEDIA_TYPE` bila bukan gambar yang diizinkan, 400 bila field `file` kosong. Catatan: `/uploads/*` disajikan tanpa login (URL acak tidak bisa ditebak, tetapi siapa pun yang punya URL bisa membukanya); ini batasan yang diterima sampai penyimpanan S3-compatible dengan URL bertanda tangan.
 
 ## 4. Post, feed, like, komentar (POST-01 sampai POST-10, INT-01 sampai INT-05)
 

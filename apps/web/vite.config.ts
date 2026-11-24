@@ -10,7 +10,10 @@ export default defineConfig(({ mode }) => {
     plugins: [vue()],
     server: {
       port: 5173,
-      proxy: { '/api': `http://localhost:${env.API_PORT ?? 3000}` },
+      proxy: {
+        '/api': `http://localhost:${env.API_PORT ?? 3000}`,
+        '/uploads': `http://localhost:${env.API_PORT ?? 3000}`,
+      },
     },
     test: { environment: 'jsdom' },
   }

@@ -9,6 +9,8 @@ export class Env {
   @Matches(/^\d+[smhd]$/) JWT_REFRESH_TTL: string = '30d'
   @IsString() CORS_ORIGINS: string = 'http://localhost:5173,http://localhost:5174'
   @IsInt() @Min(1) @Max(65535) API_PORT: number = 3000
+  // Folder unggahan, relatif terhadap direktori kerja API. Pindah ke S3-compatible saat deploy (D-3).
+  @IsString() @MinLength(1) UPLOAD_DIR: string = 'uploads'
 }
 
 export function validateEnv(raw: Record<string, unknown>): Env {

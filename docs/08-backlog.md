@@ -29,7 +29,7 @@ Keluaran minggu 1: bisa daftar dan masuk dari browser, token diperbarui otomatis
 | ID | Tugas | Ukuran | PRD |
 |---|---|---|---|
 | [x] T-10 | Layout tiga kolom, `NavBar`, `LeftMenu`, `Button`, `Avatar` | M | UX-01, 02 |
-| [ ] T-11 | Upload gambar (multer, validasi isi, batas 5 MB) | M | POST-02 |
+| [x] T-11 | Upload gambar (multer, validasi isi, batas 5 MB) | M | POST-02 |
 | [ ] T-12 | API post: buat, baca, edit, hapus (soft delete), pagination cursor | L | POST-01, 05, 06 |
 | [ ] T-13 | Service visibilitas terpusat (privasi, pertemanan, blokir, hidden, BANNED) dipakai semua query baca | L | BR-02, 03, 05, 07, 11 |
 | [ ] T-14 | `StatusBox`, `PostCard`, feed dengan infinite scroll | L | POST-01, 04 |
