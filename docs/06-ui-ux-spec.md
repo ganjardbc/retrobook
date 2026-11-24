@@ -20,47 +20,83 @@ Disalin ke `packages/shared/tokens.css`. Nilai bertanda `~` perlu diukur.
 ```css
 :root {
   /* Warna */
-  --c-brand:        #3b5998;  /* ~ navbar, tombol utama */
-  --c-brand-dark:   #29487d;  /* ~ border navbar, hover */
-  --c-link:         #365899;  /* ~ tautan dan nama */
-  --c-bg:           #e9ebee;  /* ~ latar halaman */
-  --c-card:         #ffffff;
-  --c-border:       #dddfe2;  /* ~ border kartu */
-  --c-border-soft:  #e5e5e5;
-  --c-text:         #1d2129;  /* ~ teks utama */
-  --c-text-muted:   #90949c;  /* ~ waktu, label sekunder */
-  --c-text-on-brand:#ffffff;
-  --c-success:      #42b72a;  /* ~ tombol Sign Up dan Confirm */
-  --c-success-dark: #36a420;
-  --c-danger:       #cc0000;  /* ~ badge notifikasi */
-  --c-hover-bg:     #f6f7f9;
-  --c-input-border: #ccd0d5;
-  --c-highlight:    #fff9d7;  /* ~ sorotan komentar baru */
+  --c-brand: #3c5a98; /* navbar (profil #3c5b99, login #3b5893) */
+  --c-brand-dark: #29487d; /* ~ border navbar, hover */
+  --c-link: #365899; /* ~ tautan dan nama */
+  --c-bg: #e8eaec; /* latar halaman (ukur: profil) */
+  --c-card-subtle: #f5f7f9; /* latar composer dan tombol sekunder (ukur: profil) */
+  --c-card: #ffffff;
+  --c-border: #dddfe2; /* ~ border kartu */
+  --c-border-soft: #e5e5e5;
+  --c-text: #1d2129; /* ~ teks utama */
+  --c-text-muted: #909092; /* waktu, label sekunder (ukur: profil) */
+  --c-text-on-brand: #ffffff;
+  --c-success: #64a355; /* tombol Sign Up 2015: gradien #6bac59 ke #598b48, nilai tengah (ukur: login) */
+  --c-success-dark: #4f8140; /* ~ border tombol hijau (tepi luar tidak terukur) */
+  --c-danger: #cc0000; /* ~ teks error (tidak ada di referensi) */
+  --c-badge: #dd3440; /* badge notifikasi merah (ukur: profil, rata-rata piksel merah) */
+  --c-online: #42a05b; /* titik hijau online (ukur: profil) */
+  --c-hover-bg: #f6f7f9;
+  --c-input-border: #c0c3ce; /* ukur: login */
+  --c-highlight: #fff9d7; /* ~ sorotan komentar baru */
 
   /* Tipografi */
-  --font: Helvetica, Arial, "lucida grande", tahoma, verdana, sans-serif;
+  --font: Helvetica, Arial, 'lucida grande', tahoma, verdana, sans-serif;
   --fs-small: 11px;
-  --fs-base:  12px;   /* teks utama dan komentar */
-  --fs-post:  14px;   /* isi status */
-  --fs-title: 17px;   /* judul bagian */
-  --fs-name:  24px;   /* ~ nama di profil */
-  --lh-base:  1.34;
+  --fs-base: 12px; /* teks utama dan komentar */
+  --fs-post: 14px; /* isi status */
+  --fs-title: 17px; /* judul bagian */
+  --fs-name: 24px; /* ~ nama di profil */
+  --lh-base: 1.34;
 
   /* Jarak dan bentuk */
-  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;  --sp-4: 16px;  --sp-5: 24px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
   --radius: 3px;
   --card-border: 1px solid var(--c-border);
 
   /* Layout */
-  --w-page:    980px;  /* ~ lebar konten */
-  --w-left:    180px;  /* ~ menu kiri */
-  --w-feed:    500px;  /* ~ kolom tengah */
-  --w-right:   300px;  /* ~ kolom kanan */
-  --h-navbar:  42px;   /* ~ */
-  --h-cover:   315px;  /* ~ cover profil */
-  --avatar-s:  32px;   --avatar-m: 50px;   --avatar-l: 160px;
+  --w-page: 980px; /* ~ lebar konten */
+  --w-left: 180px; /* ~ menu kiri */
+  --w-feed: 510px; /* kolom tengah (ukur: profil, 459 sampai 969) */
+  --w-timeline: 849px; /* lebar timeline profil: kolom info + tengah (ukur: profil) */
+  --w-right: 300px; /* ~ kolom kanan */
+  --h-navbar: 42px; /* ukur: profil, baris 54 sampai 95 */
+  --h-login-header: 78px; /* ukur: login (156 px pada 2x) */
+  --h-cover: 315px; /* ~ cover profil */
+  --avatar-s: 32px; /* komentar dan chat (ukur) */
+  --avatar-m: 40px; /* penulis post (ukur) */
+  --avatar-l: 160px; /* foto profil, belum termasuk border putih (ukur) */
+  --friend-tile: 105px; /* kotak grid teman (ukur: 106 x 103) */
 }
 ```
+
+### 2.1 Hasil pengukuran (T-08)
+
+Sumber: ref-2 (profil Maret 2015, 1440 x 900 pada 100 persen) dan ref-3 (login, retina 2x). ref-1 (feed 2014) hanya 640 x 400 sehingga tidak dipakai untuk mengukur. Warna diambil dari piksel dominan atau gelap per area; toleransi sekitar 3 per kanal karena kompresi gambar.
+
+| Token | Nilai terkunci | Dasar pengukuran |
+|---|---|---|
+| `--c-brand` | `#3c5a98` | Navbar profil `#3c5b99`; header login `#3b5893` |
+| `--c-bg` | `#e8eaec` | Latar profil (login memakai `#edf0f6`, tidak dipakai) |
+| `--c-card-subtle` | `#f5f7f9` | Latar composer status |
+| `--c-text-muted` | `#909092` | Waktu post di profil |
+| `--c-success` | `#64a355` | Tombol Sign Up 2015 berupa gradien `#6bac59` ke `#598b48` |
+| `--c-badge` | `#dd3440` | Piksel merah badge jewel (bervariasi `#cf3446` sampai `#f43138`) |
+| `--c-online` | `#42a05b` | Titik hijau chat |
+| `--c-input-border` | `#c0c3ce` | Tepi input login |
+| `--h-navbar` | 42 px | Baris 54 sampai 95 pada profil |
+| `--h-login-header` | 78 px | 156 px pada gambar 2x |
+| `--w-feed` | 510 px | Kolom tengah profil, x 459 sampai 969 |
+| `--w-timeline` | 849 px | Kolom info (120 sampai 441) ditambah kolom tengah |
+| `--avatar-s` / `-m` / `-l` | 32 / 40 / 160 px | Komentar dan chat / penulis post / foto profil |
+| `--friend-tile` | 105 px | Grid teman (106 x 103) |
+| Font | 12 / 14 / 14 bold / 24 px | Meta dan Like / isi dan nama penulis / nama di cover (dari tinggi huruf) |
+
+Belum terukur (tetap `~`): `--c-brand-dark`, `--c-link`, `--c-text`, `--c-border` (selisih dengan nilai awal di bawah toleransi), `--c-success-dark`, `--c-danger`, `--w-left`, `--w-right`, `--w-page`, `--h-cover` (cover di referensi terpotong), `--fs-title`, `--fs-small`. Pencocokan visual penuh dilakukan di T-28.
 
 Tema Time Travel (bonus): `[data-theme="2010"]` dan `[data-theme="2020"]` hanya menimpa variabel warna, font, dan radius di atas.
 

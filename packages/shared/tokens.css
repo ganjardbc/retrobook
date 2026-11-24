@@ -1,22 +1,26 @@
 /* Satu-satunya sumber token visual (docs/06-ui-ux-spec.md bagian 2).
-   Nilai bertanda ~ diukur ulang dari tangkapan layar referensi di T-08. */
+   T-08: nilai diukur dari ref-2 (profil Maret 2015, 1440x900) dan ref-3 (login). Toleransi kompresi gambar sekitar 3 per kanal.
+   Tanda ~ = belum bisa diukur dari referensi yang ada (perkiraan); lihat tabel pengukuran di UI spec 2.1. */
 :root {
   /* Warna */
-  --c-brand: #3b5998; /* ~ navbar, tombol utama */
+  --c-brand: #3c5a98; /* navbar (profil #3c5b99, login #3b5893) */
   --c-brand-dark: #29487d; /* ~ border navbar, hover */
   --c-link: #365899; /* ~ tautan dan nama */
-  --c-bg: #e9ebee; /* ~ latar halaman */
+  --c-bg: #e8eaec; /* latar halaman (ukur: profil) */
+  --c-card-subtle: #f5f7f9; /* latar composer dan tombol sekunder (ukur: profil) */
   --c-card: #ffffff;
   --c-border: #dddfe2; /* ~ border kartu */
   --c-border-soft: #e5e5e5;
   --c-text: #1d2129; /* ~ teks utama */
-  --c-text-muted: #90949c; /* ~ waktu, label sekunder */
+  --c-text-muted: #909092; /* waktu, label sekunder (ukur: profil) */
   --c-text-on-brand: #ffffff;
-  --c-success: #42b72a; /* ~ tombol Sign Up dan Confirm */
-  --c-success-dark: #36a420;
-  --c-danger: #cc0000; /* ~ badge notifikasi */
+  --c-success: #64a355; /* tombol Sign Up 2015: gradien #6bac59 ke #598b48, nilai tengah (ukur: login) */
+  --c-success-dark: #4f8140; /* ~ border tombol hijau (tepi luar tidak terukur) */
+  --c-danger: #cc0000; /* ~ teks error (tidak ada di referensi) */
+  --c-badge: #dd3440; /* badge notifikasi merah (ukur: profil, rata-rata piksel merah) */
+  --c-online: #42a05b; /* titik hijau online (ukur: profil) */
   --c-hover-bg: #f6f7f9;
-  --c-input-border: #ccd0d5;
+  --c-input-border: #c0c3ce; /* ukur: login */
   --c-highlight: #fff9d7; /* ~ sorotan komentar baru */
 
   /* Tipografi */
@@ -40,11 +44,14 @@
   /* Layout */
   --w-page: 980px; /* ~ lebar konten */
   --w-left: 180px; /* ~ menu kiri */
-  --w-feed: 500px; /* ~ kolom tengah */
+  --w-feed: 510px; /* kolom tengah (ukur: profil, 459 sampai 969) */
+  --w-timeline: 849px; /* lebar timeline profil: kolom info + tengah (ukur: profil) */
   --w-right: 300px; /* ~ kolom kanan */
-  --h-navbar: 42px; /* ~ */
+  --h-navbar: 42px; /* ukur: profil, baris 54 sampai 95 */
+  --h-login-header: 78px; /* ukur: login (156 px pada 2x) */
   --h-cover: 315px; /* ~ cover profil */
-  --avatar-s: 32px;
-  --avatar-m: 50px;
-  --avatar-l: 160px;
+  --avatar-s: 32px; /* komentar dan chat (ukur) */
+  --avatar-m: 40px; /* penulis post (ukur) */
+  --avatar-l: 160px; /* foto profil, belum termasuk border putih (ukur) */
+  --friend-tile: 105px; /* kotak grid teman (ukur: 106 x 103) */
 }
