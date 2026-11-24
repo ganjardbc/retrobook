@@ -56,11 +56,11 @@ Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan t
 | ID | Tugas | Ukuran | PRD |
 |---|---|---|---|
 | [x] T-25 | Halaman 404 dan "konten tidak tersedia", status kosong feed | S | User flow 5 |
-| [ ] T-26 | Seeder dasar: 10 user, post, teman, like untuk demo | M | seed |
-| [ ] T-27 | E2E-01 sampai 05 (Playwright) | L | Test 4 |
-| [ ] T-28 | Pencocokan visual dengan referensi feed dan profil; catat selisih | M | UI 7 |
-| [ ] T-29 | Perbaikan bug, label parodi di footer dan register, halaman privacy | M | UX-12 |
-| [ ] T-30 | Rekam demo Fase 1 | S | Tujuan |
+| [x] T-26 | Seeder dasar: 10 user, post, teman, like untuk demo | M | seed |
+| [x] T-27 | E2E-01 sampai 05 (Playwright) | L | Test 4 |
+| [x] T-28 | Pencocokan visual dengan referensi feed dan profil; catat selisih | M | UI 7 |
+| [x] T-29 | Perbaikan bug, label parodi di footer dan register, halaman privacy | M | UX-12 |
+| [x] T-30 | Rekam demo Fase 1 | S | Tujuan |
 
 **Gerbang R1:** semua Must Fase 1 lulus; P1 Test 3.1 sampai 3.4 hijau; demo direkam. Bila belum, hentikan dan selesaikan sebelum Fase 2.
 

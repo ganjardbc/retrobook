@@ -42,6 +42,7 @@ const onPosted = (post: Parameters<typeof list.prepend>[0]) => list.prepend(post
       :post="post"
       @delete="onDelete"
       @shared="onShared"
+      @updated="list.replace"
       @toggle-like="list.toggleLike"
       @comment-count="list.adjustComments"
     />

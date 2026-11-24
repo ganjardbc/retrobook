@@ -6,6 +6,8 @@ export const postsApi = {
     request<Paged<Post>>(`/feed?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
   create: (input: { content: string; privacy: Privacy; imageUrl?: string | null }) =>
     request<Post>('/posts', { method: 'POST', body: input }),
+  update: (id: number, input: { content: string; privacy: Privacy }) =>
+    request<Post>(`/posts/${id}`, { method: 'PATCH', body: input }),
   like: (id: number) =>
     request<{ likeCount: number; likedByMe: boolean }>(`/posts/${id}/like`, { method: 'PUT' }),
   unlike: (id: number) =>

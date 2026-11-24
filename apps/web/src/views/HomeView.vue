@@ -70,6 +70,7 @@ watch(
       @toggle-like="onLike"
       @comment-count="feed.adjustComments"
       @shared="feed.prepend"
+      @updated="feed.replace"
     />
 
     <section

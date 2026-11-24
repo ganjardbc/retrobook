@@ -138,7 +138,7 @@ Dijalankan pada Chromium; skenario realtime memakai dua konteks browser. Data di
 | E2E-01 | Daftar, masuk ke feed kosong, tulis status, status muncul di atas | Fase 1 |
 | E2E-02 | Alice mengirim permintaan teman ke Bob; Bob menerima; keduanya saling melihat status FRIENDS | Fase 1 |
 | E2E-03 | Alice menulis post FRIENDS dan ONLY_ME; Bob hanya melihat yang pertama; Carol tidak melihat keduanya | Fase 1 |
-| E2E-04 | Bob me-like dan mengomentari; ringkasan like dan jumlah komentar benar; Alice menerima notifikasi | Fase 1 dan 2 |
+| E2E-04 | Bob me-like dan mengomentari; ringkasan like dan jumlah komentar benar | Fase 1; notifikasi Alice diverifikasi setelah T-32 (Fase 2) |
 | E2E-05 | Edit dan hapus post; hapus tidak meninggalkan jejak di feed | Fase 1 |
 | E2E-06 | Chat dua arah realtime dengan indikator mengetik dan terbaca | Fase 2 |
 | E2E-07 | Alice menulis di dinding Bob (wall post); tampil sebagai "Alice ▸ Bob"; Bob bisa menghapusnya | Fase 2 |

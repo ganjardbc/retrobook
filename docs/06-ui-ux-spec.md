@@ -218,5 +218,13 @@ Admin sengaja **tidak** bergaya retro supaya bisa dipakai nyaman: bersih, padat,
 1. Ukur hex dengan color picker pada tangkapan layar untuk: navbar, latar halaman, border kartu, tautan, teks utama, teks sekunder, tombol hijau, badge merah.
 2. Ukur dimensi dengan penggaris piksel: tinggi navbar, lebar tiga kolom, tinggi cover, ukuran foto profil dan avatar.
 3. Catat ukuran font dan tebal tiap elemen utama (nama, isi status, komentar, waktu).
+
+## 11. Pencocokan visual Fase 1 (T-28)
+
+Screenshot hasil app pada 1440 × 900 ada di `docs/demo/phase1-feed.png` dan `docs/demo/phase1-profile.png`. Feed cocok pada palet biru/abu, kartu putih berbatas tipis, dan tautan aksi teks. Selisih utama dari ref-1: feed sekarang hanya satu kolom tengah; menu kiri hanya memuat profil dan News Feed/Friends; kolom kanan, pencarian, jewel, dan chat belum tersedia. Ini mengikuti fitur Fase 1 yang sudah ada.
+
+Profil memakai cover biru polos dan avatar inisial karena seed tidak menyediakan foto. Susunan cover, avatar bertumpuk, nama, tab, daftar teman, composer, dan timeline sudah mengikuti ref-2. Selisih layout yang terlihat: panel info/About belum berada di samping timeline pada tampilan Timeline; belum ada modul kolom kanan. Screenshot profil juga memperlihatkan tombol Update Info hanya pada profil sendiri.
+
+Token visual inti tampak konsisten pada kedua halaman. Pencocokan nilai piksel lebih presisi ditunda sampai aset foto seed tersedia; screenshot ref-1 berukuran kecil dan tidak cukup untuk pengukuran geometri yang andal. Demo video ada di `docs/demo/phase1-demo.webm`.
 4. Perbarui `tokens.css` dan hapus tanda `~` pada dokumen ini.
 5. Buat halaman uji `/dev/tokens` yang menampilkan semua komponen untuk dibandingkan berdampingan dengan referensi.

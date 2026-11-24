@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import type { Post } from '@retrobook/shared'
+import { PRIVACIES, type Post, type Privacy } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { ApiRequestError } from '../api/http'
+import { postsApi } from '../api/posts'
 import { useAuthStore } from '../stores/auth'
 import { formatTime } from '../utils/time'
 import Avatar from './Avatar.vue'
@@ -11,6 +13,7 @@ import SharePanel from './SharePanel.vue'
 import SharedPostCard from './SharedPostCard.vue'
 import LikeSummary from './LikeSummary.vue'
 import PostActions from './PostActions.vue'
+import Button from './Button.vue'
 
 const props = defineProps<{ post: Post }>()
 const emit = defineEmits<{
@@ -18,9 +21,15 @@ const emit = defineEmits<{
   'toggle-like': [id: number]
   'comment-count': [id: number, delta: number]
   shared: [post: Post]
+  updated: [post: Post]
 }>()
 const sharing = ref(false)
 const comments = ref<InstanceType<typeof CommentList> | null>(null)
+const editing = ref(false)
+const saving = ref(false)
+const editContent = ref('')
+const editPrivacy = ref<Privacy>('FRIENDS')
+const editError = ref('')
 
 const auth = useAuthStore()
 const menuOpen = ref(false)
@@ -32,6 +41,33 @@ const PRIVACY_ICON = { PUBLIC: '🌐', FRIENDS: '👥', ONLY_ME: '🔒' } as con
 function remove() {
   menuOpen.value = false
   if (window.confirm(t('post.delete.confirm'))) emit('delete', props.post.id)
+}
+
+function startEdit() {
+  menuOpen.value = false
+  editContent.value = props.post.content
+  editPrivacy.value = props.post.privacy
+  editError.value = ''
+  editing.value = true
+}
+
+async function saveEdit() {
+  if (saving.value) return
+  saving.value = true
+  editError.value = ''
+  try {
+    const updated = await postsApi.update(props.post.id, {
+      content: editContent.value,
+      privacy: editPrivacy.value,
+    })
+    emit('updated', updated)
+    editing.value = false
+  } catch (error) {
+    editError.value =
+      error instanceof ApiRequestError ? error.messages.join(' ') : t('error.network')
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -66,13 +102,33 @@ function remove() {
           …
         </button>
         <div v-if="menuOpen" class="post__dropdown">
+          <button type="button" class="post__item" @click="startEdit">{{ t('post.edit') }}</button>
           <button type="button" class="post__item" @click="remove">{{ t('post.delete') }}</button>
         </div>
       </div>
     </header>
 
     <!-- Konten pengguna selalu ditampilkan sebagai teks, tidak pernah sebagai HTML. -->
-    <p v-if="post.content" class="post__text">{{ post.content }}</p>
+    <form v-if="editing" class="post__editor" @submit.prevent="saveEdit">
+      <textarea
+        v-model="editContent"
+        class="post__edit-text"
+        rows="3"
+        maxlength="5000"
+        :aria-label="t('post.edit.placeholder')"
+      />
+      <select v-model="editPrivacy" class="post__edit-privacy" :aria-label="t('statusBox.privacy')">
+        <option v-for="privacy in PRIVACIES" :key="privacy" :value="privacy">
+          {{ t(`privacy.${privacy}`) }}
+        </option>
+      </select>
+      <p v-if="editError" class="form-error" role="alert">{{ editError }}</p>
+      <div class="post__edit-actions">
+        <Button variant="default" @click="editing = false">{{ t('edit.cancel') }}</Button>
+        <Button type="submit" :disabled="saving">{{ t('edit.save') }}</Button>
+      </div>
+    </form>
+    <p v-else-if="post.content" class="post__text">{{ post.content }}</p>
     <img
       v-if="post.imageUrl"
       class="post__image"
@@ -142,6 +198,33 @@ function remove() {
   font-size: var(--fs-post);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+.post__editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+}
+.post__edit-text {
+  width: 100%;
+  padding: var(--sp-2);
+  border: 1px solid var(--c-input-border);
+  border-radius: var(--radius);
+  font: inherit;
+  resize: vertical;
+}
+.post__edit-privacy {
+  align-self: flex-start;
+  padding: var(--sp-1);
+  border: 1px solid var(--c-input-border);
+  border-radius: var(--radius);
+  background: var(--c-card);
+  font: inherit;
+}
+.post__edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
 }
 .post__image {
   display: block;

@@ -10,7 +10,8 @@
     "validate": "dotenv -e ../../.env -- prisma validate",
     "migrate": "dotenv -e ../../.env -- prisma migrate dev",
     "migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
-    "migrate:test": "dotenv -e ../../.env -- sh -c 'DATABASE_URL=$TEST_DATABASE_URL prisma migrate deploy'"
+    "migrate:test": "dotenv -e ../../.env -- sh -c 'DATABASE_URL=$TEST_DATABASE_URL prisma migrate deploy'",
+    "seed": "dotenv -e ../../.env -- prisma db seed"
   },
   "devDependencies": {
     "dotenv-cli": "^11.1.0",
@@ -18,5 +19,8 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
   }
 }

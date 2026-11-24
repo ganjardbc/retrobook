@@ -78,6 +78,10 @@ export function usePostList(fetchPage: (cursor: number | null) => Promise<Paged<
   const prepend = (post: Post) => {
     if (!items.value.some((p) => p.id === post.id)) items.value.unshift(post)
   }
+  const replace = (post: Post) => {
+    const index = items.value.findIndex((item) => item.id === post.id)
+    if (index !== -1) items.value[index] = post
+  }
   const remove = (id: number) => {
     items.value = items.value.filter((p) => p.id !== id)
   }
@@ -93,6 +97,7 @@ export function usePostList(fetchPage: (cursor: number | null) => Promise<Paged<
     toggleLike,
     adjustComments,
     prepend,
+    replace,
     remove,
   }
 }

@@ -4,6 +4,16 @@ export const en = {
   'common.loading': 'Loading…',
   'footer.parody': 'Fun project / parody. Not an official product of anything.',
   'footer.privacy': 'Privacy',
+  'privacy.title': 'Privacy notice',
+  'privacy.intro':
+    'Retrobook is a local educational parody and demo. Please do not use a real password or post sensitive personal information.',
+  'privacy.data.title': 'Information in this demo',
+  'privacy.data.body':
+    'The app stores account details (email, username, and display name), profile information and photos you choose to add, posts, comments, likes, and friend connections.',
+  'privacy.security.title': 'How it is handled',
+  'privacy.security.body':
+    'Passwords are stored as secure hashes. This demo stores its database and uploaded photos on the local development server; it is not intended for public use.',
+  'privacy.home': 'Back to Retrobook',
 
   'auth.login.identifier': 'Email or username',
   'auth.login.password': 'Password',
@@ -53,6 +63,8 @@ export const en = {
 
   'post.edited': 'Edited',
   'post.menu': 'Post options',
+  'post.edit': 'Edit',
+  'post.edit.placeholder': 'Edit your post',
   'post.delete': 'Delete',
   'post.delete.confirm': 'Delete this post? This cannot be undone.',
   'post.image.alt': 'Photo posted by {name}',
