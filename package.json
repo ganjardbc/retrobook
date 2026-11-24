@@ -6,7 +6,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "pnpm -r --parallel --filter @retrobook/api --filter @retrobook/web dev",
+    "dev": "pnpm -r --parallel --filter @retrobook/api --filter @retrobook/web --filter @retrobook/admin dev",
+    "dev:api": "pnpm --filter @retrobook/api dev",
+    "dev:admin": "pnpm --filter @retrobook/admin dev",
+    "dev:web": "pnpm --filter @retrobook/web dev",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

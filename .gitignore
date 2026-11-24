@@ -13,3 +13,5 @@ test-results/
 .DS_Store
 docs/assets/reference/
 *.tsbuildinfo
+.pnpm-store
+.codegraph/
