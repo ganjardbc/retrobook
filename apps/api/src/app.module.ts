@@ -4,6 +4,7 @@ import { validateEnv } from './config/env.validation'
 import { PrismaModule } from './prisma/prisma.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { CommentsModule } from './modules/comments/comments.module'
+import { FriendsModule } from './modules/friends/friends.module'
 import { LikesModule } from './modules/likes/likes.module'
 import { PostsModule } from './modules/posts/posts.module'
 import { UploadsModule } from './modules/uploads/uploads.module'
@@ -25,6 +26,7 @@ import { HealthModule } from './modules/health/health.module'
     PostsModule,
     LikesModule,
     CommentsModule,
+    FriendsModule,
     HealthModule,
   ],
 })

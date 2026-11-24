@@ -14,6 +14,11 @@ import { Prisma } from '@prisma/client'
  */
 @Injectable()
 export class VisibilityService {
+  /** Akun yang boleh muncul bagi orang lain: tidak terhapus dan tidak BANNED (BR-05). */
+  userWhere(): Prisma.UserWhereInput {
+    return { deletedAt: null, status: { not: 'BANNED' } }
+  }
+
   /** Filter User: berteman (ACCEPTED, arah mana pun) dengan `viewerId`. */
   friendOf(viewerId: number): Prisma.UserWhereInput {
     return {

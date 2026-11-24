@@ -42,6 +42,14 @@ export type Comment = {
 
 export type Paged<T> = { items: T[]; nextCursor: number | null }
 
+/** Permintaan pertemanan masuk (GET /friends/requests). */
+export type FriendRequest = { user: UserSummary; createdAt: string }
+
+/** Daftar teman: Paged biasa ditambah jumlah total (tab Friends menampilkan jumlah, FRD-04). */
+export type FriendsPage = Paged<UserSummary> & { total: number }
+
+export type FriendshipResult = { userId: number; status: 'PENDING' | 'ACCEPTED' }
+
 export type AuthSession = {
   user: Pick<UserSummary, 'id' | 'username' | 'displayName'>
   accessToken: string

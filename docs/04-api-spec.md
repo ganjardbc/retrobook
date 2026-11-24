@@ -226,6 +226,13 @@ Satu laporan per pelapor per target; mengulang mengembalikan 409 `ALREADY_REPORT
 | DELETE | `/blocks/:userId` | Buka blokir |
 | GET | `/blocks` | Daftar yang diblokir |
 
+Status implementasi (T-18): permintaan, terima, tolak/batalkan, unfriend, daftar permintaan masuk, dan daftar teman sudah ada; saran teman, birthday, poke, dan blokir menyusul. Kode respons:
+
+- `POST /friends/requests` 201 `{ userId, status }` dengan status `PENDING`, atau `ACCEPTED` bila lawan sudah mengirim lebih dulu (permintaan silang). Mengirim ulang permintaan sendiri yang masih PENDING: 409 `REQUEST_PENDING`; sudah berteman: 409 `ALREADY_FRIENDS`; user tidak ada, BANNED, atau terhapus: 404; diri sendiri: 422 `SELF_ACTION_NOT_ALLOWED`.
+- `POST /friends/requests/:userId/accept` 200 (hanya penerima; selain itu 404; diulang aman). `DELETE /friends/requests/:userId` dan `DELETE /friends/:userId` 204, 404 bila tidak ada baris yang cocok.
+- `GET /friends/requests` mengembalikan `{ items: [{ user, createdAt }], nextCursor }`, terbaru dulu. `GET /friends` mengembalikan `{ items: UserSummary[], nextCursor, total }`, terbaru dulu, `?q=` mencocokkan nama atau username apa adanya (karakter `%` dan `_` bukan wildcard). Teman yang BANNED atau terhapus tidak ditampilkan dan tidak dihitung.
+- Blokir (BR-11) belum diterapkan di sini karena tabel `blocks` belum ada.
+
 Aturan (BR-01, BR-11):
 
 - Tidak bisa berteman dengan diri sendiri (422 `SELF_ACTION_NOT_ALLOWED`) atau dengan user yang saling memblokir (404).
