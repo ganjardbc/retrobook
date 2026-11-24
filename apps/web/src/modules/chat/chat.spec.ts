@@ -13,7 +13,9 @@ type Handler = (...a: never[]) => void
 const sock = vi.hoisted(() => {
   const handlers = new Map<string, Set<(...a: unknown[]) => void>>()
   const emitWithAck = vi.fn()
+  const emit = vi.fn()
   const socket = {
+    emit,
     connected: true,
     on: (e: string, h: (...a: unknown[]) => void) =>
       handlers.set(e, (handlers.get(e) ?? new Set()).add(h)),
@@ -21,7 +23,7 @@ const sock = vi.hoisted(() => {
     timeout: vi.fn(() => ({ emitWithAck })),
   }
   const fire = (e: string, ...a: unknown[]) => handlers.get(e)?.forEach((h) => h(...a))
-  return { handlers, emitWithAck, socket, fire }
+  return { handlers, emitWithAck, emit, socket, fire }
 })
 vi.mock('@/plugins/realtime', () => ({ getSocket: () => sock.socket, disconnectRealtime: vi.fn() }))
 vi.mock('@/modules/chat/services/api', () => ({
@@ -313,6 +315,95 @@ describe('chat store: mengirim', () => {
   })
 })
 
+describe('chat store: mengetik dan terbaca (CHT-04)', () => {
+  const emitted = () => sock.emit.mock.calls.map((c) => [c[0], c[1]])
+
+  it('event typing dari lawan menyalakan indikator dan padam sendiri setelah 6 detik', async () => {
+    vi.useFakeTimers()
+    const chat = useChatStore()
+    chat.start()
+    sock.fire('typing', { userId: 2, isTyping: true })
+    expect(chat.typing[2]).toBe(true)
+    await vi.advanceTimersByTimeAsync(5900)
+    expect(chat.typing[2]).toBe(true)
+    await vi.advanceTimersByTimeAsync(200)
+    expect(chat.typing[2]).toBe(false)
+    vi.useRealTimers()
+  })
+
+  it('isTyping false memadamkan; pesan dari lawan juga memadamkan', async () => {
+    const chat = await started()
+    sock.fire('typing', { userId: 2, isTyping: true })
+    sock.fire('typing', { userId: 2, isTyping: false })
+    expect(chat.typing[2]).toBe(false)
+    sock.fire('typing', { userId: 2, isTyping: true })
+    sock.fire('message:new', msg(80, 2, ME))
+    expect(chat.typing[2]).toBe(false)
+  })
+
+  it('mengetik: true sekali per detik, false setelah 3 detik diam', async () => {
+    vi.useFakeTimers()
+    const chat = useChatStore()
+    chat.start()
+    chat.notifyTyping(2, 'h')
+    chat.notifyTyping(2, 'ha')
+    chat.notifyTyping(2, 'hal')
+    expect(emitted()).toEqual([['typing', { toUserId: 2, isTyping: true }]])
+    await vi.advanceTimersByTimeAsync(1100)
+    chat.notifyTyping(2, 'halo')
+    expect(emitted()).toHaveLength(2) // lewat satu detik: true lagi
+    await vi.advanceTimersByTimeAsync(3100)
+    expect(emitted().at(-1)).toEqual(['typing', { toUserId: 2, isTyping: false }])
+    expect(emitted()).toHaveLength(3)
+    vi.useRealTimers()
+  })
+
+  it('teks dikosongkan, kirim pesan, dan tutup jendela mengirim false satu kali', async () => {
+    const chat = await started()
+    sock.emitWithAck.mockResolvedValue({ ok: true, message: msg(90, ME, 2, 'x') })
+    chat.openWindow(user(2, 'Bob'))
+    await flushPromises()
+
+    chat.notifyTyping(2, 'abc')
+    chat.notifyTyping(2, '  ')
+    expect(emitted().map((e) => (e[1] as { isTyping: boolean }).isTyping)).toEqual([true, false])
+    chat.stopTyping(2) // sudah berhenti: tidak ada false kedua
+    expect(emitted()).toHaveLength(2)
+
+    chat.notifyTyping(2, 'abc')
+    await chat.send(2, 'abc')
+    expect(emitted().at(-1)).toEqual(['typing', { toUserId: 2, isTyping: false }])
+
+    sock.emit.mockClear()
+    chat.notifyTyping(2, 'def')
+    chat.closeWindow(2)
+    expect(emitted().map((e) => (e[1] as { isTyping: boolean }).isTyping)).toEqual([true, false])
+  })
+
+  it('socket putus: tidak mengirim apa pun', async () => {
+    const chat = await started()
+    sock.socket.connected = false
+    chat.notifyTyping(2, 'abc')
+    expect(sock.emit).not.toHaveBeenCalled()
+  })
+
+  it('message:read menandai pesan saya sampai upToMessageId; pesan lawan dan pending tidak', async () => {
+    api.history.mockResolvedValue({
+      items: [msg(14, 2, ME), msg(13, ME, 2), msg(12, ME, 2), msg(11, ME, 2)],
+      nextCursor: null,
+    })
+    const chat = await started()
+    chat.openWindow(user(2, 'Bob'))
+    await flushPromises()
+    sock.fire('message:read', { byUserId: 2, upToMessageId: 12 })
+    const read = (id: number) => chat.thread(2).messages.find((m) => m.id === id)!.readAt
+    expect(read(11)).not.toBeNull()
+    expect(read(12)).not.toBeNull()
+    expect(read(13)).toBeNull() // lebih baru dari yang dibaca
+    expect(read(14)).toBeNull() // milik lawan
+  })
+})
+
 describe('ChatSidebar', () => {
   const mountSidebar = () => mount(ChatSidebar)
 
@@ -403,6 +494,46 @@ describe('ChatDock dan ChatWindow', () => {
     expect(w.find('.win__log').exists()).toBe(true)
     await w.find('.win__close').trigger('click')
     expect(w.find('.win').exists()).toBe(false)
+  })
+
+  it('indikator mengetik muncul di jendela; mengetik di kotak pesan memberi tahu lawan', async () => {
+    const chat = await started()
+    chat.openWindow(user(2, 'Bob'))
+    const w = mountDock()
+    await flushPromises()
+    expect(w.find('.win__typing').exists()).toBe(false)
+    sock.fire('typing', { userId: 2, isTyping: true })
+    await flushPromises()
+    expect(w.find('.win__typing').text()).toBe('Bob is typing...')
+    sock.fire('typing', { userId: 2, isTyping: false })
+    await flushPromises()
+    expect(w.find('.win__typing').exists()).toBe(false)
+
+    await w.find('input').setValue('ha')
+    expect(sock.emit).toHaveBeenCalledWith('typing', { toUserId: 2, isTyping: true })
+  })
+
+  it('"Seen" di bawah pesan terakhir saya yang sudah dibaca, dan berpindah saat yang lebih baru dibaca', async () => {
+    api.history.mockResolvedValue({
+      items: [msg(13, 2, ME), msg(12, ME, 2), msg(11, ME, 2)],
+      nextCursor: null,
+    })
+    const chat = await started()
+    chat.openWindow(user(2, 'Bob'))
+    const w = mountDock()
+    await flushPromises()
+    expect(w.find('.msg__seen').exists()).toBe(false)
+
+    sock.fire('message:read', { byUserId: 2, upToMessageId: 11 })
+    await flushPromises()
+    expect(w.findAll('.msg__seen')).toHaveLength(1)
+    expect(w.findAll('.msg')[0]!.find('.msg__seen').text()).toBe('Seen') // pesan 11, bukan 12
+
+    sock.fire('message:read', { byUserId: 2, upToMessageId: 12 })
+    await flushPromises()
+    expect(w.findAll('.msg__seen')).toHaveLength(1)
+    expect(w.findAll('.msg')[1]!.find('.msg__seen').exists()).toBe(true) // pindah ke pesan 12
+    expect(w.findAll('.msg')[0]!.find('.msg__seen').exists()).toBe(false)
   })
 
   it('"Load older messages" muncul bila ada cursor; pesan gagal punya tombol Retry', async () => {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { t } from '@retrobook/shared/i18n'
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { formatTime } from '@/helpers/time'
 import { type ChatWindow, useChatStore } from '@/modules/chat/stores'
 
@@ -11,6 +11,13 @@ const log = ref<HTMLElement | null>(null)
 const input = ref<HTMLInputElement | null>(null)
 
 const thread = () => chat.thread(props.win.user.id)
+// "Seen" di bawah pesan terakhir saya yang sudah dibaca lawan; pesan yang lebih baru belum terbaca.
+const seenId = computed(
+  () =>
+    thread()
+      .messages.filter((m) => m.senderId !== props.win.user.id && !m.pending && m.readAt)
+      .at(-1)?.id ?? null,
+)
 
 function scrollToEnd() {
   void nextTick(() => log.value && (log.value.scrollTop = log.value.scrollHeight))
@@ -89,6 +96,7 @@ function submit() {
           :class="{ 'msg--mine': m.senderId !== win.user.id, 'msg--pending': m.pending }"
         >
           <span class="msg__text" :title="formatTime(m.createdAt)">{{ m.content }}</span>
+          <span v-if="m.id === seenId" class="msg__seen">{{ t('chat.seen') }}</span>
           <span v-if="m.failed" class="msg__failed">
             {{ t('chat.failed') }}
             <button type="button" @click="chat.retry(win.user.id, m.id)">
@@ -97,6 +105,9 @@ function submit() {
           </span>
         </div>
       </div>
+      <p v-if="chat.typing[win.user.id]" class="win__typing" role="status">
+        {{ t('chat.typing', { name: win.user.displayName }) }}
+      </p>
       <form class="win__form" @submit.prevent="submit">
         <input
           ref="input"
@@ -105,6 +116,7 @@ function submit() {
           autocomplete="off"
           :placeholder="t('chat.input')"
           :aria-label="t('chat.input')"
+          @input="chat.notifyTyping(win.user.id, draft)"
         />
       </form>
     </template>
@@ -194,6 +206,16 @@ function submit() {
 }
 .msg--pending {
   opacity: 0.6;
+}
+.win__typing {
+  margin: 0;
+  padding: 0 var(--sp-2) var(--sp-1);
+  color: var(--c-text-muted);
+  font-size: var(--fs-small);
+}
+.msg__seen {
+  color: var(--c-text-muted);
+  font-size: var(--fs-small);
 }
 .msg__failed {
   color: var(--c-danger);

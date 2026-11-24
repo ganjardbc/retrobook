@@ -64,6 +64,8 @@ export const en = {
   'chat.thread.empty': 'Say hello!',
   'chat.failed': 'Not sent.',
   'chat.retry': 'Retry',
+  'chat.typing': '{name} is typing...',
+  'chat.seen': 'Seen',
   'chat.offline': 'Reconnecting…',
   'profile.action.message': 'Message',
   'jewel.error': 'Could not load. Please try again.',

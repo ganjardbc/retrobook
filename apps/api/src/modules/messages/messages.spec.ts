@@ -484,6 +484,87 @@ describe('Pesan (integrasi)', () => {
       }
     })
 
+    describe('typing (CHT-04)', () => {
+      const typing = (s: Socket, toUserId: unknown, isTyping: unknown) =>
+        s.emit('typing', { toUserId, isTyping })
+
+      it('diteruskan ke teman dengan userId pengirim; pengirim sendiri tidak menerimanya', async () => {
+        const { a, b } = await pair()
+        const sa = await connect(a)
+        const sa2 = await connect(a)
+        const sb = await connect(b)
+        const got = next<{ userId: number; isTyping: boolean }>(sb, 'typing')
+        const own = silent(sa2, 'typing')
+        typing(sa, b.id, true)
+        expect(await got).toEqual({ userId: a.id, isTyping: true })
+        expect(await own).toBe(true)
+      })
+
+      it('true dibatasi satu per detik; false selalu diteruskan', async () => {
+        const { a, b } = await pair()
+        const sa = await connect(a)
+        const sb = await connect(b)
+        const events: boolean[] = []
+        sb.on('typing', (p: { isTyping: boolean }) => events.push(p.isTyping))
+        for (let i = 0; i < 5; i++) typing(sa, b.id, true)
+        await new Promise((r) => setTimeout(r, 300))
+        expect(events).toEqual([true])
+        typing(sa, b.id, false)
+        await new Promise((r) => setTimeout(r, 200))
+        expect(events).toEqual([true, false])
+        typing(sa, b.id, true) // setelah false, batas direset
+        await new Promise((r) => setTimeout(r, 200))
+        expect(events).toEqual([true, false, true])
+      })
+
+      it.each([
+        ['bukan teman', async () => void (await h.prisma.friendship.deleteMany())],
+        [
+          'diblokir',
+          async (a: User, b: User) =>
+            void (await h.prisma.block.create({ data: { blockerId: b.id, blockedId: a.id } })),
+        ],
+      ])('%s: diam, tidak ada event dan tidak ada galat', async (_n, setup) => {
+        const { a, b } = await pair()
+        await setup(a, b)
+        const sa = await connect(a)
+        const sb = await connect(b)
+        const quiet = silent(sb, 'typing')
+        typing(sa, b.id, true)
+        expect(await quiet).toBe(true)
+      })
+
+      it('payload tidak valid diabaikan tanpa memutus koneksi', async () => {
+        const { a, b } = await pair()
+        const sa = await connect(a)
+        const sb = await connect(b)
+        const quiet = silent(sb, 'typing')
+        typing(sa, 'x', true)
+        typing(sa, b.id, 'ya')
+        typing(sa, 0, true)
+        sa.emit('typing', null)
+        sa.emit('typing', 'teks')
+        expect(await quiet).toBe(true)
+        const got = next(sb, 'typing')
+        typing(sa, b.id, true) // masih berfungsi
+        await got
+        expect(sa.connected).toBe(true)
+      })
+
+      it('diblokir setelah terhubung: dicek per event', async () => {
+        const { a, b } = await pair()
+        const sa = await connect(a)
+        const sb = await connect(b)
+        const first = next(sb, 'typing')
+        typing(sa, b.id, true)
+        await first
+        await h.prisma.block.create({ data: { blockerId: b.id, blockedId: a.id } })
+        const quiet = silent(sb, 'typing')
+        typing(sa, b.id, false)
+        expect(await quiet).toBe(true)
+      })
+    })
+
     it('message:read (socket dan REST): pengirim mendapat message:read dengan upToMessageId', async () => {
       const { a, b } = await pair()
       const sa = await connect(a)

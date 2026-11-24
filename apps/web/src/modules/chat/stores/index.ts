@@ -18,6 +18,11 @@ export type ChatWindow = { user: UserSummary; minimized: boolean }
 
 export const MAX_WINDOWS = 3
 const ACK_TIMEOUT_MS = 8000
+/** Kirim "mengetik" paling sering sekali per detik; berhenti dianggap setelah 3 detik tanpa ketikan. */
+const TYPING_THROTTLE_MS = 1000
+const TYPING_IDLE_MS = 3000
+/** Indikator lawan hilang sendiri bila tak ada kabar lagi (mis. ia putus di tengah mengetik). */
+const TYPING_EXPIRE_MS = 6000
 
 const byPresence = (a: ChatFriend, b: ChatFriend) =>
   Number(b.online) - Number(a.online) || a.user.displayName.localeCompare(b.user.displayName)
@@ -43,6 +48,10 @@ export const useChatStore = defineStore('chat', () => {
   const windows = ref<ChatWindow[]>([])
   const threads = reactive<Record<number, Thread>>({})
   const totalUnread = computed(() => friends.value.reduce((n, f) => n + f.unreadCount, 0))
+  /** userId -> sedang mengetik kepada saya (CHT-04). */
+  const typing = reactive<Record<number, boolean>>({})
+  const typingTimers = new Map<number, ReturnType<typeof setTimeout>>()
+  const outgoing = new Map<number, { last: number; idle: ReturnType<typeof setTimeout> }>()
   let tempSeq = 0
 
   const me = () => auth.user?.id ?? 0
@@ -114,6 +123,52 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  function onTyping(p: { userId: number; isTyping: boolean }) {
+    clearTimeout(typingTimers.get(p.userId))
+    typing[p.userId] = p.isTyping
+    if (p.isTyping) {
+      typingTimers.set(
+        p.userId,
+        setTimeout(() => (typing[p.userId] = false), TYPING_EXPIRE_MS),
+      )
+    }
+  }
+
+  /** Lawan membaca pesan saya sampai `upToMessageId`: tandai terbaca di jendela (indikator "Seen"). */
+  function onRead(p: { byUserId: number; upToMessageId: number }) {
+    const at = new Date().toISOString()
+    for (const m of thread(p.byUserId).messages) {
+      if (m.senderId === me() && m.id > 0 && m.id <= p.upToMessageId && !m.readAt) m.readAt = at
+    }
+  }
+
+  function emitTyping(userId: number, isTyping: boolean) {
+    const socket = getSocket()
+    if (socket.connected) socket.emit('typing', { toUserId: userId, isTyping })
+  }
+
+  /** Dipanggil tiap ketikan di kotak pesan; teks kosong berarti berhenti mengetik. */
+  function notifyTyping(userId: number, text: string) {
+    if (!text.trim()) return stopTyping(userId)
+    const now = Date.now()
+    const st = outgoing.get(userId)
+    clearTimeout(st?.idle)
+    let last = st?.last ?? 0
+    if (now - last >= TYPING_THROTTLE_MS) {
+      emitTyping(userId, true)
+      last = now
+    }
+    outgoing.set(userId, { last, idle: setTimeout(() => stopTyping(userId), TYPING_IDLE_MS) })
+  }
+
+  function stopTyping(userId: number) {
+    const st = outgoing.get(userId)
+    if (!st) return
+    clearTimeout(st.idle)
+    outgoing.delete(userId)
+    emitTyping(userId, false)
+  }
+
   function openWindow(user: UserSummary) {
     const existing = windows.value.find((w) => w.user.id === user.id)
     if (existing) existing.minimized = false
@@ -127,6 +182,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   function closeWindow(userId: number) {
+    stopTyping(userId)
     windows.value = windows.value.filter((w) => w.user.id !== userId)
   }
 
@@ -186,6 +242,7 @@ export const useChatStore = defineStore('chat', () => {
       pending: true,
       clientId: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
     }
+    stopTyping(userId) // mengirim berarti selesai mengetik
     const t = thread(userId)
     t.messages = [...t.messages, local]
     return deliver(userId, local)
@@ -210,6 +267,7 @@ export const useChatStore = defineStore('chat', () => {
     // Riwayat belum pernah dimuat: loadLatest nanti membawa pesan ini; cukup hitung belum dibaca.
     if (t.loaded || t.loading) t.messages = merge(t.messages, [msg])
     if (mine) return
+    onTyping({ userId: partner, isTyping: false }) // pesan sudah tiba, indikator tak perlu lagi
 
     const w = windows.value.find((x) => x.user.id === partner)
     if (w && !w.minimized && document.visibilityState !== 'hidden') {
@@ -246,11 +304,15 @@ export const useChatStore = defineStore('chat', () => {
     const onDisconnect = () => (connected.value = false)
     socket.on('message:new', receive)
     socket.on('presence', onPresence)
+    socket.on('typing', onTyping)
+    socket.on('message:read', onRead)
     socket.on('connect', onConnect)
     socket.on('disconnect', onDisconnect)
     stopListening = () => {
       socket.off('message:new', receive)
       socket.off('presence', onPresence)
+      socket.off('typing', onTyping)
+      socket.off('message:read', onRead)
       socket.off('connect', onConnect)
       socket.off('disconnect', onDisconnect)
     }
@@ -263,6 +325,11 @@ export const useChatStore = defineStore('chat', () => {
     friends.value = []
     windows.value = []
     for (const k of Object.keys(threads)) delete threads[Number(k)]
+    for (const k of Object.keys(typing)) delete typing[Number(k)]
+    typingTimers.forEach(clearTimeout)
+    typingTimers.clear()
+    outgoing.forEach((o) => clearTimeout(o.idle))
+    outgoing.clear()
     connected.value = false
     friendsLoading.value = false
     friendsFailed.value = false
@@ -275,6 +342,7 @@ export const useChatStore = defineStore('chat', () => {
     connected,
     windows,
     threads,
+    typing,
     totalUnread,
     thread,
     loadFriends,
@@ -286,6 +354,8 @@ export const useChatStore = defineStore('chat', () => {
     toggleMinimize,
     send,
     retry,
+    notifyTyping,
+    stopTyping,
     receive,
     onPresence,
     start,

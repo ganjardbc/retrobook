@@ -47,6 +47,8 @@ export class MessagesService {
    * kolom `client_id` UNIQUE bila ada lebih dari satu instance (R-06).
    */
   private readonly recent = new Map<string, { at: number; result: Promise<ChatMessage> }>()
+  /** Waktu `typing: true` terakhir per pasangan (pengirim:penerima) untuk batas satu per detik. */
+  private readonly typingAt = new Map<string, number>()
   private static readonly TTL_MS = 10 * 60_000
   private static readonly MAX_KEYS = 5000
 
@@ -212,6 +214,31 @@ export class MessagesService {
       },
     })
     return { count }
+  }
+
+  /**
+   * CHT-04: indikator mengetik. Fire-and-forget: kegagalan (bukan teman, diblokir) diam saja supaya tidak
+   * membocorkan apa pun. `true` dibatasi satu per detik per pasangan; `false` selalu diteruskan.
+   */
+  async typing(senderId: number, toUserId: number, isTyping: boolean): Promise<void> {
+    try {
+      await this.assertPartner(senderId, toUserId)
+    } catch {
+      return
+    }
+    const key = `${senderId}:${toUserId}`
+    if (isTyping) {
+      const now = Date.now()
+      const last = this.typingAt.get(key)
+      if (last !== undefined && now - last < 1000) return
+      if (this.typingAt.size >= MessagesService.MAX_KEYS) {
+        for (const [k, at] of this.typingAt) if (now - at > 5000) this.typingAt.delete(k)
+      }
+      this.typingAt.set(key, now)
+    } else {
+      this.typingAt.delete(key)
+    }
+    this.realtime.emitToUser(toUserId, 'typing', { userId: senderId, isTyping })
   }
 
   private async create(

@@ -62,6 +62,15 @@ export class MessagesGateway {
     })
   }
 
+  /** Tanpa ack dan tanpa galat ke klien: payload buruk atau lawan yang tak boleh diajak chat diabaikan. */
+  @SubscribeMessage('typing')
+  async typing(@ConnectedSocket() socket: Socket, @MessageBody() body: unknown): Promise<void> {
+    const b = (body ?? {}) as { toUserId?: unknown; isTyping?: unknown }
+    if (!Number.isInteger(b.toUserId) || (b.toUserId as number) < 1) return
+    if (typeof b.isTyping !== 'boolean') return
+    await this.messages.typing(socket.data.userId, b.toUserId as number, b.isTyping)
+  }
+
   private async ack<T extends object>(fn: () => Promise<T>): Promise<Ack<T>> {
     try {
       return { ok: true, ...(await fn()) }
