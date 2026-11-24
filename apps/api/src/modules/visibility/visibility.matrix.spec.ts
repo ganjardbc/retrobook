@@ -112,6 +112,7 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
       data: {
         authorId: owner.id,
         content: 'isi rahasia',
+        imageUrl: `/uploads/${'a'.repeat(32)}.png`,
         privacy: s.privacy,
         hidden: s.hidden ?? false,
         deletedAt: s.deleted ? new Date() : null,
@@ -145,6 +146,7 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
         const likes = await api.get(`/posts/${post.id}/likes`)
         const feed = await api.get('/feed?limit=50')
         const timeline = await api.get(`/users/${users.owner.username}/posts?limit=50`)
+        const photos = await api.get(`/users/${users.owner.username}/photos?limit=50`)
 
         if (guard) {
           for (const [ep, r] of [
@@ -152,6 +154,8 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
             ['komentar', comments],
             ['penyuka', likes],
             ['feed', feed],
+            ['timeline', timeline],
+            ['photos', photos],
           ] as const) {
             if (r.status !== guard)
               problems.push(`${v} ${ep}: guard seharusnya ${guard}, dapat ${r.status}`)
@@ -204,6 +208,21 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
         else if (inTimeline !== see)
           problems.push(
             `${v} timeline: post ${inTimeline ? 'ada' : 'tidak ada'}, seharusnya ${see ? 'ada' : 'tidak ada'}`,
+          )
+
+        // tab Photos: aturan yang sama dengan timeline untuk post yang memiliki gambar
+        const inPhotos = (photos.body.items ?? []).some(
+          (p: { postId: number }) => p.postId === post.id,
+        )
+        if (authorGone) {
+          if (photos.status !== 404)
+            problems.push(
+              `${v} photos: profil penulis hilang seharusnya 404, dapat ${photos.status}`,
+            )
+        } else if (photos.status !== 200) problems.push(`${v} photos: status ${photos.status}`)
+        else if (inPhotos !== see)
+          problems.push(
+            `${v} photos: foto ${inPhotos ? 'ada' : 'tidak ada'}, seharusnya ${see ? 'ada' : 'tidak ada'}`,
           )
 
         // --- penulis (mutasi) ---

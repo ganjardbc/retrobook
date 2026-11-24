@@ -1,10 +1,11 @@
-import type { Profile, Relationship } from '@retrobook/shared'
+import type { Profile, ProfilePhoto, Relationship, UserSummary } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { ApiRequestError } from '../api/http'
 import { friendsApi } from '../api/friends'
 import { usersApi } from '../api/users'
+import { usePaged } from '../composables/paged'
 import { usePostList } from '../composables/postList'
 import { meApi } from '../api/me'
 import { imageProblem } from '../utils/image'
@@ -19,6 +20,14 @@ export const useProfileStore = defineStore('profile', () => {
   const state = ref<ProfileState>('idle')
   const actionFailed = ref(false)
   const timeline = usePostList((cursor) => usersApi.timeline(username.value, cursor))
+  const friends = usePaged<UserSummary>(
+    (cursor) => usersApi.friends(username.value, cursor),
+    (u) => u.id,
+  )
+  const photos = usePaged<ProfilePhoto>(
+    (cursor) => usersApi.photos(username.value, cursor),
+    (p) => p.postId,
+  )
   let generation = 0
 
   async function load(name: string) {
@@ -34,12 +43,15 @@ export const useProfileStore = defineStore('profile', () => {
     state.value = 'loading'
     actionFailed.value = false
     timeline.reset()
+    friends.reset()
+    photos.reset()
     try {
       const p = await usersApi.profile(name)
       if (gen !== generation) return
       profile.value = p
       state.value = 'ready'
       void timeline.loadMore()
+      void friends.loadMore() // grid enam teman di kartu info dan tab Friends memakai daftar yang sama
     } catch (e) {
       if (gen !== generation) return
       // 404 sama untuk "tidak ada", privasi, BANNED, dan blokir: tidak membedakan sebabnya.
@@ -53,6 +65,8 @@ export const useProfileStore = defineStore('profile', () => {
     profile.value = null
     state.value = 'idle'
     timeline.reset()
+    friends.reset()
+    photos.reset()
   }
 
   /** Mengubah hubungan lewat API pertemanan lalu memperbarui profil di tempat (tanpa muat ulang). */
@@ -108,5 +122,17 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
-  return { username, profile, state, actionFailed, timeline, load, reset, relate, uploadPhoto }
+  return {
+    username,
+    profile,
+    state,
+    actionFailed,
+    timeline,
+    friends,
+    photos,
+    load,
+    reset,
+    relate,
+    uploadPhoto,
+  }
 })

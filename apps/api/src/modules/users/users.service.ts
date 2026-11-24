@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import type { Prisma, User } from '@prisma/client'
-import type { Paged, Post, Profile } from '@retrobook/shared'
+import type { FriendsPage, Paged, Post, Profile, ProfilePhoto } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
 import { FriendsService } from '../friends/friends.service'
@@ -93,6 +93,48 @@ export class UsersService {
   ): Promise<Paged<Post>> {
     const u = await this.findProfileUser(username)
     return this.posts.timeline(viewerId, u.id, limit, cursor)
+  }
+
+  /** Daftar teman pemilik profil (PRF-01 tab Friends). Terlihat oleh semua member sampai PRF-06 (Fase 3). */
+  async friendsOf(
+    username: string,
+    limit: number,
+    cursor?: number,
+    q?: string,
+  ): Promise<FriendsPage> {
+    const u = await this.findProfileUser(username)
+    return this.friends.list(u.id, limit, cursor, q)
+  }
+
+  /**
+   * Tab Photos: gambar dari post pemilik profil yang boleh dilihat pembaca (aturan yang sama dengan
+   * timeline). Album dan foto profil menyusul bersama Fase 3.
+   */
+  async photos(
+    viewerId: number,
+    username: string,
+    limit: number,
+    cursor?: number,
+  ): Promise<Paged<ProfilePhoto>> {
+    const u = await this.findProfileUser(username)
+    const rows = await this.prisma.post.findMany({
+      where: {
+        AND: [this.visibility.postWhere(viewerId), { authorId: u.id, imageUrl: { not: null } }],
+      },
+      orderBy: { id: 'desc' },
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      select: { id: true, imageUrl: true, createdAt: true },
+    })
+    const page = rows.slice(0, limit)
+    return {
+      items: page.map((r) => ({
+        postId: r.id,
+        url: r.imageUrl!,
+        createdAt: r.createdAt.toISOString(),
+      })),
+      nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+    }
   }
 
   /** Username dicocokkan tanpa memperhatikan huruf besar (collation database). */

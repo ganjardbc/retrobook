@@ -4,7 +4,7 @@ import { t } from '@retrobook/shared/i18n'
 import { RouterLink } from 'vue-router'
 
 defineProps<{ profile: Profile }>()
-// Friends, Photos, dan More menunggu T-24; ditampilkan redup agar bentuk tab sesuai referensi.
+// Tab More (Notes, Albums, Events) menunggu Fase 3.
 </script>
 
 <template>
@@ -23,10 +23,20 @@ defineProps<{ profile: Profile }>()
     >
       {{ t('profile.tab.about') }}
     </RouterLink>
-    <span class="tabs__tab tabs__tab--off" aria-disabled="true">
+    <RouterLink
+      class="tabs__tab"
+      :to="`/${profile.username}/friends`"
+      exact-active-class="tabs__tab--active"
+    >
       {{ t('profile.tab.friends') }} <span class="tabs__count">{{ profile.friendCount }}</span>
-    </span>
-    <span class="tabs__tab tabs__tab--off" aria-disabled="true">{{ t('profile.tab.photos') }}</span>
+    </RouterLink>
+    <RouterLink
+      class="tabs__tab"
+      :to="`/${profile.username}/photos`"
+      exact-active-class="tabs__tab--active"
+    >
+      {{ t('profile.tab.photos') }}
+    </RouterLink>
   </nav>
 </template>
 

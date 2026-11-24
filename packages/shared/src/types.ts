@@ -57,6 +57,9 @@ export type Comment = {
 
 export type Paged<T> = { items: T[]; nextCursor: number | null }
 
+/** Satu foto pada tab Photos: gambar dari post yang boleh dilihat pembaca (post asal untuk tautan). */
+export type ProfilePhoto = { postId: number; url: string; createdAt: string }
+
 /** Hubungan pemanggil dengan pemilik profil (docs/04-api-spec.md bagian 3). */
 export type Relationship = 'SELF' | 'FRIENDS' | 'REQUEST_SENT' | 'REQUEST_RECEIVED' | 'NONE'
 

@@ -1,0 +1,82 @@
+<script setup lang="ts">
+import { t } from '@retrobook/shared/i18n'
+import { onMounted } from 'vue'
+import Button from '../components/Button.vue'
+import { useProfileStore } from '../stores/profile'
+
+const store = useProfileStore()
+const list = store.photos
+
+onMounted(() => void list.loadMore())
+</script>
+
+<template>
+  <section class="photos" :aria-label="t('profile.tab.photos')">
+    <h2 class="photos__head">{{ t('profile.tab.photos') }}</h2>
+    <ul v-if="list.items.length" class="photos__grid">
+      <li v-for="p in list.items" :key="p.postId">
+        <a :href="p.url" target="_blank" rel="noopener noreferrer" class="photos__link">
+          <img
+            :src="p.url"
+            :alt="t('profile.photos.alt', { name: store.profile?.displayName ?? '' })"
+            loading="lazy"
+          />
+        </a>
+      </li>
+    </ul>
+    <p v-else-if="list.loading" class="photos__note" role="status">{{ t('common.loading') }}</p>
+    <p v-else-if="list.failed" class="photos__note" role="alert">
+      {{ t('feed.error') }}
+      <Button variant="default" @click="list.loadMore()">{{ t('feed.retry') }}</Button>
+    </p>
+    <p v-else class="photos__note">{{ t('profile.photos.empty') }}</p>
+    <div v-if="list.items.length && !list.done" class="photos__more">
+      <Button variant="default" :disabled="list.loading" @click="list.loadMore()">{{
+        t('profile.more')
+      }}</Button>
+    </div>
+  </section>
+</template>
+
+<style scoped>
+.photos {
+  background: var(--c-card);
+  border: var(--card-border);
+  border-radius: var(--radius);
+}
+.photos__head {
+  margin: 0;
+  padding: var(--sp-3);
+  background: var(--c-card-subtle);
+  border-bottom: 1px solid var(--c-border-soft);
+  font-size: var(--fs-post);
+}
+.photos__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+}
+.photos__link {
+  display: block;
+  aspect-ratio: 1;
+}
+.photos__link img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.photos__note {
+  margin: 0;
+  padding: var(--sp-3);
+  color: var(--c-text-muted);
+  text-align: center;
+}
+.photos__more {
+  padding: var(--sp-3);
+  text-align: center;
+}
+</style>

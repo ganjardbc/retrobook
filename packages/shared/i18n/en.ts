@@ -145,6 +145,12 @@ export const en = {
   'edit.cancel': 'Cancel',
   'edit.saving': 'Saving…',
 
+  'profile.friends.title': 'Friends',
+  'profile.friends.empty': 'No friends to show.',
+  'profile.photos.empty': 'No photos to show.',
+  'profile.photos.alt': 'Photo from {name}',
+  'profile.more': 'Load more',
+
   'feed.empty': 'No posts yet. Write something or add some friends to fill your News Feed.',
   'feed.loadMore': 'Load more posts',
   'feed.end': "You're all caught up.",

@@ -3,6 +3,7 @@ import { t } from '@retrobook/shared/i18n'
 import { watch } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import Button from '../components/Button.vue'
+import FriendsGrid from '../components/FriendsGrid.vue'
 import InfoCards from '../components/InfoCards.vue'
 import ProfileHeader from '../components/ProfileHeader.vue'
 import ProfileTabs from '../components/ProfileTabs.vue'
@@ -42,7 +43,10 @@ watch(
       <ProfileHeader :profile="store.profile" class="profile__header" />
       <ProfileTabs :profile="store.profile" />
       <div class="profile__body">
-        <aside class="profile__info"><InfoCards :profile="store.profile" /></aside>
+        <aside class="profile__info">
+          <InfoCards :profile="store.profile" />
+          <FriendsGrid :profile="store.profile" :friends="store.friends.items" />
+        </aside>
         <section class="profile__main"><RouterView /></section>
       </div>
     </template>
@@ -75,6 +79,11 @@ watch(
   grid-template-columns: calc(var(--w-timeline) - var(--w-feed) - var(--sp-4)) minmax(0, 1fr);
   gap: var(--sp-4);
   margin-top: var(--sp-3);
+}
+.profile__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
 }
 .profile__info,
 .profile__main {

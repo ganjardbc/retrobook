@@ -38,6 +38,16 @@ export const router = createRouter({
               name: 'profile-about',
               component: () => import('../views/ProfileAbout.vue'),
             },
+            {
+              path: 'friends',
+              name: 'profile-friends',
+              component: () => import('../views/ProfileFriends.vue'),
+            },
+            {
+              path: 'photos',
+              name: 'profile-photos',
+              component: () => import('../views/ProfilePhotos.vue'),
+            },
           ],
         },
       ],

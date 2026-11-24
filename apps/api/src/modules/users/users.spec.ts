@@ -258,4 +258,111 @@ describe('Profil dan timeline (integrasi)', () => {
       expect((await h.as(viewer).get(`/users/${banned.username}/posts`)).status).toBe(404)
     })
   })
+
+  describe('GET /users/:username/friends (tab Friends)', () => {
+    it('daftar teman PEMILIK profil (bukan milik pemanggil), dengan total, kursor, dan filter', async () => {
+      const owner = await h.mkUser('owner')
+      const viewer = await h.mkUser('viewer')
+      const mine = await h.mkUser('mine')
+      await h.befriend(viewer, mine) // teman pemanggil: tidak boleh muncul
+      const friends = []
+      for (let i = 0; i < 4; i++) {
+        const f = await h.mkUser(`f${i}`, { displayName: i === 3 ? 'Budi Santoso' : `Teman ${i}` })
+        friends.push(f)
+        await (i % 2 === 0 ? h.befriend(owner, f) : h.befriend(f, owner))
+      }
+      await h.befriend(owner, await h.mkUser('pending'), 'PENDING')
+      await h.befriend(owner, await h.mkUser('banned', { status: 'BANNED' }))
+      await h.befriend(owner, await h.mkUser('gone', { deletedAt: new Date() }))
+
+      const p1 = (await h.as(viewer).get(`/users/${owner.username}/friends?limit=3`)).body
+      expect(p1.total).toBe(4)
+      expect(p1.items.map((u: { id: number }) => u.id)).toEqual([
+        friends[3]!.id,
+        friends[2]!.id,
+        friends[1]!.id,
+      ])
+      const p2 = (
+        await h.as(viewer).get(`/users/${owner.username}/friends?limit=3&cursor=${p1.nextCursor}`)
+      ).body
+      expect(p2.items.map((u: { id: number }) => u.id)).toEqual([friends[0]!.id])
+      expect(p2.nextCursor).toBeNull()
+      expect(p1.items.map((u: { id: number }) => u.id)).not.toContain(mine.id)
+      expect(p1.items[0].email).toBeUndefined()
+      const q = (await h.as(viewer).get(`/users/${owner.username}/friends?q=budi`)).body
+      expect(q.items.map((u: { id: number }) => u.id)).toEqual([friends[3]!.id])
+    })
+
+    it('profil tidak ada, BANNED, atau terhapus: 404; tanpa login: 401', async () => {
+      const viewer = await h.mkUser('viewer')
+      const banned = await h.mkUser('banned', { status: 'BANNED' })
+      expect((await h.as(viewer).get('/users/tidak_ada/friends')).status).toBe(404)
+      expect((await h.as(viewer).get(`/users/${banned.username}/friends`)).status).toBe(404)
+      expect(
+        (await request(app.getHttpServer()).get(`/api/users/${viewer.username}/friends`)).status,
+      ).toBe(401)
+    })
+  })
+
+  describe('GET /users/:username/photos (tab Photos)', () => {
+    const url = (c: string) => `/uploads/${c.repeat(32)}.png`
+    const seed = async () => {
+      const owner = await h.mkUser('owner')
+      const friend = await h.mkUser('friend')
+      const stranger = await h.mkUser('stranger')
+      await h.befriend(owner, friend)
+      const mk = (c: string, extra: object = {}) =>
+        h.prisma.post.create({
+          data: { authorId: owner.id, content: 'x', imageUrl: url(c), privacy: 'PUBLIC', ...extra },
+        })
+      await mk('a')
+      await mk('b', { privacy: 'FRIENDS' })
+      await mk('c', { privacy: 'ONLY_ME' })
+      await mk('d', { hidden: true })
+      await mk('e', { deletedAt: new Date() })
+      await h.prisma.post.create({
+        data: { authorId: owner.id, content: 'tanpa gambar', privacy: 'PUBLIC' },
+      })
+      return { owner, friend, stranger }
+    }
+    const urls = (r: { body: { items: { url: string }[] } }) =>
+      r.body.items.map((p) => p.url.slice(9, 10))
+
+    it('hanya post bergambar yang boleh dilihat pembaca; terbaru dulu', async () => {
+      const { owner, friend, stranger } = await seed()
+      expect(urls(await h.as(owner).get(`/users/${owner.username}/photos`))).toEqual([
+        'd',
+        'c',
+        'b',
+        'a',
+      ])
+      expect(urls(await h.as(friend).get(`/users/${owner.username}/photos`))).toEqual(['b', 'a'])
+      expect(urls(await h.as(stranger).get(`/users/${owner.username}/photos`))).toEqual(['a'])
+    })
+
+    it('bentuk item: { postId, url, createdAt }; berkursor', async () => {
+      const { owner } = await seed()
+      const p1 = (await h.as(owner).get(`/users/${owner.username}/photos?limit=2`)).body
+      expect(p1.items[0]).toEqual({
+        postId: expect.any(Number),
+        url: url('d'),
+        createdAt: expect.any(String),
+      })
+      const p2 = (
+        await h.as(owner).get(`/users/${owner.username}/photos?limit=2&cursor=${p1.nextCursor}`)
+      ).body
+      expect(p2.items.map((i: { url: string }) => i.url)).toEqual([url('b'), url('a')])
+      expect(p2.nextCursor).toBeNull()
+    })
+
+    it('profil tidak ada, BANNED, atau terhapus: 404; tanpa login: 401', async () => {
+      const viewer = await h.mkUser('viewer')
+      const gone = await h.mkUser('gone', { deletedAt: new Date() })
+      expect((await h.as(viewer).get('/users/tidak_ada/photos')).status).toBe(404)
+      expect((await h.as(viewer).get(`/users/${gone.username}/photos`)).status).toBe(404)
+      expect(
+        (await request(app.getHttpServer()).get(`/api/users/${viewer.username}/photos`)).status,
+      ).toBe(401)
+    })
+  })
 })
