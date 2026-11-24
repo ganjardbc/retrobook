@@ -196,7 +196,7 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 | read_at         | DATETIME                                                                               | null                      |                                 |
 | created_at      | DATETIME                                                                               | NOT NULL                  |                                 |
 
-### blocks (Fase 3)
+### blocks (T-13; UI manajemen blokir FRD-06 tetap Fase 3)
 
 | Kolom      | Tipe     | Constraint                      | Keterangan    |
 |------------|----------|---------------------------------|---------------|

@@ -1,5 +1,5 @@
 // Skema inti Fase 1 dan 2 (docs/03-erd.md). Tabel admin dan Fase 3 menyusul lewat migrasi terpisah.
-// Belum ada: notifications.announcement_id (T-48), posts.group_id (Fase 3), blocks (Fase 3).
+// Belum ada: notifications.announcement_id (T-48), posts.group_id (Fase 3).
 // CHECK constraint (likes, friendships) ditulis manual di SQL migrasi karena Prisma belum mendukungnya.
 
 generator client {
@@ -79,6 +79,8 @@ model User {
   messagesReceived     Message[]      @relation("MessageReceiver")
   notifications        Notification[] @relation("NotifRecipient")
   notificationsAsActor Notification[] @relation("NotifActor")
+  blocksMade           Block[]        @relation("Blocker")
+  blocksReceived       Block[]        @relation("Blocked")
 
   @@index([status, createdAt])
   @@index([username])
@@ -223,6 +225,20 @@ model Friendship {
   @@index([addresseeId, status])
   @@index([requesterId, status])
   @@map("friendships")
+}
+
+model Block {
+  id        Int      @id @default(autoincrement())
+  blockerId Int      @map("blocker_id")
+  blockedId Int      @map("blocked_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Restrict)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Restrict)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("blocks")
 }
 
 model Poke {

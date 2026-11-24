@@ -23,8 +23,12 @@ export class UsersController {
   }
 
   @Get(':username/friends')
-  friends(@Param('username') username: string, @Query() q: FriendsQueryDto) {
-    return this.users.friendsOf(username, q.limit, q.cursor, q.q)
+  friends(
+    @CurrentUser() user: AuthUser,
+    @Param('username') username: string,
+    @Query() q: FriendsQueryDto,
+  ) {
+    return this.users.friendsOf(user.id, username, q.limit, q.cursor, q.q)
   }
 
   @Get(':username/photos')

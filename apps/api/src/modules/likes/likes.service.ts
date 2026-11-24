@@ -42,7 +42,7 @@ export class LikesService {
   ): Promise<Paged<UserSummary>> {
     await this.assertVisible(viewerId, postId)
     const rows = await this.prisma.like.findMany({
-      where: { postId, ...this.visibility.likerWhere() },
+      where: { postId, ...this.visibility.likerWhere(viewerId) },
       orderBy: { id: 'desc' },
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -70,7 +70,7 @@ export class LikesService {
   }
 
   private async state(viewerId: number, postId: number): Promise<LikeState> {
-    const where = { postId, ...this.visibility.likerWhere() }
+    const where = { postId, ...this.visibility.likerWhere(viewerId) }
     const [likeCount, mine] = await Promise.all([
       this.prisma.like.count({ where }),
       this.prisma.like.count({ where: { ...where, userId: viewerId } }),

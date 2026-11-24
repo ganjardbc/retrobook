@@ -19,6 +19,7 @@ const userSummary = {
 const postInclude = (likerWhere: Prisma.LikeWhereInput, commentWhere: Prisma.CommentWhereInput) =>
   ({
     author: { select: userSummary },
+    wallOwner: { select: userSummary },
     _count: {
       select: {
         likes: { where: likerWhere },
@@ -90,7 +91,7 @@ export class PostsService {
 
   async remove(viewerId: number, id: number): Promise<void> {
     const current = await this.findVisible(viewerId, id)
-    if (current.authorId !== viewerId) {
+    if (current.authorId !== viewerId && current.wallOwnerId !== viewerId) {
       throw new AppException(403, 'FORBIDDEN', 'Hanya pemilik yang bisa menghapus post')
     }
     await this.prisma.post.update({ where: { id }, data: { deletedAt: new Date() } })
@@ -149,7 +150,12 @@ export class PostsService {
     cursor?: number,
   ): Promise<Paged<PostDto>> {
     const rows = await this.prisma.post.findMany({
-      where: { AND: [this.visibility.postWhere(viewerId), { authorId }] },
+      where: {
+        AND: [
+          this.visibility.postWhere(viewerId),
+          { OR: [{ authorId }, { wallOwnerId: authorId }] },
+        ],
+      },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -173,7 +179,7 @@ export class PostsService {
   }
 
   private include(viewerId: number) {
-    return postInclude(this.visibility.likerWhere(), this.visibility.commentWhere(viewerId))
+    return postInclude(this.visibility.likerWhere(viewerId), this.visibility.commentWhere(viewerId))
   }
 
   private async assertUpload(imageUrl: string | null) {
@@ -187,7 +193,7 @@ export class PostsService {
       where: {
         userId: viewerId,
         postId: { in: rows.map((r) => r.id) },
-        ...this.visibility.likerWhere(),
+        ...this.visibility.likerWhere(viewerId),
       },
       select: { postId: true },
     })
@@ -230,7 +236,7 @@ export class PostsService {
     return {
       id: row.id,
       author: row.author as UserSummary,
-      wallOwner: null, // wall post: T-35
+      wallOwner: row.wallOwner as UserSummary | null,
       sharedFrom:
         row.sharedFromId === null ? null : (shared.get(row.sharedFromId) ?? { unavailable: true }),
       content: row.content,

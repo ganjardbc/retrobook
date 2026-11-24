@@ -6,17 +6,32 @@ import { Prisma } from '@prisma/client'
  * Semua query baca post HARUS memakai postWhere/feedWhere; jangan menulis filter privasi
  * ad hoc di controller, service lain, atau frontend.
  *
- * Aturan (BR-02, 03, 05, 07): post terlihat oleh `viewer` bila belum dihapus, penulisnya tidak
- * BANNED atau terhapus, dan (viewer adalah penulis, atau tidak hidden dan privasinya PUBLIC,
- * atau tidak hidden dan privasinya FRIENDS dan penulis berteman ACCEPTED dengan viewer).
- *
- * TODO(BR-11): blokir dua arah belum ada karena tabel `blocks` baru dibuat bersama fitur Block.
+ * Aturan (BR-02, 03, 04, 05, 07, 11): blokir berlaku dua arah; wall post harus memenuhi
+ * pertemanan dengan penulis dan pemilik dinding.
  */
 @Injectable()
 export class VisibilityService {
   /** Akun yang boleh muncul bagi orang lain: tidak terhapus dan tidak BANNED (BR-05). */
-  userWhere(): Prisma.UserWhereInput {
-    return { deletedAt: null, status: { not: 'BANNED' } }
+  userWhere(viewerId?: number): Prisma.UserWhereInput {
+    return {
+      deletedAt: null,
+      status: { not: 'BANNED' },
+      ...(viewerId === undefined ? {} : { NOT: this.blockedPair(viewerId) }),
+    }
+  }
+
+  /** Pengguna dalam pasangan blokir tidak saling menemukan satu sama lain (BR-11). */
+  private blockedPair(viewerId: number): Prisma.UserWhereInput {
+    return {
+      OR: [
+        { blocksMade: { some: { blockedId: viewerId } } },
+        { blocksReceived: { some: { blockerId: viewerId } } },
+      ],
+    }
+  }
+
+  private noBlock(viewerId: number): Prisma.PostWhereInput {
+    return { NOT: { author: this.blockedPair(viewerId) } }
   }
 
   /** Filter User: berteman (ACCEPTED, arah mana pun) dengan `viewerId`. */
@@ -32,11 +47,37 @@ export class VisibilityService {
   postWhere(viewerId: number): Prisma.PostWhereInput {
     return {
       deletedAt: null,
-      author: { deletedAt: null, status: { not: 'BANNED' } },
+      author: this.userWhere(),
+      AND: [this.noBlock(viewerId), { NOT: { wallOwner: this.blockedPair(viewerId) } }],
       OR: [
+        // Penulis tetap bisa membaca post miliknya sendiri, termasuk yang dipasang di dinding.
         { authorId: viewerId },
-        { hidden: false, privacy: 'PUBLIC' },
-        { hidden: false, privacy: 'FRIENDS', author: this.friendOf(viewerId) },
+        // Post biasa mengikuti privasi penulis.
+        {
+          wallOwnerId: null,
+          hidden: false,
+          OR: [{ privacy: 'PUBLIC' }, { privacy: 'FRIENDS', author: this.friendOf(viewerId) }],
+        },
+        // BR-04: pemilik dinding dan teman dari kedua pihak dapat membaca; pemilik dinding
+        // juga dapat membaca post pada dindingnya sendiri.
+        {
+          wallOwnerId: { not: null },
+          hidden: false,
+          AND: [
+            { privacy: { not: 'ONLY_ME' } },
+            {
+              OR: [
+                { wallOwnerId: viewerId },
+                {
+                  AND: [
+                    { author: this.friendOf(viewerId) },
+                    { wallOwner: this.friendOf(viewerId) },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
       ],
     }
   }
@@ -48,7 +89,7 @@ export class VisibilityService {
   commentWhere(viewerId: number): Prisma.CommentWhereInput {
     return {
       deletedAt: null,
-      author: { deletedAt: null, status: { not: 'BANNED' } },
+      author: this.userWhere(viewerId),
       OR: [{ hidden: false }, { authorId: viewerId }],
     }
   }
@@ -57,8 +98,8 @@ export class VisibilityService {
    * Like yang boleh dihitung dan ditampilkan: penyuka yang BANNED atau terhapus disembunyikan
    * seperti kontennya (BR-05).
    */
-  likerWhere(): Prisma.LikeWhereInput {
-    return { user: { deletedAt: null, status: { not: 'BANNED' } } }
+  likerWhere(viewerId?: number): Prisma.LikeWhereInput {
+    return { user: this.userWhere(viewerId) }
   }
 
   /** News feed (POST-04): post yang terlihat dan ditulis diri sendiri atau teman. */
@@ -66,7 +107,14 @@ export class VisibilityService {
     return {
       AND: [
         this.postWhere(viewerId),
-        { OR: [{ authorId: viewerId }, { author: this.friendOf(viewerId) }] },
+        {
+          OR: [
+            { authorId: viewerId },
+            { author: this.friendOf(viewerId) },
+            { wallOwnerId: viewerId },
+            { wallOwner: this.friendOf(viewerId) },
+          ],
+        },
       ],
     }
   }

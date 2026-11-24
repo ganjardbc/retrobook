@@ -29,7 +29,6 @@ const noUser = () => new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemuka
  * Menolak atau membatalkan menghapus baris. Semua perubahan status berjalan dalam transaksi supaya
  * notifikasi (T-32) bisa ditambahkan di transaksi yang sama.
  *
- * TODO(BR-11, T-13): permintaan ke atau dari user yang saling memblokir harus 404; tabel `blocks` belum ada.
  */
 @Injectable()
 export class FriendsService {
@@ -48,7 +47,7 @@ export class FriendsService {
       )
     }
     const target = await this.prisma.user.findFirst({
-      where: { id: targetId, ...this.visibility.userWhere() },
+      where: { id: targetId, ...this.visibility.userWhere(viewerId) },
       select: { id: true },
     })
     if (!target) throw noUser()
@@ -76,7 +75,11 @@ export class FriendsService {
   /** FRD-02: hanya penerima yang bisa menerima. Diulang tetap aman. */
   async accept(viewerId: number, requesterId: number): Promise<FriendshipResult> {
     const row = await this.prisma.friendship.findFirst({
-      where: { requesterId, addresseeId: viewerId },
+      where: {
+        requesterId,
+        addresseeId: viewerId,
+        requester: this.visibility.userWhere(viewerId),
+      },
     })
     if (!row) throw new AppException(404, 'NOT_FOUND', 'Permintaan tidak ditemukan')
     if (row.status === 'ACCEPTED') return { userId: requesterId, status: 'ACCEPTED' }
@@ -103,7 +106,11 @@ export class FriendsService {
   /** Permintaan masuk yang PENDING, terbaru dulu; pengirim yang BANNED/terhapus disembunyikan. */
   async incoming(viewerId: number, limit: number, cursor?: number): Promise<Paged<FriendRequest>> {
     const rows = await this.prisma.friendship.findMany({
-      where: { addresseeId: viewerId, status: 'PENDING', requester: this.visibility.userWhere() },
+      where: {
+        addresseeId: viewerId,
+        status: 'PENDING',
+        requester: this.visibility.userWhere(viewerId),
+      },
       orderBy: { id: 'desc' },
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -120,9 +127,13 @@ export class FriendsService {
   }
 
   /** Syarat Friendship: teman ACCEPTED milik `userId` (kedua arah), pihak lain tidak BANNED/terhapus dan cocok `q`. */
-  private acceptedWhere(userId: number, q?: string): Prisma.FriendshipWhereInput {
+  private acceptedWhere(
+    userId: number,
+    q?: string,
+    viewerId = userId,
+  ): Prisma.FriendshipWhereInput {
     const other = (): Prisma.UserWhereInput => ({
-      ...this.visibility.userWhere(),
+      ...this.visibility.userWhere(viewerId),
       ...(q
         ? {
             OR: [
@@ -159,8 +170,14 @@ export class FriendsService {
   }
 
   /** FRD-04: teman (ACCEPTED, kedua arah), terbaru dulu, `q` memfilter nama atau username. */
-  async list(viewerId: number, limit: number, cursor?: number, q?: string): Promise<FriendsPage> {
-    const where = this.acceptedWhere(viewerId, q)
+  async list(
+    viewerId: number,
+    limit: number,
+    cursor?: number,
+    q?: string,
+    blockedById = viewerId,
+  ): Promise<FriendsPage> {
+    const where = this.acceptedWhere(viewerId, q, blockedById)
     const [rows, total] = await Promise.all([
       this.prisma.friendship.findMany({
         where,

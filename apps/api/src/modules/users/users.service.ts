@@ -14,7 +14,6 @@ import type { UpdateProfileDto } from './dto/profile.dto'
  * profil baru di PRF-06). Akun terhapus atau BANNED menghasilkan 404 yang sama dengan username
  * yang tidak ada (BR-05).
  *
- * TODO(BR-11, T-13): 404 bila pemanggil dan pemilik profil saling memblokir; tabel `blocks` belum ada.
  */
 @Injectable()
 export class UsersService {
@@ -27,7 +26,7 @@ export class UsersService {
   ) {}
 
   async getProfile(viewerId: number, username: string): Promise<Profile> {
-    return this.buildProfile(await this.findProfileUser(username), viewerId)
+    return this.buildProfile(await this.findProfileUser(viewerId, username), viewerId)
   }
 
   /** PRF-02: ubah profil sendiri. Hanya kolom yang dikirim yang berubah. */
@@ -91,19 +90,20 @@ export class UsersService {
     limit: number,
     cursor?: number,
   ): Promise<Paged<Post>> {
-    const u = await this.findProfileUser(username)
+    const u = await this.findProfileUser(viewerId, username)
     return this.posts.timeline(viewerId, u.id, limit, cursor)
   }
 
   /** Daftar teman pemilik profil (PRF-01 tab Friends). Terlihat oleh semua member sampai PRF-06 (Fase 3). */
   async friendsOf(
+    viewerId: number,
     username: string,
     limit: number,
     cursor?: number,
     q?: string,
   ): Promise<FriendsPage> {
-    const u = await this.findProfileUser(username)
-    return this.friends.list(u.id, limit, cursor, q)
+    const u = await this.findProfileUser(viewerId, username)
+    return this.friends.list(u.id, limit, cursor, q, viewerId)
   }
 
   /**
@@ -116,10 +116,14 @@ export class UsersService {
     limit: number,
     cursor?: number,
   ): Promise<Paged<ProfilePhoto>> {
-    const u = await this.findProfileUser(username)
+    const u = await this.findProfileUser(viewerId, username)
     const rows = await this.prisma.post.findMany({
       where: {
-        AND: [this.visibility.postWhere(viewerId), { authorId: u.id, imageUrl: { not: null } }],
+        AND: [
+          this.visibility.postWhere(viewerId),
+          { OR: [{ authorId: u.id }, { wallOwnerId: u.id }] },
+          { imageUrl: { not: null } },
+        ],
       },
       orderBy: { id: 'desc' },
       take: limit + 1,
@@ -138,9 +142,9 @@ export class UsersService {
   }
 
   /** Username dicocokkan tanpa memperhatikan huruf besar (collation database). */
-  private async findProfileUser(username: string) {
+  private async findProfileUser(viewerId: number, username: string) {
     const user = await this.prisma.user.findFirst({
-      where: { username, ...this.visibility.userWhere() },
+      where: { username, ...this.visibility.userWhere(viewerId) },
     })
     if (!user) throw new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemukan')
     return user
