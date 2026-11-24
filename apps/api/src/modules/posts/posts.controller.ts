@@ -11,7 +11,13 @@ import {
   Query,
 } from '@nestjs/common'
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
-import { CreatePostDto, CursorQueryDto, SharePostDto, UpdatePostDto } from './dto/post.dto'
+import {
+  CreatePostDto,
+  CursorQueryDto,
+  FeedQueryDto,
+  SharePostDto,
+  UpdatePostDto,
+} from './dto/post.dto'
 import { PostsService } from './posts.service'
 
 @Controller('posts')
@@ -58,8 +64,8 @@ export class FeedController {
   constructor(private readonly posts: PostsService) {}
 
   @Get()
-  feed(@CurrentUser() user: AuthUser, @Query() q: CursorQueryDto) {
-    return this.posts.feed(user.id, q.limit, q.cursor)
+  feed(@CurrentUser() user: AuthUser, @Query() q: FeedQueryDto) {
+    return this.posts.feed(user.id, q.limit, q.cursor, q.sort)
   }
 }
 

@@ -1,9 +1,9 @@
-import type { Paged, Post, Privacy } from '@retrobook/shared'
+import type { FeedSort, Paged, Post, Privacy } from '@retrobook/shared'
 import { request } from '@/plugins/http'
 
 export const postsApi = {
-  feed: (cursor?: number | null, limit = 10) =>
-    request<Paged<Post>>(`/feed?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
+  feed: (cursor?: number | null, limit = 10, sort: FeedSort = 'recent') =>
+    request<Paged<Post>>(`/feed?limit=${limit}&sort=${sort}${cursor ? `&cursor=${cursor}` : ''}`),
   create: (input: {
     content: string
     privacy: Privacy

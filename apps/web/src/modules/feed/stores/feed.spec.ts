@@ -47,6 +47,30 @@ describe('feed store', () => {
     expect(spy).toHaveBeenCalledTimes(2)
   })
 
+  it('setSort: mengosongkan daftar, memuat ulang dari awal dengan urutan baru; sama = tidak berbuat apa-apa', async () => {
+    const spy = vi
+      .spyOn(postsApi, 'feed')
+      .mockResolvedValueOnce(page([3, 2], 2))
+      .mockResolvedValueOnce(page([2, 1], null))
+    const feed = useFeedStore()
+    await feed.loadMore()
+    await feed.setSort('recent')
+    expect(spy).toHaveBeenCalledTimes(1)
+    await feed.setSort('top')
+    expect(feed.sort).toBe('top')
+    expect(feed.items.map((p) => p.id)).toEqual([2, 1])
+    expect(spy.mock.calls[1]).toEqual([null, undefined, 'top'])
+  })
+
+  it('reset (ganti akun) mengembalikan urutan ke recent', async () => {
+    vi.spyOn(postsApi, 'feed').mockResolvedValue(page([1], null))
+    const feed = useFeedStore()
+    await feed.setSort('top')
+    feed.reset(7)
+    expect(feed.sort).toBe('recent')
+    expect(feed.items).toEqual([])
+  })
+
   it('panggilan bersamaan hanya memuat sekali', async () => {
     const spy = vi.spyOn(postsApi, 'feed').mockResolvedValue(page([1], null))
     const feed = useFeedStore()

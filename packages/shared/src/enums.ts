@@ -22,3 +22,7 @@ export const NOTIF_TYPES = [
   'ANNOUNCEMENT',
 ] as const
 export type NotifType = (typeof NOTIF_TYPES)[number]
+
+/** Urutan News Feed (POST-09): terbaru, atau Top Stories (jumlah like). */
+export const FEED_SORTS = ['recent', 'top'] as const
+export type FeedSort = (typeof FEED_SORTS)[number]

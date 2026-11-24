@@ -1,10 +1,12 @@
 import { Privacy } from '@prisma/client'
+import { FEED_SORTS, type FeedSort } from '@retrobook/shared'
 import { Type } from 'class-transformer'
 import {
   ArrayMaxSize,
   ArrayUnique,
   IsArray,
   IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -76,4 +78,11 @@ export class CursorQueryDto {
   @IsInt()
   @Min(1)
   cursor?: number
+}
+
+/** GET /feed: `sort=recent` (bawaan) atau `sort=top` (Top Stories, urut jumlah like; POST-09). */
+export class FeedQueryDto extends CursorQueryDto {
+  @IsOptional()
+  @IsIn(FEED_SORTS, { message: 'sort harus recent atau top' })
+  sort: FeedSort = 'recent'
 }

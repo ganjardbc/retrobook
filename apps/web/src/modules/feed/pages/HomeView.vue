@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FEED_SORTS, type FeedSort } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { postsApi } from '@/modules/posts/services/api'
@@ -61,6 +62,16 @@ watch(
 <template>
   <div class="home">
     <StatusBox ref="statusBox" />
+    <label class="home__sort">
+      {{ t('feed.sort.label') }}
+      <select
+        class="home__sort-select"
+        :value="feed.sort"
+        @change="feed.setSort(($event.target as HTMLSelectElement).value as FeedSort)"
+      >
+        <option v-for="s in FEED_SORTS" :key="s" :value="s">{{ t(`feed.sort.${s}`) }}</option>
+      </select>
+    </label>
     <p v-if="likeFailed" class="form-error" role="alert">{{ t('like.error') }}</p>
     <PostCard
       v-for="post in feed.items"
@@ -103,6 +114,20 @@ watch(
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
+}
+.home__sort {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--c-text-muted);
+}
+.home__sort-select {
+  padding: var(--sp-1) var(--sp-2);
+  color: var(--c-text);
+  background: var(--c-card);
+  border: 1px solid var(--c-input-border);
+  border-radius: var(--radius);
+  font: inherit;
 }
 .home__note {
   margin: 0;

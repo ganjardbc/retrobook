@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import {
   extractHashtags,
+  type FeedSort,
   type Paged,
   type Post as PostDto,
   type SharedPost,
@@ -190,10 +191,23 @@ export class PostsService {
     return (await this.toDtos(viewerId, [row]))[0]!
   }
 
-  async feed(viewerId: number, limit: number, cursor?: number): Promise<Paged<PostDto>> {
+  /**
+   * POST-09: `top` mengurutkan berdasarkan jumlah like, lalu terbaru. Kursor tetap id post (Prisma
+   * membandingkan nilai urutan baris kursor). shortcut: jumlah untuk urutan menghitung semua penyuka,
+   * sedangkan angka yang tampil menyaring penyuka BANNED/terhapus; selisihnya hanya menggeser peringkat.
+   */
+  async feed(
+    viewerId: number,
+    limit: number,
+    cursor?: number,
+    sort: FeedSort = 'recent',
+  ): Promise<Paged<PostDto>> {
     const rows = await this.prisma.post.findMany({
       where: this.visibility.feedWhere(viewerId),
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy:
+        sort === 'top'
+          ? [{ likes: { _count: 'desc' } }, { createdAt: 'desc' }, { id: 'desc' }]
+          : [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: this.include(viewerId),
