@@ -174,13 +174,18 @@ describe('PostCard', () => {
     expect(w.emitted('delete')).toEqual([[7]])
   })
 
-  it('gambar punya alt dan jumlah like/komentar tampil bila ada', () => {
+  it('gambar punya alt; aksi Like berubah jadi Unlike; Like memancarkan event', async () => {
     const w = mount(PostCard, {
-      props: { post: mkPost({ imageUrl: '/uploads/a.png', likeCount: 3, commentCount: 2 }) },
+      props: { post: mkPost({ id: 4, imageUrl: '/uploads/a.png' }) },
       global: { plugins: [router()] },
     })
     expect(w.find('img.post__image').attributes('alt')).toBe('Photo posted by Budi')
-    expect(w.find('.post__counts').text()).toContain('3 likes')
-    expect(w.find('.post__counts').text()).toContain('2 comments')
+    const like = w.find('.actions__link')
+    expect(like.text()).toBe('Like')
+    await like.trigger('click')
+    expect(w.emitted('toggle-like')).toEqual([[4]])
+    await w.setProps({ post: mkPost({ id: 4, likedByMe: true, likeCount: 1 }) })
+    expect(w.find('.actions__link').text()).toBe('Unlike')
+    expect(w.find('.likes').text()).toContain('You like this.')
   })
 })

@@ -15,19 +15,25 @@ const userSummary = {
   isBot: true,
 } satisfies Prisma.UserSelect
 
-const postInclude = {
-  author: { select: userSummary },
-  _count: {
-    select: { likes: true, comments: { where: { deletedAt: null, hidden: false } } },
-  },
-  likes: {
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    take: 2,
-    select: { user: { select: userSummary } },
-  },
-} satisfies Prisma.PostInclude
+// Penyuka yang disembunyikan (BANNED/terhapus) tidak ikut dihitung; aturannya ada di VisibilityService.
+const postInclude = (likerWhere: Prisma.LikeWhereInput) =>
+  ({
+    author: { select: userSummary },
+    _count: {
+      select: {
+        likes: { where: likerWhere },
+        comments: { where: { deletedAt: null, hidden: false } },
+      },
+    },
+    likes: {
+      where: likerWhere,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: 2,
+      select: { user: { select: userSummary } },
+    },
+  }) satisfies Prisma.PostInclude
 
-type PostRow = Prisma.PostGetPayload<{ include: typeof postInclude }>
+type PostRow = Prisma.PostGetPayload<{ include: ReturnType<typeof postInclude> }>
 
 const notFound = () => new AppException(404, 'NOT_FOUND', 'Post tidak ditemukan')
 const empty = () => new AppException(400, 'VALIDATION_FAILED', 'Post tidak boleh kosong')
@@ -48,7 +54,7 @@ export class PostsService {
 
     const row = await this.prisma.post.create({
       data: { authorId: viewerId, content, imageUrl, privacy: dto.privacy ?? 'FRIENDS' },
-      include: postInclude,
+      include: this.include(),
     })
     return this.toDto(row, new Set())
   }
@@ -72,7 +78,7 @@ export class PostsService {
     const row = await this.prisma.post.update({
       where: { id },
       data: { content, imageUrl, privacy: dto.privacy, editedAt: new Date() },
-      include: postInclude,
+      include: this.include(),
     })
     return (await this.toDtos(viewerId, [row]))[0]!
   }
@@ -91,7 +97,7 @@ export class PostsService {
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-      include: postInclude,
+      include: this.include(),
     })
     const page = rows.slice(0, limit)
     return {
@@ -104,10 +110,14 @@ export class PostsService {
   private async findVisible(viewerId: number, id: number): Promise<PostRow> {
     const row = await this.prisma.post.findFirst({
       where: { AND: [{ id }, this.visibility.postWhere(viewerId)] },
-      include: postInclude,
+      include: this.include(),
     })
     if (!row) throw notFound()
     return row
+  }
+
+  private include() {
+    return postInclude(this.visibility.likerWhere())
   }
 
   private async assertUpload(imageUrl: string | null) {
@@ -118,7 +128,11 @@ export class PostsService {
 
   private async toDtos(viewerId: number, rows: PostRow[]): Promise<PostDto[]> {
     const liked = await this.prisma.like.findMany({
-      where: { userId: viewerId, postId: { in: rows.map((r) => r.id) } },
+      where: {
+        userId: viewerId,
+        postId: { in: rows.map((r) => r.id) },
+        ...this.visibility.likerWhere(),
+      },
       select: { postId: true },
     })
     const likedIds = new Set(liked.map((l) => l.postId))

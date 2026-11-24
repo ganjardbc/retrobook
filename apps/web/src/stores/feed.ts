@@ -11,6 +11,7 @@ export const useFeedStore = defineStore('feed', () => {
   const failed = ref(false)
   /** Pemilik data; feed dibersihkan bila akun berganti. */
   const ownerId = ref<number | null>(null)
+  const liking = new Set<number>() // post yang sedang menunggu respons like
 
   function reset(newOwnerId: number | null = null) {
     items.value = []
@@ -19,6 +20,7 @@ export const useFeedStore = defineStore('feed', () => {
     loading.value = false
     failed.value = false
     ownerId.value = newOwnerId
+    liking.clear()
   }
 
   /** Muat halaman berikutnya. Aman dipanggil berulang: panggilan saat memuat atau setelah habis diabaikan. */
@@ -41,10 +43,45 @@ export const useFeedStore = defineStore('feed', () => {
     }
   }
 
+  /** Like/unlike optimistik: tampilan berubah dulu, lalu dikoreksi dengan angka dari server atau dikembalikan bila gagal. */
+  async function toggleLike(id: number): Promise<boolean> {
+    const post = items.value.find((p) => p.id === id)
+    if (!post || liking.has(id)) return true
+    liking.add(id)
+    const before = { likeCount: post.likeCount, likedByMe: post.likedByMe }
+    const willLike = !before.likedByMe
+    post.likedByMe = willLike
+    post.likeCount = Math.max(0, before.likeCount + (willLike ? 1 : -1))
+    try {
+      const state = await (willLike ? postsApi.like(id) : postsApi.unlike(id))
+      post.likeCount = state.likeCount
+      post.likedByMe = state.likedByMe
+      return true
+    } catch {
+      post.likeCount = before.likeCount
+      post.likedByMe = before.likedByMe
+      return false
+    } finally {
+      liking.delete(id)
+    }
+  }
+
   const prepend = (post: Post) => items.value.unshift(post)
   const remove = (id: number) => {
     items.value = items.value.filter((p) => p.id !== id)
   }
 
-  return { items, nextCursor, done, loading, failed, ownerId, reset, loadMore, prepend, remove }
+  return {
+    items,
+    nextCursor,
+    done,
+    loading,
+    failed,
+    ownerId,
+    reset,
+    loadMore,
+    toggleLike,
+    prepend,
+    remove,
+  }
 })

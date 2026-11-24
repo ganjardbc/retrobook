@@ -22,6 +22,11 @@ async function onDelete(id: number) {
   }
 }
 
+const likeFailed = ref(false)
+async function onLike(id: number) {
+  likeFailed.value = !(await feed.toggleLike(id))
+}
+
 onMounted(() => {
   // Feed milik akun sebelumnya tidak boleh terlihat setelah ganti akun.
   if (feed.ownerId !== (auth.user?.id ?? null)) feed.reset(auth.user?.id ?? null)
@@ -51,7 +56,14 @@ watch(
 <template>
   <div class="home">
     <StatusBox />
-    <PostCard v-for="post in feed.items" :key="post.id" :post="post" @delete="onDelete" />
+    <p v-if="likeFailed" class="form-error" role="alert">{{ t('like.error') }}</p>
+    <PostCard
+      v-for="post in feed.items"
+      :key="post.id"
+      :post="post"
+      @delete="onDelete"
+      @toggle-like="onLike"
+    />
 
     <p
       v-if="!feed.loading && !feed.failed && feed.done && feed.items.length === 0"

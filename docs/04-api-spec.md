@@ -186,7 +186,7 @@ Aturan: `content` maksimal 5.000 karakter; boleh kosong hanya bila `imageUrl` ad
 | DELETE | `/comments/:id/like` | Unlike komentar |
 | GET | `/posts/:id/likes` | Daftar penyuka (cursor) |
 
-Hanya satu jenis reaksi, yaitu Like (BR-13). Respons semua endpoint like: `{ "likeCount": 12, "likedByMe": true }`.
+Hanya satu jenis reaksi, yaitu Like (BR-13). Status implementasi (T-15): endpoint post (PUT/DELETE `/posts/:id/like` dan GET `/posts/:id/likes`) sudah ada; endpoint komentar menunggu T-16 dan INT-03. Hanya pada post yang terlihat (404 yang sama bila tidak); penyuka BANNED atau terhapus tidak dihitung dan tidak ditampilkan (BR-05). Respons semua endpoint like: `{ "likeCount": 12, "likedByMe": true }`.
 
 ### 4.3 Komentar (INT-02, INT-05)
 

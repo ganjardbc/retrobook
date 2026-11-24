@@ -6,9 +6,11 @@ import { RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { formatTime } from '../utils/time'
 import Avatar from './Avatar.vue'
+import LikeSummary from './LikeSummary.vue'
+import PostActions from './PostActions.vue'
 
 const props = defineProps<{ post: Post }>()
-const emit = defineEmits<{ delete: [id: number] }>()
+const emit = defineEmits<{ delete: [id: number]; 'toggle-like': [id: number] }>()
 
 const auth = useAuthStore()
 const menuOpen = ref(false)
@@ -69,10 +71,9 @@ function remove() {
       loading="lazy"
     />
 
-    <footer v-if="post.likeCount || post.commentCount" class="post__counts">
-      <span v-if="post.likeCount">{{ t('post.likes', { n: post.likeCount }) }}</span>
-      <span v-if="post.commentCount">{{ t('post.comments', { n: post.commentCount }) }}</span>
-    </footer>
+    <PostActions :liked="post.likedByMe" @toggle-like="emit('toggle-like', post.id)" />
+    <LikeSummary :post="post" />
+    <!-- Daftar komentar dan kotak komentar: T-16. -->
   </article>
 </template>
 
@@ -112,13 +113,6 @@ function remove() {
   display: block;
   width: 100%;
   height: auto;
-}
-.post__counts {
-  display: flex;
-  gap: var(--sp-3);
-  padding: var(--sp-2) var(--sp-3);
-  color: var(--c-text-muted);
-  border-top: 1px solid var(--c-border-soft);
 }
 .post__menu {
   position: relative;

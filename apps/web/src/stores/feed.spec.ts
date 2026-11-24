@@ -98,4 +98,54 @@ describe('feed store', () => {
     await pending
     expect(feed.items).toEqual([])
   })
+
+  describe('toggleLike (optimistik)', () => {
+    const setup = (over: Partial<Post> = {}) => {
+      const feed = useFeedStore()
+      feed.prepend({ ...post(1), ...over })
+      return feed
+    }
+
+    it('like: tampilan berubah dulu, lalu memakai angka server', async () => {
+      let release!: () => void
+      vi.spyOn(postsApi, 'like').mockReturnValue(
+        new Promise((r) => (release = () => r({ likeCount: 5, likedByMe: true }))),
+      )
+      const feed = setup({ likeCount: 2 })
+      const pending = feed.toggleLike(1)
+      expect(feed.items[0]).toMatchObject({ likeCount: 3, likedByMe: true }) // sebelum server menjawab
+      release()
+      expect(await pending).toBe(true)
+      expect(feed.items[0]).toMatchObject({ likeCount: 5, likedByMe: true })
+    })
+
+    it('unlike memanggil DELETE dan menurunkan jumlah (tidak di bawah 0)', async () => {
+      const spy = vi.spyOn(postsApi, 'unlike').mockResolvedValue({ likeCount: 0, likedByMe: false })
+      const feed = setup({ likeCount: 0, likedByMe: true })
+      await feed.toggleLike(1)
+      expect(spy).toHaveBeenCalledWith(1)
+      expect(feed.items[0]).toMatchObject({ likeCount: 0, likedByMe: false })
+    })
+
+    it('gagal: dikembalikan ke keadaan semula dan mengembalikan false', async () => {
+      vi.spyOn(postsApi, 'like').mockRejectedValue(new Error('x'))
+      const feed = setup({ likeCount: 2 })
+      expect(await feed.toggleLike(1)).toBe(false)
+      expect(feed.items[0]).toMatchObject({ likeCount: 2, likedByMe: false })
+    })
+
+    it('klik berulang saat menunggu hanya mengirim satu permintaan', async () => {
+      const spy = vi.spyOn(postsApi, 'like').mockResolvedValue({ likeCount: 1, likedByMe: true })
+      const feed = setup()
+      await Promise.all([feed.toggleLike(1), feed.toggleLike(1), feed.toggleLike(1)])
+      expect(spy).toHaveBeenCalledTimes(1)
+      expect(feed.items[0]?.likeCount).toBe(1)
+    })
+
+    it('post yang tidak ada di feed diabaikan', async () => {
+      const spy = vi.spyOn(postsApi, 'like')
+      await useFeedStore().toggleLike(404)
+      expect(spy).not.toHaveBeenCalled()
+    })
+  })
 })

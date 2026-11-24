@@ -36,6 +36,14 @@ export class VisibilityService {
     }
   }
 
+  /**
+   * Like yang boleh dihitung dan ditampilkan: penyuka yang BANNED atau terhapus disembunyikan
+   * seperti kontennya (BR-05).
+   */
+  likerWhere(): Prisma.LikeWhereInput {
+    return { user: { deletedAt: null, status: { not: 'BANNED' } } }
+  }
+
   /** News feed (POST-04): post yang terlihat dan ditulis diri sendiri atau teman. */
   feedWhere(viewerId: number): Prisma.PostWhereInput {
     return {

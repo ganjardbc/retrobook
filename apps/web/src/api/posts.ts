@@ -6,6 +6,10 @@ export const postsApi = {
     request<Paged<Post>>(`/feed?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
   create: (input: { content: string; privacy: Privacy; imageUrl?: string | null }) =>
     request<Post>('/posts', { method: 'POST', body: input }),
+  like: (id: number) =>
+    request<{ likeCount: number; likedByMe: boolean }>(`/posts/${id}/like`, { method: 'PUT' }),
+  unlike: (id: number) =>
+    request<{ likeCount: number; likedByMe: boolean }>(`/posts/${id}/like`, { method: 'DELETE' }),
   remove: (id: number) => request<void>(`/posts/${id}`, { method: 'DELETE' }),
   uploadImage: (file: File) => {
     const form = new FormData()
