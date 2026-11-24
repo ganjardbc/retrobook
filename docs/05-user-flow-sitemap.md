@@ -43,7 +43,7 @@ flowchart TD
 | `/` | News feed, status box, kolom kanan | member | 1 | POST-04 |
 | `/:username` | Profil, tab Timeline | member | 1 | PRF-01 |
 | `/:username/about`, `/friends`, `/photos` | Tab profil | member | 1 | PRF-01, 04 |
-| `/friends` | Permintaan masuk, saran teman, semua teman | member | 1 | FRD-02, 04, 05 |
+| `/friends` | Permintaan masuk, saran teman, semua teman. Status implementasi (T-19): permintaan masuk (Confirm, Delete Request) dan semua teman (jumlah, pencarian, Load more, Unfriend); saran teman menyusul di T-41 | member | 1 | FRD-02, 04, 05 |
 | `/search` | Hasil pencarian lengkap | member | 2 | SRC-01 |
 | `/hashtag/:tag` | Post dengan hashtag | member | 2 | POST-10 |
 | `/notifications` | Daftar notifikasi penuh | member | 2 | NTF-01 |

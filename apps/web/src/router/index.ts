@@ -16,7 +16,10 @@ export const router = createRouter({
     {
       path: '/',
       component: () => import('../components/AppLayout.vue'),
-      children: [{ path: '', name: 'home', component: () => import('../views/HomeView.vue') }],
+      children: [
+        { path: '', name: 'home', component: () => import('../views/HomeView.vue') },
+        { path: 'friends', name: 'friends', component: () => import('../views/FriendsView.vue') },
+      ],
     },
     {
       path: '/login',

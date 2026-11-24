@@ -5,7 +5,10 @@ import { useAuthStore } from '../stores/auth'
 import Avatar from './Avatar.vue'
 
 // Hanya rute yang sudah ada; item lain (Messages, Friends, ...) ditambahkan bersama halamannya.
-const items: { label: MessageKey; to: string }[] = [{ label: 'menu.newsFeed', to: '/' }]
+const items: { label: MessageKey; to: string }[] = [
+  { label: 'menu.newsFeed', to: '/' },
+  { label: 'menu.friends', to: '/friends' },
+]
 const auth = useAuthStore()
 </script>
 
@@ -17,12 +20,7 @@ const auth = useAuthStore()
     </RouterLink>
     <ul class="menu__list">
       <li v-for="item in items" :key="item.to">
-        <RouterLink
-          class="menu__row"
-          :to="item.to"
-          active-class="menu__row--active"
-          exact-active-class="menu__row--active"
-        >
+        <RouterLink class="menu__row" :to="item.to" exact-active-class="menu__row--active">
           {{ t(item.label) }}
         </RouterLink>
       </li>
