@@ -11,6 +11,7 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { PrismaService } from '../../prisma/prisma.service'
+import { resetDb } from '../../test/db'
 import { hashToken } from './token.util'
 
 const body = {
@@ -32,11 +33,11 @@ describe('Auth (integrasi)', () => {
     await app.init()
     prisma = app.get(PrismaService)
   })
-  beforeEach(async () => {
-    await prisma.refreshToken.deleteMany()
-    await prisma.user.deleteMany()
+  beforeEach(() => resetDb(prisma))
+  afterAll(async () => {
+    await resetDb(prisma)
+    await app.close()
   })
-  afterAll(() => app.close())
 
   describe('register (AUTH-01)', () => {
     it('berhasil: 201, token, tanpa password di respons, hash argon2 di database', async () => {

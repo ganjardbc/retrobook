@@ -6,7 +6,7 @@ Panduan untuk Claude Code di repo **retrobook**. Baca ini dulu, lalu buka dokume
 
 retrobook adalah jejaring sosial **parodi** bertampilan 2014 sampai Maret 2015: user app, admin panel, dan satu API. Ini fun project (pembelajaran, demo, bahan konten Coderium), bukan produk komersial. Pemilik: Ganjar, yang memutuskan arsitektur.
 
-Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), T-04 (kerangka NestJS), T-05 (modul Auth), T-06 (tokens.css, tipe bersama), T-07 (app Vue dasar, login, register), T-08 (token terukur), T-09 (CI dasar), T-10 (layout tiga kolom), dan T-11 (upload gambar) selesai. Lanjut dari `docs/08-backlog.md` (T-12).
+Status: dokumentasi draf 1 selesai; T-01 (monorepo) dan T-02 (env, Compose opsional) dan T-03 (skema Prisma inti, migrasi pertama), T-04 (kerangka NestJS), T-05 (modul Auth), T-06 (tokens.css, tipe bersama), T-07 (app Vue dasar, login, register), T-08 (token terukur), T-09 (CI dasar), T-10 (layout tiga kolom), T-11 (upload gambar), dan T-12 (API post, feed, `VisibilityService`) selesai. T-13 sebagian (sisa: blokir). Lanjut dari `docs/08-backlog.md` (T-13).
 
 ## Dokumen (sumber kebenaran)
 
@@ -45,7 +45,7 @@ Nama aplikasi (`retrobook`) disimpan di satu konstanta di `packages/shared`; jan
 Skrip akar yang sudah jalan: `pnpm install`, `pnpm lint` (ESLint di akar, bukan per paket), `pnpm format:check`, `pnpm typecheck`. Sisanya masih target (dev, test, db, docker menunggu T-02 sampai T-09):
 
 ```bash
-pnpm install
+pnpm install        # juga membangun packages/shared ke dist/ (script prepare), dibutuhkan API dan typecheck
 pnpm dev            # web, admin, api bersamaan (belum; sementara: pnpm --filter @retrobook/api dev dan pnpm --filter @retrobook/web dev)
 pnpm lint
 pnpm -r test        # Jest + Vitest

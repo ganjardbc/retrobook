@@ -52,6 +52,9 @@ importers:
       '@prisma/client':
         specifier: ^6.19
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      '@retrobook/shared':
+        specifier: workspace:^
+        version: link:../../packages/shared
       argon2:
         specifier: ^0.45.2
         version: 0.45.2

@@ -30,8 +30,8 @@ Keluaran minggu 1: bisa daftar dan masuk dari browser, token diperbarui otomatis
 |---|---|---|---|
 | [x] T-10 | Layout tiga kolom, `NavBar`, `LeftMenu`, `Button`, `Avatar` | M | UX-01, 02 |
 | [x] T-11 | Upload gambar (multer, validasi isi, batas 5 MB) | M | POST-02 |
-| [ ] T-12 | API post: buat, baca, edit, hapus (soft delete), pagination cursor | L | POST-01, 05, 06 |
-| [ ] T-13 | Service visibilitas terpusat (privasi, pertemanan, blokir, hidden, BANNED) dipakai semua query baca | L | BR-02, 03, 05, 07, 11 |
+| [x] T-12 | API post: buat, baca, edit, hapus (soft delete), pagination cursor | L | POST-01, 05, 06 |
+| [~] T-13 | Service visibilitas terpusat (privasi, pertemanan, blokir, hidden, BANNED) dipakai semua query baca. Dasar sudah ada dari T-12 (`VisibilityService`: privasi, teman ACCEPTED, hidden, deleted, BANNED, tanpa blokir); sisa: blokir dua arah (butuh tabel `blocks`) dan wall post (BR-04) | L | BR-02, 03, 05, 07, 11 |
 | [ ] T-14 | `StatusBox`, `PostCard`, feed dengan infinite scroll | L | POST-01, 04 |
 | [ ] T-15 | Like dan unlike post; `LikeSummary` | M | INT-01 |
 | [ ] T-16 | Komentar: API, `CommentList`, hapus | M | INT-02 |

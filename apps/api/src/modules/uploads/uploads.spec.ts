@@ -14,13 +14,19 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { PrismaService } from '../../prisma/prisma.service'
+import { resetDb } from '../../test/db'
 import { MAX_IMAGE_BYTES, detectImageExt } from './image-type'
 import { serveUploads } from './serve-uploads'
 
-const pad = (head: Buffer, total: number) => Buffer.concat([head, Buffer.alloc(Math.max(0, total - head.length))])
+const pad = (head: Buffer, total: number) =>
+  Buffer.concat([head, Buffer.alloc(Math.max(0, total - head.length))])
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0xff, 0xd9])
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0])
-const WEBP = Buffer.concat([Buffer.from('RIFF'), Buffer.from([4, 0, 0, 0]), Buffer.from('WEBPVP8 ')])
+const WEBP = Buffer.concat([
+  Buffer.from('RIFF'),
+  Buffer.from([4, 0, 0, 0]),
+  Buffer.from('WEBPVP8 '),
+])
 const EXE = Buffer.concat([Buffer.from('MZ'), Buffer.alloc(100)])
 
 describe('detectImageExt', () => {
@@ -55,14 +61,17 @@ describe('Upload gambar (integrasi)', () => {
     serveUploads(app)
     await app.init()
     prisma = app.get(PrismaService)
-    await prisma.refreshToken.deleteMany()
-    await prisma.user.deleteMany()
-    const res = await request(app.getHttpServer())
-      .post('/api/auth/register')
-      .send({ email: 'up@example.com', username: 'uploader', displayName: 'Up', password: 'password123' })
+    await resetDb(prisma)
+    const res = await request(app.getHttpServer()).post('/api/auth/register').send({
+      email: 'up@example.com',
+      username: 'uploader',
+      displayName: 'Up',
+      password: 'password123',
+    })
     token = res.body.accessToken
   })
   afterAll(async () => {
+    await resetDb(prisma)
     await app.close()
     rmSync(dir, { recursive: true, force: true })
   })
@@ -99,7 +108,9 @@ describe('Upload gambar (integrasi)', () => {
   })
 
   it('SVG dan teks berkedok gambar: 415', async () => {
-    expect((await upload(Buffer.from('<svg onload="alert(1)"/>'), 'a.png', 'image/png')).status).toBe(415)
+    expect(
+      (await upload(Buffer.from('<svg onload="alert(1)"/>'), 'a.png', 'image/png')).status,
+    ).toBe(415)
   })
 
   it('tepat 5 MB lolos, lebih satu byte: 413 FILE_TOO_LARGE', async () => {
@@ -144,7 +155,9 @@ describe('Upload gambar (integrasi)', () => {
     expect(file.status).toBe(200)
     expect(file.headers['content-type']).toMatch(/image\/png/)
     expect(file.headers['x-content-type-options']).toBe('nosniff')
-    expect(Buffer.compare(file.body, readFileSync(join(dir, body.url.replace('/uploads/', ''))))).toBe(0)
+    expect(
+      Buffer.compare(file.body, readFileSync(join(dir, body.url.replace('/uploads/', '')))),
+    ).toBe(0)
     expect((await request(app.getHttpServer()).get('/uploads/')).status).toBe(404)
     expect((await request(app.getHttpServer()).get('/uploads/tidak-ada.png')).status).toBe(404)
   })

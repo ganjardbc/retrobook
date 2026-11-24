@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { randomBytes } from 'node:crypto'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { access, mkdir, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { AppException } from '../../common/app-exception'
 import type { Env } from '../../config/env.validation'
@@ -19,6 +19,16 @@ export class UploadsService implements OnModuleInit {
     return mkdir(this.dir, { recursive: true })
   }
 
+  /** Apakah URL `/uploads/<nama>` menunjuk berkas yang ada (nama sudah divalidasi pemanggil). */
+  async exists(url: string): Promise<boolean> {
+    const name = url.replace(/^\/uploads\//, '')
+    if (name === url || name.includes('/') || name.includes('..')) return false
+    return access(join(this.dir, name)).then(
+      () => true,
+      () => false,
+    )
+  }
+
   /**
    * Simpan gambar dan kembalikan URL publik. Tipe ditentukan dari isi berkas dan nama
    * ditentukan server (acak), sehingga nama dari klien tidak pernah menyentuh disk.
@@ -29,7 +39,11 @@ export class UploadsService implements OnModuleInit {
     }
     const ext = detectImageExt(file.buffer)
     if (!ext) {
-      throw new AppException(415, 'UNSUPPORTED_MEDIA_TYPE', 'Hanya JPG, PNG, atau WebP yang diizinkan')
+      throw new AppException(
+        415,
+        'UNSUPPORTED_MEDIA_TYPE',
+        'Hanya JPG, PNG, atau WebP yang diizinkan',
+      )
     }
     const name = `${randomBytes(16).toString('hex')}.${ext}`
     await writeFile(join(this.dir, name), file.buffer, { flag: 'wx' })

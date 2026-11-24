@@ -170,6 +170,8 @@ Akun SUSPENDED atau BANNED mendapat 403 (`ACCOUNT_SUSPENDED` atau `ACCOUNT_BANNE
 }
 ```
 
+Status implementasi (T-12): hanya `content`, `imageUrl`, dan `privacy` yang diterima; `feeling`, `wallOwnerUsername`, `taggedUserIds`, hashtag, dan kata terlarang menyusul (T-35, T-42, T-56) dan field asing ditolak 400. `imageUrl` hanya menerima URL hasil `POST /uploads/post-image` yang berkasnya ada. `GET /feed` baru mendukung urutan terbaru (`sort=top`: T-43). Bukan pemilik: 403 bila post terlihat, 404 bila tidak.
+
 Aturan: `content` maksimal 5.000 karakter; boleh kosong hanya bila `imageUrl` ada; mengandung kata terlarang menghasilkan 400 `CONTENT_BLOCKED_WORD` (BR-08, konten tidak disimpan, kejadian dicatat untuk antrean moderasi); hashtag (`#kata`) diekstrak ke `hashtags` dan `post_hashtags`. `wallOwnerUsername` hanya sah untuk teman; wall post mengikuti BR-04. Tag hanya untuk teman dan memicu notifikasi `TAG`.
 
 **Visibilitas di feed** (BR-02, BR-03, BR-05, BR-11): post terlihat bila pemanggil adalah penulis, atau privasi PUBLIC, atau privasi FRIENDS dan penulis adalah teman, dan penulis tidak BANNED, dan tidak ada blokir dua arah, dan `hidden` false dan `deleted_at` null.
