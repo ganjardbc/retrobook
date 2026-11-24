@@ -1,0 +1,38 @@
+# OPSIONAL. Default dev retrobook berjalan tanpa Docker (MySQL lokal, lihat .env.example).
+# Dipakai bila ingin MySQL terisolasi: `docker compose up -d mysql mysql-test` (butuh variabel MYSQL_* di .env).
+services:
+  mysql:
+    image: mysql:8.4
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?isi di .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-retrobook}
+    ports:
+      - '${MYSQL_PORT:-3306}:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-p${MYSQL_ROOT_PASSWORD}']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Database uji: tanpa volume, data hilang saat container dihapus.
+  mysql-test:
+    image: mysql:8.4
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?isi di .env}
+      MYSQL_DATABASE: ${MYSQL_TEST_DATABASE:-retrobook_test}
+    ports:
+      - '${MYSQL_TEST_PORT:-3307}:3306'
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-p${MYSQL_ROOT_PASSWORD}']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql-data:
