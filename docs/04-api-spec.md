@@ -288,7 +288,7 @@ Tipe: `LIKE`, `COMMENT`, `FRIEND_REQUEST`, `FRIEND_ACCEPT`, `POKE`, `TAG`, `WALL
 | GET | `/messages/conversations` | Daftar percakapan dengan pesan terakhir dan jumlah belum dibaca |
 | GET | `/messages/unread-count` | `{ count }` pesan belum dibaca dari teman (badge jewel pesan; T-36) |
 | GET | `/messages/:userId` | Riwayat dengan satu user (cursor ke arah lebih lama) |
-| POST | `/messages/:userId` | Kirim `{ content }` (REST sebagai cadangan bila socket putus) |
+| POST | `/messages/:userId` | Kirim `{ content, clientId? }` (REST sebagai cadangan bila socket putus) |
 | POST | `/messages/:userId/read` | Tandai semua pesan dari user itu sebagai terbaca |
 | GET | `/chat/friends` | Daftar teman untuk sidebar chat beserta status online |
 
