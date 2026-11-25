@@ -161,7 +161,7 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 | [x] T-83 | Year in Review di profil (akhir tahun) | YIR-01 |
 | [x] T-84 | Pencarian isi post teman (Graph Search ringan, lewat `VisibilityService`) | SRC-05 |
 | [x] T-85 | Aksesibilitas: fokus keyboard, kontras token, label ARIA | NFR |
-| [ ] T-86 | Tes E2E untuk fitur T-71 sampai T-82 | test plan |
+| [x] T-86 | Tes E2E `e2e/phase4.spec.ts`: SAV-01, OTD-01, YIR-01, SRC-05, INT-03, GRP-01, EVT-01, NOT-01, AUTH-06. Belum: album (T-71, butuh unggah foto), life event, privasi profil, foto komentar, feeling | test plan |
 | [ ] T-87 | Audit privasi endpoint baru (album, grup, event, notes, life event, saved) | R-03 |
 | [ ] T-88 | Performa feed dengan seeder besar (N+1, indeks) | NFR |
 | [ ] T-89 | Polish tampilan 2014: ikon sprite sendiri, favicon, loading state | UX |

@@ -149,7 +149,7 @@ test('AUTH-05 forgotten password: reset link from the outbox sets a new password
 
   await page.goto('/login')
   await page.getByLabel('Email or username').fill(user.username)
-  await page.getByLabel('Password').fill('brand-new-password')
+  await page.getByLabel('Password', { exact: true }).fill('brand-new-password')
   await page.getByRole('button', { name: 'Log In' }).click()
   await expect(page.getByLabel("What's on your mind?")).toBeVisible()
   await guestCtx.close()
