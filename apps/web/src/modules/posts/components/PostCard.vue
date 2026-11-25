@@ -238,7 +238,7 @@ async function saveEdit() {
   display: flex;
   align-items: flex-start;
   gap: var(--sp-2);
-  padding: var(--sp-3) var(--sp-3) 0;
+  padding: var(--sp-3);
 }
 .post__who {
   flex: 1;
@@ -255,7 +255,7 @@ async function saveEdit() {
 }
 .post__text {
   margin: 0;
-  padding: var(--sp-3);
+  padding: 0 var(--sp-3) var(--sp-3);
   font-size: var(--fs-post);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -264,7 +264,7 @@ async function saveEdit() {
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  padding: var(--sp-3);
+  padding: 0 var(--sp-3) var(--sp-3);
 }
 .post__edit-text {
   width: 100%;

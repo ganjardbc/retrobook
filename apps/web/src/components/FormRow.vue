@@ -1,10 +1,10 @@
 <script setup lang="ts">
 /** Baris form padat: label di kiri, kontrol di kanan. */
-defineProps<{ label: string; forId?: string }>()
+defineProps<{ label: string; forId?: string; stacked?: boolean }>()
 </script>
 
 <template>
-  <div class="row">
+  <div class="row" :class="{ 'row--stacked': stacked }">
     <label class="row__label" :for="forId">{{ label }}</label>
     <div class="row__field"><slot /></div>
   </div>
@@ -16,6 +16,13 @@ defineProps<{ label: string; forId?: string }>()
   grid-template-columns: 110px 1fr;
   align-items: start;
   gap: var(--sp-2);
+}
+.row--stacked {
+  grid-template-columns: 1fr;
+  gap: 2px;
+}
+.row--stacked .row__label {
+  padding-top: 0;
 }
 .row__label {
   padding-top: var(--sp-1);

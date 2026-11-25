@@ -5,7 +5,6 @@ import Button from '@/components/Button.vue'
 import PostCard from '@/modules/posts/components/PostCard.vue'
 import YearScroller from '@/modules/profile/components/YearScroller.vue'
 import StatusBox from '@/modules/feed/components/StatusBox.vue'
-import LifeEvents from '@/modules/profile/components/LifeEvents.vue'
 import { postsApi } from '@/modules/posts/services/api'
 import { useFeedStore } from '@/modules/feed/stores'
 import { useProfileStore } from '@/modules/profile/stores'
@@ -56,7 +55,6 @@ function onWallPosted(post: Parameters<typeof list.prepend>[0]) {
         :wall-owner="store.profile"
         @posted="onWallPosted"
       />
-      <LifeEvents />
 
       <PostCard
         v-for="post in list.items"

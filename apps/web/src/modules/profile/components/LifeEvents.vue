@@ -95,16 +95,16 @@ async function remove(item: LifeEvent) {
       <Button v-if="!showForm" @click="showForm = true">{{ t('lifeEvents.add') }}</Button>
     </template>
     <form v-if="showForm" class="form" @submit.prevent="create">
-      <FormRow :label="t('lifeEvents.kind')">
+      <FormRow stacked :label="t('lifeEvents.kind')">
         <IconSelect v-model="kind" :options="kindOptions" :label="t('lifeEvents.kind')" />
       </FormRow>
-      <FormRow :label="t('lifeEvents.name')" for-id="le-title">
+      <FormRow stacked :label="t('lifeEvents.name')" for-id="le-title">
         <input id="le-title" v-model="title" maxlength="120" required />
       </FormRow>
-      <FormRow :label="t('lifeEvents.date')" for-id="le-date">
+      <FormRow stacked :label="t('lifeEvents.date')" for-id="le-date">
         <input id="le-date" v-model="happenedOn" type="date" required />
       </FormRow>
-      <FormRow :label="t('lifeEvents.privacy')">
+      <FormRow stacked :label="t('lifeEvents.privacy')">
         <IconSelect v-model="privacy" :options="privacyOptions" :label="t('lifeEvents.privacy')" />
       </FormRow>
       <div class="form__actions">
@@ -155,7 +155,6 @@ async function remove(item: LifeEvent) {
 .form__actions {
   display: flex;
   gap: var(--sp-2);
-  padding-left: 118px;
 }
 .list {
   margin: 0;
@@ -199,10 +198,5 @@ async function remove(item: LifeEvent) {
 .item__privacy {
   flex: none;
   margin-top: 2px;
-}
-@media (max-width: 560px) {
-  .form__actions {
-    padding-left: 0;
-  }
 }
 </style>
