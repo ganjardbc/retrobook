@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { t } from '@retrobook/shared/i18n'
+import { Icon } from '@iconify/vue'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { formatTime } from '@/helpers/time'
 import { type ChatWindow, useChatStore } from '@/modules/chat/stores'
 
 const props = defineProps<{ win: ChatWindow }>()
 const chat = useChatStore()
+const router = useRouter()
 const draft = ref('')
 const log = ref<HTMLElement | null>(null)
 const input = ref<HTMLInputElement | null>(null)
@@ -42,6 +45,12 @@ onMounted(() => {
   input.value?.focus()
 })
 
+// Buka percakapan ini di halaman Messages; jendela melayang ditutup agar tidak ganda.
+function expand() {
+  void router.push({ path: '/messages', query: { with: props.win.user.id } })
+  chat.closeWindow(props.win.user.id)
+}
+
 function submit() {
   const text = draft.value
   draft.value = ''
@@ -52,22 +61,37 @@ function submit() {
 <template>
   <section class="win" :class="{ 'win--min': win.minimized }">
     <header class="win__head">
+      <h2 class="win__title">{{ win.user.displayName }}</h2>
       <button
-        class="win__title"
+        class="win__btn"
         type="button"
         :aria-expanded="!win.minimized"
         :aria-label="t('chat.toggle', { name: win.user.displayName })"
+        :title="t('chat.toggle', { name: win.user.displayName })"
         @click="chat.toggleMinimize(win.user.id)"
       >
-        {{ win.user.displayName }}
+        <Icon
+          :icon="win.minimized ? 'mdi:window-maximize' : 'mdi:window-minimize'"
+          aria-hidden="true"
+        />
       </button>
       <button
-        class="win__close"
+        class="win__btn"
+        type="button"
+        :aria-label="t('chat.expand', { name: win.user.displayName })"
+        :title="t('chat.expand', { name: win.user.displayName })"
+        @click="expand"
+      >
+        <Icon icon="mdi:arrow-expand" aria-hidden="true" />
+      </button>
+      <button
+        class="win__btn"
         type="button"
         :aria-label="t('chat.close', { name: win.user.displayName })"
+        :title="t('chat.close', { name: win.user.displayName })"
         @click="chat.closeWindow(win.user.id)"
       >
-        ×
+        <Icon icon="mdi:close" aria-hidden="true" />
       </button>
     </header>
 
@@ -137,28 +161,28 @@ function submit() {
   background: var(--c-brand);
   border-bottom: 1px solid var(--c-brand-dark);
 }
-.win__title,
-.win__close {
-  border: 0;
-  background: none;
-  color: var(--c-text-on-brand);
-  font: inherit;
-  font-weight: bold;
-  cursor: pointer;
-}
+/* Header bukan tombol: hanya tiga ikon berukuran sama yang bisa diklik. */
 .win__title {
   flex: 1;
+  margin: 0;
   padding: var(--sp-2) var(--sp-3);
   overflow: hidden;
-  text-align: left;
+  color: var(--c-text-on-brand);
+  font-size: inherit;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.win__close {
-  padding: 0 var(--sp-3);
+.win__btn {
+  display: grid;
+  width: 30px;
+  place-items: center;
+  border: 0;
+  background: none;
+  color: var(--c-text-on-brand);
   font-size: var(--fs-title);
+  cursor: pointer;
 }
-.win__head:hover {
+.win__btn:hover {
   background: var(--c-brand-dark);
 }
 .win__log {

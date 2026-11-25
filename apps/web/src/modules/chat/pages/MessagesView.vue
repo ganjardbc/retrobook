@@ -3,7 +3,7 @@ import type { ChatFriend, ChatMessage, Conversation, UserSummary } from '@retrob
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
 import { formatShortAgo, formatTime } from '@/helpers/time'
 import { chatApi } from '@/modules/chat/services/api'
@@ -24,7 +24,10 @@ const conversations = ref<Conversation[]>([])
 const listLoading = ref(true)
 const listFailed = ref(false)
 const query = ref('')
-const selectedId = ref<number | null>(null)
+// ?with=<id> membuka percakapan tertentu (dari jendela chat melayang).
+const route = useRoute()
+const withId = Number(route.query.with)
+const selectedId = ref<number | null>(Number.isInteger(withId) && withId > 0 ? withId : null)
 const draft = ref('')
 const log = ref<HTMLElement | null>(null)
 const input = ref<HTMLInputElement | null>(null)

@@ -249,6 +249,7 @@ export const en = {
   'chat.unread': '{n} unread',
   'chat.toggle': 'Show or hide chat with {name}',
   'chat.close': 'Close chat with {name}',
+  'chat.expand': 'Open chat with {name} in Messages',
   'chat.input': 'Write a message...',
   'chat.send': 'Send',
   'chat.older': 'Load older messages',

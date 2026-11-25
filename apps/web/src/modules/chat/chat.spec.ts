@@ -486,18 +486,21 @@ describe('ChatDock dan ChatWindow', () => {
     expect(w.find('.msg__text').text()).toBe('<img src=x onerror=alert(1)>')
   })
 
-  it('judul menciutkan dan mengembangkan; tombol tutup menghapus jendela', async () => {
+  it('ikon minimize menciutkan dan mengembangkan; judul tidak bisa diklik; ikon tutup menghapus jendela', async () => {
     const chat = await started()
     chat.openWindow(user(2, 'Bob'))
     const w = mountDock()
     await flushPromises()
     expect(w.find('.win__log').exists()).toBe(true)
+    const [minimize, , close] = w.findAll('.win__btn')
     await w.find('.win__title').trigger('click')
+    expect(w.find('.win__log').exists()).toBe(true) // header bukan tombol
+    await minimize!.trigger('click')
     expect(w.find('.win__log').exists()).toBe(false)
-    expect(w.find('.win__title').attributes('aria-expanded')).toBe('false')
-    await w.find('.win__title').trigger('click')
+    expect(minimize!.attributes('aria-expanded')).toBe('false')
+    await minimize!.trigger('click')
     expect(w.find('.win__log').exists()).toBe(true)
-    await w.find('.win__close').trigger('click')
+    await close!.trigger('click')
     expect(w.find('.win').exists()).toBe(false)
   })
 
