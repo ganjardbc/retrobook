@@ -16,6 +16,22 @@ export class CreateGroupDto {
   privacy?: GroupPrivacy
 }
 
+export class UpdateGroupDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  name?: string
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  description?: string
+
+  @IsOptional()
+  @IsEnum(GroupPrivacy)
+  privacy?: GroupPrivacy
+}
+
 export class CreateGroupPostDto {
   @IsString()
   @MaxLength(5000)

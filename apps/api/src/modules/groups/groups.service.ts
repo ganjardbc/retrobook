@@ -5,12 +5,13 @@ import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
 import { PostsService } from '../posts/posts.service'
 import { VisibilityService } from '../visibility/visibility.service'
-import type { CreateGroupDto } from './dto/group.dto'
+import { UploadsService } from '../uploads/uploads.service'
+import type { CreateGroupDto, UpdateGroupDto } from './dto/group.dto'
 
 const groupInclude = (userId: number) =>
   ({
     _count: { select: { members: true } },
-    members: { where: { userId }, select: { userId: true } },
+    members: { where: { userId }, select: { userId: true, role: true } },
   }) satisfies Prisma.GroupInclude
 
 @Injectable()
@@ -19,6 +20,7 @@ export class GroupsService {
     private readonly prisma: PrismaService,
     private readonly postsService: PostsService,
     private readonly visibility: VisibilityService,
+    private readonly uploads: UploadsService,
   ) {}
 
   async list(userId: number): Promise<{ items: GroupSummary[]; suggested: GroupSummary[] }> {
@@ -83,6 +85,34 @@ export class GroupsService {
     return toSummary(group)
   }
 
+  /** Edit nama, deskripsi, privasi: hanya admin grup. Bukan admin: 404 seperti non-anggota. */
+  async update(userId: number, groupId: number, dto: UpdateGroupDto): Promise<GroupSummary> {
+    await this.assertAdmin(userId, groupId)
+    const name = dto.name?.trim()
+    if (dto.name !== undefined && !name)
+      throw new AppException(400, 'VALIDATION_FAILED', 'Nama grup wajib diisi')
+    await this.prisma.group.update({
+      where: { id: groupId },
+      data: {
+        ...(name ? { name } : {}),
+        ...(dto.description !== undefined ? { description: dto.description.trim() } : {}),
+        ...(dto.privacy ? { privacy: dto.privacy } : {}),
+      },
+    })
+    return this.get(userId, groupId)
+  }
+
+  async setPhoto(
+    userId: number,
+    groupId: number,
+    file: { buffer: Buffer } | undefined,
+  ): Promise<GroupSummary> {
+    await this.assertAdmin(userId, groupId)
+    const avatarUrl = await this.uploads.saveImage(file)
+    await this.prisma.group.update({ where: { id: groupId }, data: { avatarUrl } })
+    return this.get(userId, groupId)
+  }
+
   async join(userId: number, groupId: number) {
     // Grup CLOSED tidak bisa dimasuki sendiri; 404 sama seperti non-anggota (tidak membocorkan keberadaan).
     const group = await this.prisma.group.findFirst({
@@ -144,6 +174,16 @@ export class GroupsService {
     if (!member) throw this.notFound()
   }
 
+  private async assertAdmin(userId: number, groupId: number) {
+    const member = await this.prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId, userId } },
+      select: { role: true },
+    })
+    if (!member) throw this.notFound()
+    if (member.role !== 'ADMIN')
+      throw new AppException(403, 'FORBIDDEN', 'Hanya admin grup yang bisa mengubah grup')
+  }
+
   private notFound() {
     return new AppException(404, 'NOT_FOUND', 'Grup tidak ditemukan')
   }
@@ -154,19 +194,22 @@ function toSummary(group: {
   name: string
   description: string
   privacy: 'PUBLIC' | 'CLOSED'
+  avatarUrl: string | null
   createdBy: number
   createdAt: Date
   _count: { members: number }
-  members: { userId: number }[]
+  members: { userId: number; role: 'ADMIN' | 'MEMBER' }[]
 }): GroupSummary {
   return {
     id: group.id,
     name: group.name,
     description: group.description,
     privacy: group.privacy,
+    avatarUrl: group.avatarUrl,
     createdBy: group.createdBy,
     createdAt: group.createdAt.toISOString(),
     memberCount: group._count.members,
     isMember: group.members.length > 0,
+    isAdmin: group.members[0]?.role === 'ADMIN',
   }
 }

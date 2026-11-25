@@ -1,7 +1,20 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common'
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
 import { CursorQueryDto } from '../posts/dto/post.dto'
-import { CreateGroupDto, CreateGroupPostDto } from './dto/group.dto'
+import { ImageFileInterceptor } from '../uploads/image-upload.interceptor'
+import { CreateGroupDto, CreateGroupPostDto, UpdateGroupDto } from './dto/group.dto'
 import { GroupsService } from './groups.service'
 
 @Controller('groups')
@@ -21,6 +34,26 @@ export class GroupsController {
   @Get(':id')
   get(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
     return this.groups.get(user.id, id)
+  }
+
+  @Patch(':id')
+  update(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateGroupDto,
+  ) {
+    return this.groups.update(user.id, id, dto)
+  }
+
+  @Post(':id/photo')
+  @HttpCode(200)
+  @UseInterceptors(ImageFileInterceptor())
+  photo(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.groups.setPhoto(user.id, id, file)
   }
 
   @Post(':id/join')

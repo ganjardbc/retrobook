@@ -36,6 +36,11 @@ export class PostsController {
     return this.posts.get(user.id, id)
   }
 
+  @Get(':id/related')
+  related(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+    return this.posts.related(user.id, id)
+  }
+
   @Patch(':id')
   update(
     @CurrentUser() user: AuthUser,

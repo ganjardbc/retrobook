@@ -162,6 +162,42 @@ export class PostsService {
     return (await this.toDtos(viewerId, [row]))[0]!
   }
 
+  /**
+   * Halaman detail post: post lain dari penulis yang sama (di grup yang sama untuk post grup), lalu
+   * dilengkapi post terbaru dari feed bila kurang. Semuanya lewat VisibilityService; post asal 404 bila tak terlihat.
+   */
+  async related(viewerId: number, id: number, limit = 5): Promise<PostDto[]> {
+    const base = await this.findVisible(viewerId, id)
+    const order = [{ createdAt: 'desc' as const }, { id: 'desc' as const }]
+    const same = await this.prisma.post.findMany({
+      where: {
+        AND: [
+          this.visibility.postWhere(viewerId, base.groupId !== null),
+          { id: { not: id }, authorId: base.authorId, groupId: base.groupId },
+        ],
+      },
+      orderBy: order,
+      take: limit,
+      include: this.include(viewerId),
+    })
+    let rows = same
+    if (rows.length < limit && base.groupId === null) {
+      const recent = await this.prisma.post.findMany({
+        where: {
+          AND: [
+            this.visibility.feedWhere(viewerId, await this.friendIds(viewerId)),
+            { id: { notIn: [id, ...same.map((p) => p.id)] } },
+          ],
+        },
+        orderBy: order,
+        take: limit - rows.length,
+        include: this.include(viewerId),
+      })
+      rows = [...same, ...recent]
+    }
+    return this.toDtos(viewerId, rows)
+  }
+
   async update(viewerId: number, id: number, dto: UpdatePostDto): Promise<PostDto> {
     const current = await this.findVisible(viewerId, id)
     if (current.authorId !== viewerId) {

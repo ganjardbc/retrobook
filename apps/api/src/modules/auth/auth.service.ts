@@ -18,6 +18,7 @@ const RESERVED_USERNAMES = new Set([
   'friends',
   'messages',
   'notifications',
+  'posts',
   'search',
   'login',
   'register',

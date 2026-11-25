@@ -82,4 +82,19 @@ describe('Grup (integrasi)', () => {
       .send({ content: 'x', groupId: group.id, taggedUserIds: [friend.id] })
     expect(tagged.status).toBe(400)
   })
+
+  it('hanya admin grup yang boleh edit; anggota biasa 403, non-anggota 404', async () => {
+    const admin = await h.mkUser('admin')
+    const member = await h.mkUser('member')
+    const outsider = await h.mkUser('outsider')
+    const group = (await h.as(admin).post('/groups').send({ name: 'Klub', privacy: 'PUBLIC' })).body
+    await h.as(member).post(`/groups/${group.id}/join`)
+    const ok = await h.as(admin).patch(`/groups/${group.id}`).send({ name: 'Klub Baru' })
+    expect(ok.status).toBe(200)
+    expect(ok.body).toMatchObject({ name: 'Klub Baru', isAdmin: true })
+    expect((await h.as(member).patch(`/groups/${group.id}`).send({ name: 'x' })).status).toBe(403)
+    expect((await h.as(outsider).patch(`/groups/${group.id}`).send({ name: 'x' })).status).toBe(404)
+    expect((await h.as(admin).patch(`/groups/${group.id}`).send({ name: '  ' })).status).toBe(400)
+    expect((await h.as(member).post(`/groups/${group.id}/photo`)).status).toBe(403)
+  })
 })
