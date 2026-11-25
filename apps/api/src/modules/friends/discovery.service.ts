@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import type { FriendSuggestion, UserSummary } from '@retrobook/shared'
 import { PrismaService } from '../../prisma/prisma.service'
 import { VisibilityService } from '../visibility/visibility.service'
+import { cmp } from '../../common/keyset'
 
 const userSummary = {
   id: true,
@@ -57,7 +58,7 @@ export class FriendDiscoveryService {
       }
     }
     const ranked = [...mutual.entries()]
-      .sort((a, b) => b[1] - a[1] || a[0] - b[0])
+      .sort((a, b) => b[1] - a[1] || cmp(a[0], b[0]))
       .slice(0, CANDIDATE_POOL)
     if (ranked.length === 0) return { items: [] }
     const ids = ranked.map(([id]) => id)

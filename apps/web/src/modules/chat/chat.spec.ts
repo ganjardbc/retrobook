@@ -58,13 +58,15 @@ const friend = (id: number, name: string, over: Partial<ChatFriend> = {}): ChatF
   hidden: false,
   ...over,
 })
+/** Waktu deterministik menurut id: pesan berurutan menurut waktu, bukan menurut nilai id. */
+const at = (id: number) => new Date(Date.UTC(2015, 0, 1, 0, 0, id)).toISOString()
 const msg = (id: number, from: number, to: number, content = `m${id}`): ChatMessage => ({
   id,
   senderId: from,
   receiverId: to,
   content,
   readAt: null,
-  createdAt: new Date().toISOString(),
+  createdAt: at(id),
 })
 const ME = 1
 
@@ -429,7 +431,7 @@ describe('chat store: mengetik dan terbaca (CHT-04)', () => {
     expect(sock.emit).not.toHaveBeenCalled()
   })
 
-  it('message:read menandai pesan saya sampai upToMessageId; pesan lawan dan pending tidak', async () => {
+  it('message:read menandai pesan saya sampai upToCreatedAt; pesan lawan dan pending tidak', async () => {
     api.history.mockResolvedValue({
       items: [msg(14, 2, ME), msg(13, ME, 2), msg(12, ME, 2), msg(11, ME, 2)],
       nextCursor: null,
@@ -437,7 +439,7 @@ describe('chat store: mengetik dan terbaca (CHT-04)', () => {
     const chat = await started()
     chat.openWindow(user(2, 'Bob'))
     await flushPromises()
-    sock.fire('message:read', { byUserId: 2, upToMessageId: 12 })
+    sock.fire('message:read', { byUserId: 2, upToMessageId: 12, upToCreatedAt: at(12) })
     const read = (id: number) => chat.thread(2).messages.find((m) => m.id === id)!.readAt
     expect(read(11)).not.toBeNull()
     expect(read(12)).not.toBeNull()
@@ -597,12 +599,12 @@ describe('ChatDock dan ChatWindow', () => {
     await flushPromises()
     expect(w.find('.msg__seen').exists()).toBe(false)
 
-    sock.fire('message:read', { byUserId: 2, upToMessageId: 11 })
+    sock.fire('message:read', { byUserId: 2, upToMessageId: 11, upToCreatedAt: at(11) })
     await flushPromises()
     expect(w.findAll('.msg__seen')).toHaveLength(1)
     expect(w.findAll('.msg')[0]!.find('.msg__seen').text()).toBe('Seen') // pesan 11, bukan 12
 
-    sock.fire('message:read', { byUserId: 2, upToMessageId: 12 })
+    sock.fire('message:read', { byUserId: 2, upToMessageId: 12, upToCreatedAt: at(12) })
     await flushPromises()
     expect(w.findAll('.msg__seen')).toHaveLength(1)
     expect(w.findAll('.msg')[1]!.find('.msg__seen').exists()).toBe(true) // pindah ke pesan 12

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import type { Paged, UserSummary } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
+import { NEWEST_FIRST } from '../../common/keyset'
 import { PrismaService } from '../../prisma/prisma.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { VisibilityService } from '../visibility/visibility.service'
@@ -51,7 +52,7 @@ export class LikesService {
     await this.assertVisible(viewerId, postId)
     const rows = await this.prisma.like.findMany({
       where: { postId, ...this.visibility.likerWhere(viewerId) },
-      orderBy: { id: 'desc' },
+      orderBy: NEWEST_FIRST,
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       select: {
@@ -89,7 +90,7 @@ export class LikesService {
     await this.assertCommentVisible(viewerId, commentId)
     const rows = await this.prisma.like.findMany({
       where: { commentId, ...this.visibility.likerWhere(viewerId) },
-      orderBy: { id: 'desc' },
+      orderBy: NEWEST_FIRST,
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       select: {

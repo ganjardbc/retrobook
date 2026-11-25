@@ -2,6 +2,7 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { Prisma, User } from '@prisma/client'
 import type { FriendsPage, Paged, Post, Profile, ProfilePhoto } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
+import { NEWEST_FIRST } from '../../common/keyset'
 import { PrismaService } from '../../prisma/prisma.service'
 import { FriendsService } from '../friends/friends.service'
 import { PostsService } from '../posts/posts.service'
@@ -245,7 +246,7 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
     const [rows, total] = await Promise.all([
       this.prisma.post.findMany({
         where,
-        orderBy: { id: 'desc' },
+        orderBy: NEWEST_FIRST,
         take: limit + 1,
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
         select: { id: true, imageUrl: true, createdAt: true },

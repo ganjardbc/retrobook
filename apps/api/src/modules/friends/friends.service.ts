@@ -9,6 +9,7 @@ import type {
   UserSummary,
 } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
+import { NEWEST_FIRST } from '../../common/keyset'
 import { escapeLike } from '../../common/like'
 import { PrismaService } from '../../prisma/prisma.service'
 import { NotificationsService } from '../notifications/notifications.service'
@@ -118,7 +119,7 @@ export class FriendsService {
         status: 'PENDING',
         requester: this.visibility.userWhere(viewerId),
       },
-      orderBy: { id: 'desc' },
+      orderBy: NEWEST_FIRST,
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       select: { id: true, createdAt: true, requester: { select: userSummary } },
@@ -188,7 +189,7 @@ export class FriendsService {
     const [rows, total] = await Promise.all([
       this.prisma.friendship.findMany({
         where,
-        orderBy: { id: 'desc' },
+        orderBy: NEWEST_FIRST,
         take: limit + 1,
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
         select: {

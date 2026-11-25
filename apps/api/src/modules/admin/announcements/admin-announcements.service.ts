@@ -4,6 +4,7 @@ import { PrismaService } from '../../../prisma/prisma.service'
 import { NotificationsService } from '../../notifications/notifications.service'
 import { AdminAuditService } from '../admin-audit.service'
 import type { CreateAnnouncementDto, UpdateAnnouncementDto } from './admin-announcements.dto'
+import { NEWEST_FIRST } from '../../../common/keyset'
 
 const select = { id: true, title: true, body: true, active: true, createdAt: true } as const
 const notFound = () => new AppException(404, 'NOT_FOUND', 'Pengumuman tidak ditemukan')
@@ -17,7 +18,7 @@ export class AdminAnnouncementsService {
   ) {}
 
   async list() {
-    return { items: await this.prisma.announcement.findMany({ orderBy: { id: 'desc' }, select }) }
+    return { items: await this.prisma.announcement.findMany({ orderBy: NEWEST_FIRST, select }) }
   }
 
   /** ADM-13: pengumuman, notifikasi ANNOUNCEMENT ke semua user aktif, dan audit dalam satu transaksi; push realtime setelah commit. */

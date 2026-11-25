@@ -11,6 +11,7 @@ import {
   type YearInReview,
 } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
+import { afterCursor, cmp, NEWEST_FIRST } from '../../common/keyset'
 import { escapeLike } from '../../common/like'
 import { PrismaService } from '../../prisma/prisma.service'
 import { BlockedWordsService } from '../blocked-words/blocked-words.service'
@@ -43,7 +44,7 @@ const postInclude = (likerWhere: Prisma.LikeWhereInput, userWhere: Prisma.UserWh
     wallOwner: { select: userSummary },
     likes: {
       where: likerWhere,
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: NEWEST_FIRST,
       take: 2,
       select: { user: { select: userSummary } },
     },
@@ -137,7 +138,7 @@ export class PostsService {
     await this.assertGroupMember(viewerId, groupId)
     const rows = await this.prisma.post.findMany({
       where: { AND: [{ groupId }, this.visibility.postWhere(viewerId, true)] },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: NEWEST_FIRST,
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: this.include(viewerId),
@@ -295,7 +296,7 @@ export class PostsService {
     if (sort === 'top') return this.topFeed(viewerId, where, limit, cursor)
     const rows = await this.prisma.post.findMany({
       where,
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: NEWEST_FIRST,
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: this.include(viewerId),
@@ -323,7 +324,7 @@ export class PostsService {
   ): Promise<Paged<PostDto>> {
     const candidates = await this.prisma.post.findMany({
       where,
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: NEWEST_FIRST,
       take: TOP_WINDOW,
       select: { id: true, createdAt: true },
     })
@@ -338,7 +339,7 @@ export class PostsService {
     )
     const sorted = candidates
       .map((c) => ({ ...c, likes: counts.get(c.id) ?? 0 }))
-      .sort((x, y) => y.likes - x.likes || +y.createdAt - +x.createdAt || y.id - x.id)
+      .sort((x, y) => y.likes - x.likes || +y.createdAt - +x.createdAt || cmp(y.id, x.id))
     const start = cursor === undefined ? 0 : sorted.findIndex((c) => c.id === cursor) + 1
     // Kursor yang tidak ada lagi (dihapus atau di luar jendela): halaman kosong, seperti kursor Prisma.
     if (cursor !== undefined && start === 0) return { items: [], nextCursor: null }
@@ -396,7 +397,7 @@ export class PostsService {
           { hashtags: { some: { hashtag: { tag: tag.toLowerCase() } } } },
         ],
       },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: NEWEST_FIRST,
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: this.include(viewerId),
@@ -426,27 +427,35 @@ export class PostsService {
     const visible = this.visibility.postWhere(viewerId, true)
     const like = escapeLike(q)
     const found: PostRow[] = []
-    let before = cursor
+    // Kursor = id post terakhir yang sudah dipindai; posisinya dicari lewat (createdAt, id)-nya.
+    let before: { id: number; createdAt: Date } | null = null
+    if (cursor) {
+      before = await this.prisma.post.findUnique({
+        where: { id: cursor },
+        select: { id: true, createdAt: true },
+      })
+      if (!before) return { items: [], nextCursor: null }
+    }
     let scanned = false
     for (let batch = 0; batch < SEARCH_MAX_BATCHES; batch++) {
-      const candidates = await this.prisma.post.findMany({
+      const candidates: { id: number; createdAt: Date }[] = await this.prisma.post.findMany({
         where: {
           content: { contains: like },
           deletedAt: null,
-          ...(before ? { id: { lt: before } } : {}),
+          ...(before ? afterCursor(before) : {}),
         },
-        orderBy: { id: 'desc' },
+        orderBy: NEWEST_FIRST,
         take: SEARCH_BATCH,
-        select: { id: true },
+        select: { id: true, createdAt: true },
       })
       if (candidates.length === 0) {
         scanned = true
         break
       }
-      before = candidates[candidates.length - 1]!.id
+      before = candidates[candidates.length - 1]!
       const rows = await this.prisma.post.findMany({
         where: { AND: [{ id: { in: candidates.map((c) => c.id) } }, visible] },
-        orderBy: { id: 'desc' },
+        orderBy: NEWEST_FIRST,
         take: limit + 1 - found.length,
         include: this.include(viewerId),
       })
@@ -460,7 +469,7 @@ export class PostsService {
     // Lebih dari satu halaman: lanjut dari post terakhir. Batas pindai tercapai tanpa cukup hasil: lanjut dari
     // kandidat terakhir yang diperiksa (bukan dari hasil) supaya klien bisa meminta halaman berikutnya.
     const nextCursor =
-      found.length > limit ? page[page.length - 1]!.id : scanned ? null : (before ?? null)
+      found.length > limit ? page[page.length - 1]!.id : scanned ? null : (before?.id ?? null)
     return { items: await this.toDtos(viewerId, page), nextCursor }
   }
 
@@ -490,8 +499,8 @@ export class PostsService {
           { savedBy: { some: { userId: viewerId } } },
         ],
       },
-      // shortcut: urut menurut id post, bukan waktu simpan; ganti ke kursor (saved_at, id) bila perlu.
-      orderBy: [{ id: 'desc' }],
+      // shortcut: urut menurut waktu post, bukan waktu simpan; ganti ke kursor (saved_at, id) bila perlu.
+      orderBy: NEWEST_FIRST,
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: this.include(viewerId),
@@ -530,7 +539,7 @@ export class PostsService {
       where: {
         AND: [this.visibility.postWhere(viewerId), { authorId: viewerId }, { OR: days }],
       },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: NEWEST_FIRST,
       take: 50,
       include: this.include(viewerId),
     })
@@ -591,7 +600,7 @@ export class PostsService {
           ...(year === undefined ? [] : [yearRange(year)]),
         ],
       },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: NEWEST_FIRST,
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: this.include(viewerId),

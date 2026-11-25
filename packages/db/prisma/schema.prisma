@@ -239,6 +239,8 @@ model Like {
   @@unique([userId, commentId])
   @@index([postId])
   @@index([commentId])
+  @@index([postId, createdAt])
+  @@index([commentId, createdAt])
   @@map("likes")
 }
 
@@ -308,6 +310,8 @@ model Friendship {
   @@unique([pairLowId, pairHighId])
   @@index([addresseeId, status])
   @@index([requesterId, status])
+  @@index([addresseeId, status, createdAt])
+  @@index([requesterId, status, createdAt])
   @@map("friendships")
 }
 
@@ -390,6 +394,7 @@ model Notification {
   announcement Announcement? @relation(fields: [announcementId], references: [id], onDelete: SetNull)
 
   @@index([userId, readAt, createdAt])
+  @@index([userId, createdAt])
   @@index([announcementId])
   @@map("notifications")
 }
@@ -429,6 +434,7 @@ model AuditLog {
 
   @@index([adminId, createdAt])
   @@index([action, createdAt])
+  @@index([createdAt])
   @@map("audit_logs")
 }
 
@@ -537,6 +543,7 @@ model Photo {
   album     Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
   owner     User     @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   @@index([albumId, id])
+  @@index([albumId, createdAt])
   @@index([ownerId, createdAt])
   @@map("photos")
 }

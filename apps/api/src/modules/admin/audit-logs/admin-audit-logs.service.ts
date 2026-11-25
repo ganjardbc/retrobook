@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../../../prisma/prisma.service'
 import type { AdminAuditLogsQuery } from './admin-audit-logs.dto'
+import { NEWEST_FIRST } from '../../../common/keyset'
 
 @Injectable()
 export class AdminAuditLogsService {
@@ -21,7 +22,7 @@ export class AdminAuditLogsService {
     const [rows, total] = await Promise.all([
       this.prisma.auditLog.findMany({
         where,
-        orderBy: { id: 'desc' },
+        orderBy: NEWEST_FIRST,
         take: query.limit + 1,
         ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
         select: {

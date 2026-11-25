@@ -111,4 +111,17 @@ describe('Pencarian isi post (integrasi)', () => {
     expect(contents(res)).toEqual(['sandi lama terlihat'])
     expect(res.body.nextCursor).toBeNull()
   })
+
+  it('urut menurut waktu, bukan nilai id; kursor tetap benar bila id dan waktu berlawanan', async () => {
+    const alice = await h.mkUser('alice')
+    const base = Date.now() - 60_000
+    await post(alice.id, 'tema baru', { createdAt: new Date(base) }) // id kecil, waktu terbaru
+    await post(alice.id, 'tema tengah', { createdAt: new Date(base - 10_000) })
+    await post(alice.id, 'tema lama', { createdAt: new Date(base - 20_000) }) // id terbesar, waktu tertua
+    const p1 = await h.as(alice).get('/search/posts?q=tema&limit=2').expect(200)
+    expect(contents(p1)).toEqual(['tema baru', 'tema tengah'])
+    const p2 = await h.as(alice).get(`/search/posts?q=tema&limit=2&cursor=${p1.body.nextCursor}`)
+    expect(contents(p2)).toEqual(['tema lama'])
+    expect(p2.body.nextCursor).toBeNull()
+  })
 })

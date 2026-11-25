@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import type { ChatFriend, ChatMessage, Conversation, Paged } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
+import { NEWEST_FIRST } from '../../common/keyset'
 import { PrismaService } from '../../prisma/prisma.service'
 import { RealtimeGateway } from '../realtime/realtime.gateway'
 import { VisibilityService } from '../visibility/visibility.service'
@@ -107,7 +108,7 @@ export class MessagesService {
         ...(state ? { createdAt: { gt: state.clearedAt } } : {}),
         ...this.between(viewerId, otherId),
       },
-      orderBy: { id: 'desc' },
+      orderBy: NEWEST_FIRST,
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     })
@@ -122,15 +123,23 @@ export class MessagesService {
   async markRead(viewerId: number, fromId: number): Promise<{ updated: number }> {
     await this.assertPartner(viewerId, fromId)
     const where = { senderId: fromId, receiverId: viewerId, readAt: null, deletedAt: null }
-    const last = await this.prisma.message.aggregate({ where, _max: { id: true } })
-    const upTo = last._max.id
-    if (upTo === null) return { updated: 0 }
+    // Pesan terbaru menurut waktu (bukan nilai id terbesar); semua yang tak lebih baru ikut ditandai.
+    const last = await this.prisma.message.findFirst({
+      where,
+      orderBy: NEWEST_FIRST,
+      select: { id: true, createdAt: true },
+    })
+    if (!last) return { updated: 0 }
     const { count } = await this.prisma.message.updateMany({
-      where: { ...where, id: { lte: upTo } },
+      where: { ...where, createdAt: { lte: last.createdAt } },
       data: { readAt: new Date() },
     })
     if (count > 0)
-      this.realtime.emitToUser(fromId, 'message:read', { byUserId: viewerId, upToMessageId: upTo })
+      this.realtime.emitToUser(fromId, 'message:read', {
+        byUserId: viewerId,
+        upToMessageId: last.id,
+        upToCreatedAt: last.createdAt.toISOString(),
+      })
     return { updated: count }
   }
 
@@ -143,20 +152,35 @@ export class MessagesService {
     const friends = await this.friendIds(viewerId)
     if (friends.length === 0) return { items: [], nextCursor: null }
 
-    // Satu baris per lawan bicara: id pesan terbaru; MySQL tidak punya DISTINCT ON, jadi GROUP BY.
+    // Satu baris per lawan bicara: pesan terbaru menurut (created_at, id); MySQL tidak punya DISTINCT ON,
+    // jadi ROW_NUMBER. Kursor = id pesan terakhir halaman sebelumnya; posisinya dicari lewat created_at-nya.
+    let after = Prisma.empty // kondisi tambahan pada baris terbaru per lawan bicara
+    if (cursor) {
+      const c = await this.prisma.message.findUnique({
+        where: { id: cursor },
+        select: { id: true, createdAt: true },
+      })
+      if (!c) return { items: [], nextCursor: null }
+      after = Prisma.sql`AND (t.created_at, t.id) < (${c.createdAt}, ${c.id})`
+    }
     const ids = Prisma.join(friends)
     const latest = await this.prisma.$queryRaw<{ id: number }[]>(Prisma.sql`
-      SELECT MAX(m.id) AS id FROM messages m
-      LEFT JOIN conversation_states cs
-        ON cs.user_id = ${viewerId}
-       AND cs.peer_id = IF(m.sender_id = ${viewerId}, m.receiver_id, m.sender_id)
-      WHERE m.deleted_at IS NULL
-        AND (cs.cleared_at IS NULL OR m.created_at > cs.cleared_at)
-        AND ((m.sender_id = ${viewerId} AND m.receiver_id IN (${ids}))
-          OR (m.receiver_id = ${viewerId} AND m.sender_id IN (${ids})))
-      GROUP BY IF(m.sender_id = ${viewerId}, m.receiver_id, m.sender_id)
-      ${cursor ? Prisma.sql`HAVING MAX(m.id) < ${cursor}` : Prisma.empty}
-      ORDER BY MAX(m.id) DESC
+      SELECT t.id FROM (
+        SELECT m.id, m.created_at,
+          ROW_NUMBER() OVER (
+            PARTITION BY IF(m.sender_id = ${viewerId}, m.receiver_id, m.sender_id)
+            ORDER BY m.created_at DESC, m.id DESC) AS rn
+        FROM messages m
+        LEFT JOIN conversation_states cs
+          ON cs.user_id = ${viewerId}
+         AND cs.peer_id = IF(m.sender_id = ${viewerId}, m.receiver_id, m.sender_id)
+        WHERE m.deleted_at IS NULL
+          AND (cs.cleared_at IS NULL OR m.created_at > cs.cleared_at)
+          AND ((m.sender_id = ${viewerId} AND m.receiver_id IN (${ids}))
+            OR (m.receiver_id = ${viewerId} AND m.sender_id IN (${ids})))
+      ) t
+      WHERE t.rn = 1 ${after}
+      ORDER BY t.created_at DESC, t.id DESC
       LIMIT ${limit + 1}`)
     const page = latest.slice(0, limit).map((r) => Number(r.id))
     if (page.length === 0) return { items: [], nextCursor: null }
@@ -164,7 +188,7 @@ export class MessagesService {
     const [rows, unread] = await Promise.all([
       this.prisma.message.findMany({
         where: { id: { in: page } },
-        orderBy: { id: 'desc' },
+        orderBy: NEWEST_FIRST,
         include: { sender: { select: userSummary }, receiver: { select: userSummary } },
       }),
       this.prisma.message.groupBy({

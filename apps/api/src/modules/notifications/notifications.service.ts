@@ -4,6 +4,7 @@ import type { Paged, UserSummary } from '@retrobook/shared'
 import { PrismaService } from '../../prisma/prisma.service'
 import { RealtimeGateway } from '../realtime/realtime.gateway'
 import { VisibilityService } from '../visibility/visibility.service'
+import { NEWEST_FIRST } from '../../common/keyset'
 
 export type NotificationDto = {
   id: number
@@ -124,7 +125,7 @@ export class NotificationsService {
   async list(viewerId: number, limit: number, cursor?: number): Promise<Paged<NotificationDto>> {
     const rows = await this.prisma.notification.findMany({
       where: this.visibleTo(viewerId),
-      orderBy: { id: 'desc' },
+      orderBy: NEWEST_FIRST,
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       select,

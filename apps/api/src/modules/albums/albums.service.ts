@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { AppException } from '../../common/app-exception'
+import { NEWEST_FIRST } from '../../common/keyset'
 import { PrismaService } from '../../prisma/prisma.service'
 import { UploadsService } from '../uploads/uploads.service'
 import { VisibilityService } from '../visibility/visibility.service'
@@ -19,7 +20,7 @@ export class AlbumsService {
       orderBy: { createdAt: 'desc' },
       include: {
         _count: { select: { photos: true } },
-        photos: { take: 1, orderBy: { id: 'desc' }, select: { url: true } },
+        photos: { take: 1, orderBy: NEWEST_FIRST, select: { url: true } },
       },
     })
   }
@@ -35,7 +36,7 @@ export class AlbumsService {
       orderBy: { createdAt: 'desc' },
       include: {
         _count: { select: { photos: true } },
-        photos: { take: 1, orderBy: { id: 'desc' }, select: { url: true } },
+        photos: { take: 1, orderBy: NEWEST_FIRST, select: { url: true } },
       },
     })
   }
@@ -49,7 +50,7 @@ export class AlbumsService {
   async get(viewerId: number, albumId: number) {
     const album = await this.prisma.album.findFirst({
       where: { AND: [{ id: albumId }, this.visibility.albumWhere(viewerId)] },
-      include: { photos: { orderBy: { id: 'desc' } } },
+      include: { photos: { orderBy: NEWEST_FIRST } },
     })
     if (!album) throw new AppException(404, 'NOT_FOUND', 'Album tidak ditemukan')
     return album
@@ -67,7 +68,7 @@ export class AlbumsService {
       .then(() =>
         this.prisma.photo.findMany({
           where: { albumId },
-          orderBy: { id: 'desc' },
+          orderBy: NEWEST_FIRST,
           take: urls.length,
         }),
       )

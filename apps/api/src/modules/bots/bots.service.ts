@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { PrismaService } from '../../prisma/prisma.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { BotTextProvider } from './bot-text.provider'
+import { OLDEST_FIRST } from '../../common/keyset'
 
 const DAY_MS = 86_400_000
 const MAX_REPLIES_PER_TICK = 5
@@ -111,7 +112,7 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
         author: { isBot: false, deletedAt: null, status: 'ACTIVE' },
         post: { authorId: bot.userId, deletedAt: null, hidden: false },
       },
-      orderBy: { id: 'asc' },
+      orderBy: OLDEST_FIRST,
       take: MAX_REPLIES_PER_TICK,
     })
     for (const c of comments) {

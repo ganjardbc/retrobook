@@ -220,6 +220,54 @@ describe('Pesan (integrasi)', () => {
     })
   })
 
+  describe('urutan menurut waktu, bukan menurut nilai id', () => {
+    /** Baris dengan id lebih besar sengaja lebih lama: urutan yang bergantung pada id akan terbalik. */
+    const skewed = async () => {
+      const { a, b } = await pair()
+      const base = Date.now() - 60_000
+      const mk = (content: string, ageMs: number) =>
+        h.prisma.message.create({
+          data: {
+            senderId: a.id,
+            receiverId: b.id,
+            content,
+            createdAt: new Date(base - ageMs),
+          },
+        })
+      const newer = await mk('baru', 0) // id lebih kecil, waktu lebih baru
+      const older = await mk('lama', 30_000) // id lebih besar, waktu lebih lama
+      expect(older.id).toBeGreaterThan(newer.id)
+      return { a, b, newer, older }
+    }
+
+    it('riwayat: terbaru menurut waktu dulu, kursor tetap konsisten', async () => {
+      const { a, b } = await skewed()
+      const p1 = (await h.as(a).get(`/messages/${b.id}?limit=1`)).body
+      expect(p1.items.map((m: { content: string }) => m.content)).toEqual(['baru'])
+      const p2 = (await h.as(a).get(`/messages/${b.id}?limit=1&cursor=${p1.nextCursor}`)).body
+      expect(p2.items.map((m: { content: string }) => m.content)).toEqual(['lama'])
+    })
+
+    it('percakapan: pesan terakhir menurut waktu', async () => {
+      const { a, b } = await skewed()
+      const res = (await h.as(b).get('/messages/conversations')).body
+      expect(res.items).toHaveLength(1)
+      expect(res.items[0].lastMessage.content).toBe('baru')
+      expect(res.items[0].user.id).toBe(a.id)
+    })
+
+    it('markRead: upToMessageId dan upToCreatedAt dari pesan terbaru menurut waktu', async () => {
+      const { a, b, newer } = await skewed()
+      const sa = await connect(a)
+      const got = next<{ upToMessageId: number; upToCreatedAt: string }>(sa, 'message:read')
+      expect((await h.as(b).post(`/messages/${a.id}/read`)).body).toEqual({ updated: 2 })
+      expect(await got).toMatchObject({
+        upToMessageId: newer.id,
+        upToCreatedAt: newer.createdAt.toISOString(),
+      })
+    })
+  })
+
   describe('POST /messages/:userId/read', () => {
     it('menandai pesan dari lawan terbaca; milik sendiri dan percakapan lain tetap', async () => {
       const { a, b } = await pair()
@@ -633,18 +681,24 @@ describe('Pesan (integrasi)', () => {
       })
     })
 
-    it('message:read (socket dan REST): pengirim mendapat message:read dengan upToMessageId', async () => {
+    it('message:read (socket dan REST): pengirim mendapat message:read dengan upToMessageId dan upToCreatedAt', async () => {
       const { a, b } = await pair()
       const sa = await connect(a)
       const sb = await connect(b)
       const m1 = (await send(a, b, '1')).body.id
       const m2 = (await send(a, b, '2')).body.id
-      const got = next<{ byUserId: number; upToMessageId: number }>(sa, 'message:read')
+      const got = next<{ byUserId: number; upToMessageId: number; upToCreatedAt: string }>(
+        sa,
+        'message:read',
+      )
       const ack = await emitAck<{ ok: boolean; updated: number }>(sb, 'message:read', {
         fromUserId: a.id,
       })
       expect(ack).toEqual({ ok: true, updated: 2 })
-      expect(await got).toEqual({ byUserId: b.id, upToMessageId: Math.max(m1, m2) })
+      const ev = await got
+      expect(ev).toMatchObject({ byUserId: b.id, upToMessageId: m2 }) // m2 dikirim terakhir
+      expect(m1).toBeLessThan(m2)
+      expect(Number.isNaN(Date.parse(ev.upToCreatedAt))).toBe(false)
 
       const quiet = silent(sa, 'message:read')
       await h.as(b).post(`/messages/${a.id}/read`) // tidak ada yang baru: tanpa event

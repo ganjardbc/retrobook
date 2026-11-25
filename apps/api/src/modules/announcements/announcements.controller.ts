@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
+import { NEWEST_FIRST } from '../../common/keyset'
 
 @Controller('announcements')
 export class AnnouncementsController {
@@ -10,7 +11,7 @@ export class AnnouncementsController {
   async active() {
     const items = await this.prisma.announcement.findMany({
       where: { active: true },
-      orderBy: { id: 'desc' },
+      orderBy: NEWEST_FIRST,
       take: 5,
       select: { id: true, title: true, body: true, createdAt: true },
     })

@@ -361,12 +361,15 @@ Index dipilih dari pola baca yang paling sering: feed, timeline, chat, notifikas
 | posts          | INDEX (created_at)                                                       | Urutan feed global dan moderasi admin         |
 | comments       | INDEX (post_id, created_at)                                              | Daftar komentar per post                      |
 | likes          | UNIQUE (user_id, post_id), UNIQUE (user_id, comment_id)                  | Satu like per user per target                 |
-| likes          | INDEX (post_id), INDEX (comment_id)                                      | Hitung dan daftar like                        |
+| likes          | INDEX (post_id), INDEX (comment_id)                                      | Hitung like                                   |
+| likes          | INDEX (post_id, created_at), INDEX (comment_id, created_at)              | Daftar like terbaru dulu                      |
 | friendships    | UNIQUE (pair_low_id, pair_high_id)                                       | Satu baris per pasangan                       |
 | friendships    | INDEX (addressee_id, status), INDEX (requester_id, status)               | Daftar permintaan dan daftar teman            |
+| friendships    | INDEX (addressee_id, status, created_at), INDEX (requester_id, status, created_at) | Daftar permintaan dan teman terbaru dulu |
 | pokes          | UNIQUE (from_user_id, to_user_id), INDEX (to_user_id, seen_at)           | Poke aktif per pasangan dan daftar poke masuk |
 | messages       | INDEX (sender_id, receiver_id, created_at), INDEX (receiver_id, read_at) | Riwayat percakapan dan hitung belum dibaca    |
-| notifications  | INDEX (user_id, read_at, created_at)                                     | Dropdown notifikasi dan badge                 |
+| notifications  | INDEX (user_id, read_at, created_at)                                     | Badge dan filter belum dibaca                 |
+| notifications  | INDEX (user_id, created_at)                                              | Dropdown notifikasi terbaru dulu              |
 | hashtags       | UNIQUE (tag)                                                             | Satu baris per tag                            |
 | post_hashtags  | INDEX (hashtag_id, created_at)                                           | Trending 24 jam                               |
 | refresh_tokens | UNIQUE (token_hash), INDEX (user_id), INDEX (expires_at)                 | Validasi sesi dan pembersihan                 |
@@ -374,7 +377,11 @@ Index dipilih dari pola baca yang paling sering: feed, timeline, chat, notifikas
 | reports        | INDEX (status, created_at), INDEX (target_type, target_id)               | Antrean admin dan laporan per konten          |
 | reports        | UNIQUE (reporter_id, target_type, target_id)                             | Satu laporan per pelapor per target           |
 | audit_logs     | INDEX (admin_id, created_at), INDEX (action, created_at)                 | Filter log per admin dan aksi                 |
+| audit_logs     | INDEX (created_at)                                                       | Daftar log terbaru dulu                       |
+| photos         | INDEX (album_id, created_at)                                             | Foto dalam album terbaru dulu                 |
 | blocked_words  | UNIQUE (word)                                                            | Tanpa kata ganda                              |
+
+Aturan urutan dan pagination: daftar yang diurut waktu memakai `ORDER BY created_at DESC, id DESC`, dan kursor menunjuk id baris terakhir halaman sebelumnya (posisinya dicari lewat pasangan `created_at, id`). Urutan tidak boleh bergantung pada nilai `id` saja: id tidak dijamin menaik menurut waktu (mis. UUID). Penulisan bantu ada di `apps/api/src/common/keyset.ts`.
 
 ## 7. Aturan integritas
 

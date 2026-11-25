@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
+import { NEWEST_FIRST } from '../../common/keyset'
 
 @Controller('sponsored')
 export class SponsoredController {
@@ -17,7 +18,7 @@ export class SponsoredController {
           { OR: [{ endsAt: null }, { endsAt: { gt: now } }] },
         ],
       },
-      orderBy: { id: 'desc' },
+      orderBy: NEWEST_FIRST,
       select: { id: true, title: true, body: true, imageUrl: true, linkUrl: true },
     })
     return { item }

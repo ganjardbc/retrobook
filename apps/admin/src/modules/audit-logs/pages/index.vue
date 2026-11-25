@@ -44,7 +44,7 @@ onMounted(() => void load())
   <section class="surface-card words-card">
     <form class="words-form" @submit.prevent="load()">
       <label class="moderation-control"
-        ><span>ID admin</span><input v-model="filters.adminId" type="number" min="1"
+        ><span>ID admin</span><input v-model="filters.adminId" type="text" inputmode="numeric"
       /></label>
       <label class="moderation-control"
         ><span>Aksi</span

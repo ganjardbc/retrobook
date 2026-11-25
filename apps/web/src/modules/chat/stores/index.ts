@@ -35,7 +35,9 @@ function merge(a: LocalMessage[], b: LocalMessage[]): LocalMessage[] {
   for (const m of [...a, ...b]) if (!seen.has(m.id)) seen.set(m.id, m)
   const all = [...seen.values()]
   return [
-    ...all.filter((m) => !m.pending).sort((x, y) => x.id - y.id),
+    ...all
+      .filter((m) => !m.pending)
+      .sort((x, y) => x.createdAt.localeCompare(y.createdAt) || (x.id > y.id ? 1 : -1)),
     ...all.filter((m) => m.pending),
   ]
 }
@@ -146,11 +148,12 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  /** Lawan membaca pesan saya sampai `upToMessageId`: tandai terbaca di jendela (indikator "Seen"). */
-  function onRead(p: { byUserId: number; upToMessageId: number }) {
+  /** Lawan membaca pesan saya sampai `upToCreatedAt`: tandai terbaca di jendela (indikator "Seen"). */
+  function onRead(p: { byUserId: number; upToMessageId: number; upToCreatedAt: string }) {
     const at = new Date().toISOString()
     for (const m of thread(p.byUserId).messages) {
-      if (m.senderId === me() && m.id > 0 && m.id <= p.upToMessageId && !m.readAt) m.readAt = at
+      if (m.senderId === me() && !m.pending && m.createdAt <= p.upToCreatedAt && !m.readAt)
+        m.readAt = at
     }
   }
 

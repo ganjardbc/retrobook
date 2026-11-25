@@ -2,6 +2,7 @@ import type { FriendActivity } from '@retrobook/shared'
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
 import { VisibilityService } from '../visibility/visibility.service'
+import { cmp } from '../../common/keyset'
 
 /** Jendela "sudah chat" untuk ticker teman (60 menit). */
 const RECENT_CHAT_MS = 60 * 60_000
@@ -80,7 +81,7 @@ export class ActivityService {
         createdAt: l.createdAt.toISOString(),
         at: l.createdAt.getTime(),
       })),
-    ].sort((a, b) => b.at - a.at || b.id - a.id)
+    ].sort((a, b) => b.at - a.at || cmp(b.id, a.id))
     const page = all.slice(0, limit)
     return {
       items: page.map(({ at: _at, ...item }) => item),
@@ -162,7 +163,7 @@ export class ActivityService {
         createdAt: l.createdAt,
       })),
     ]
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id - a.id)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || cmp(b.id, a.id))
       .slice(0, limit)
       .map((i) => ({ ...i, createdAt: i.createdAt.toISOString() }))
   }

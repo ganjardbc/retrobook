@@ -3,6 +3,7 @@ import { AppException } from '../../../common/app-exception'
 import { PrismaService } from '../../../prisma/prisma.service'
 import { AdminAuditService } from '../admin-audit.service'
 import type { CreateSponsoredDto, UpdateSponsoredDto } from './admin-sponsored.dto'
+import { NEWEST_FIRST } from '../../../common/keyset'
 
 const select = {
   id: true,
@@ -27,7 +28,7 @@ export class AdminSponsoredService {
   ) {}
 
   async list() {
-    return { items: await this.prisma.sponsored.findMany({ orderBy: { id: 'desc' }, select }) }
+    return { items: await this.prisma.sponsored.findMany({ orderBy: NEWEST_FIRST, select }) }
   }
 
   create(adminId: number, dto: CreateSponsoredDto, ip?: string) {

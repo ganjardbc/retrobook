@@ -2,6 +2,7 @@ import type { INestApplication } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import type { User } from '@prisma/client'
 import request from 'supertest'
+import { pairOf } from '../modules/friends/pair'
 import { PrismaService } from '../prisma/prisma.service'
 
 /** Pembantu tes integrasi: buat user langsung di DB uji, token tanpa login, request terautentikasi. */
@@ -37,8 +38,7 @@ export function testHelpers(app: INestApplication) {
       data: {
         requesterId: a.id,
         addresseeId: b.id,
-        pairLowId: Math.min(a.id, b.id),
-        pairHighId: Math.max(a.id, b.id),
+        ...pairOf(a.id, b.id),
         status,
       },
     })
