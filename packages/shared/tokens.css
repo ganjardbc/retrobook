@@ -55,3 +55,40 @@
   --avatar-l: 160px; /* foto profil, belum termasuk border putih (ukur) */
   --friend-tile: 105px; /* kotak grid teman (ukur: 106 x 103) */
 }
+
+/* Tema Time Travel (THM-01): hanya menimpa warna, font, dan radius; tema bawaan (2015) ada di :root. */
+[data-theme='2010'] {
+  --c-brand: #3b5998;
+  --c-brand-dark: #2d4373;
+  --c-link: #3b5998;
+  --c-bg: #ffffff;
+  --c-card-subtle: #eceff5;
+  --c-border: #ccd0d5;
+  --c-hover-bg: #eceff5;
+  --c-text-muted: #808080;
+  --c-highlight: #fff9d7;
+  --font: 'lucida grande', tahoma, verdana, arial, sans-serif;
+  --fs-base: 11px;
+  --fs-post: 13px;
+  --radius: 0;
+}
+
+[data-theme='2020'] {
+  --c-brand: #1b74e4;
+  --c-brand-dark: #1559b3;
+  --c-link: #216fdb;
+  --c-bg: #f0f2f5;
+  --c-card-subtle: #f0f2f5;
+  --c-border: #dadde1;
+  --c-border-soft: #e4e6eb;
+  --c-text: #050505;
+  --c-text-muted: #65676b;
+  --c-hover-bg: #e4e6eb;
+  --c-success: #42b72a;
+  --c-success-dark: #36a420;
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --fs-small: 12px;
+  --fs-base: 15px;
+  --fs-post: 15px;
+  --radius: 8px;
+}

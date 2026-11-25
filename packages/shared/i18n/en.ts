@@ -4,6 +4,7 @@ export const en = {
   'common.loading': 'Loading…',
   'footer.parody': 'Fun project / parody. Not an official product of anything.',
   'footer.privacy': 'Privacy',
+  'theme.label': 'Time Travel',
   'privacy.title': 'Privacy notice',
   'privacy.intro':
     'Retrobook is a local educational parody and demo. Please do not use a real password or post sensitive personal information.',

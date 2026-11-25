@@ -32,3 +32,7 @@ export type ReportReason = (typeof REPORT_REASONS)[number]
 /** Urutan News Feed (POST-09): terbaru, atau Top Stories (jumlah like). */
 export const FEED_SORTS = ['recent', 'top'] as const
 export type FeedSort = (typeof FEED_SORTS)[number]
+
+/** Tema Time Travel (THM-01); '2015' adalah tema bawaan di :root. */
+export const THEMES = ['2010', '2015', '2020'] as const
+export type Theme = (typeof THEMES)[number]

@@ -7,9 +7,11 @@ import App from '@/App.vue'
 import { router } from '@/core/global-routes'
 import { useAuthStore } from '@/modules/auth/stores'
 import '@/styles/base.css'
+import { applyTheme, readTheme } from '@/helpers/theme'
 
 async function bootstrap() {
   document.title = APP_NAME
+  applyTheme(readTheme())
   const app = createApp(App)
   const pinia = createPinia()
   app.use(pinia)
