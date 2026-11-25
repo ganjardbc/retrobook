@@ -85,6 +85,7 @@ defineProps<{
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: var(--sp-1) var(--sp-2);
 }
 .row__corner {
