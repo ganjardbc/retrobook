@@ -1,9 +1,9 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common'
 import { AppException } from '../../common/app-exception'
-import { LOGIN_PER_IP, REGISTER_PER_IP, RateLimit } from '../../common/rate-limit'
+import { FORGOT_PASSWORD_PER_IP, LOGIN_PER_IP, REGISTER_PER_IP, RateLimit } from '../../common/rate-limit'
 import { AuthService } from './auth.service'
 import { AuthUser, CurrentUser } from './current-user.decorator'
-import { LoginDto, RefreshDto, RegisterDto } from './dto/auth.dto'
+import { ForgotPasswordDto, LoginDto, RefreshDto, RegisterDto, ResetPasswordDto } from './dto/auth.dto'
 import { LoginLockout } from './login-lockout'
 import { Public } from './public.decorator'
 
@@ -19,6 +19,22 @@ export class AuthController {
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto)
+  }
+
+  @Public()
+  @RateLimit(FORGOT_PASSWORD_PER_IP)
+  @Post('forgot-password')
+  @HttpCode(202)
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    await this.auth.forgotPassword(dto.email)
+  }
+
+  @Public()
+  @RateLimit(FORGOT_PASSWORD_PER_IP)
+  @Post('reset-password')
+  @HttpCode(204)
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.auth.resetPassword(dto.token, dto.password)
   }
 
   @Public()

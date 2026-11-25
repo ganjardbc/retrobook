@@ -1,3 +1,5 @@
+import { readFile, readdir } from 'node:fs/promises'
+import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { ADMIN_URL, createPost, loginAsNewAdmin, register } from './helpers'
 
@@ -85,4 +87,49 @@ test('ADM-17 hiding a hashtag removes it from trending', async ({ browser, page 
   await page.reload()
   await expect(page.locator('.card').filter({ hasText: 'Trending' }).getByText(`#${tag}`)).toHaveCount(0)
   await admin.context.close()
+})
+
+test('AUTH-05 forgotten password: reset link from the outbox sets a new password', async ({ browser }) => {
+  const ctx = await browser.newContext()
+  const member = await ctx.newPage()
+  const user = await register(member)
+  await ctx.close()
+
+  const guestCtx = await browser.newContext()
+  const page = await guestCtx.newPage()
+  await page.goto('/login')
+  await page.getByRole('link', { name: 'Forgotten your password?' }).click()
+  await expect(page.getByRole('heading', { name: 'Reset your password' })).toBeVisible()
+  await page.getByLabel('Email', { exact: true }).fill(`${user.username}@example.com`)
+  await page.getByRole('button', { name: 'Send reset link' }).click()
+  await expect(page.getByText(/reset link is on its way/)).toBeVisible()
+
+  // Penyedia email belum ada: API menulis email ke apps/api/outbox (hanya di non-production).
+  const outbox = join(process.cwd(), 'apps/api/outbox')
+  let link = ''
+  await expect
+    .poll(async () => {
+      const files = (await readdir(outbox).catch(() => [])).sort()
+      for (const file of files.reverse()) {
+        const text = await readFile(join(outbox, file), 'utf8')
+        if (text.includes(`To: ${user.username}@example.com`)) {
+          link = /http\S+reset-password\?token=\S+/.exec(text)?.[0] ?? ''
+          return link
+        }
+      }
+      return ''
+    })
+    .not.toBe('')
+
+  await page.goto(link.replace(/^https?:\/\/[^/]+/, ''))
+  await page.getByLabel('New password (min. 8 characters)').fill('brand-new-password')
+  await page.getByRole('button', { name: 'Save password' }).click()
+  await expect(page.getByText('Your password was changed.')).toBeVisible()
+
+  await page.goto('/login')
+  await page.getByLabel('Email or username').fill(user.username)
+  await page.getByLabel('Password').fill('brand-new-password')
+  await page.getByRole('button', { name: 'Log In' }).click()
+  await expect(page.getByLabel("What's on your mind?")).toBeVisible()
+  await guestCtx.close()
 })

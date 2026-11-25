@@ -21,6 +21,12 @@ export const REGISTER_PER_IP: RateRule = {
   windowMs: 3_600_000,
   by: 'ip',
 }
+export const FORGOT_PASSWORD_PER_IP: RateRule = {
+  name: 'forgot-password',
+  limit: 5,
+  windowMs: 3_600_000,
+  by: 'ip',
+}
 export const MESSAGE_PER_USER: RateRule = {
   name: 'message',
   limit: 60,

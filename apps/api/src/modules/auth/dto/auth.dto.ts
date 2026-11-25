@@ -37,6 +37,24 @@ export class LoginDto {
   password!: string
 }
 
+export class ForgotPasswordDto {
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
+  @IsEmail({}, { message: 'Email tidak valid' })
+  @MaxLength(191)
+  email!: string
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @Length(10, 200)
+  token!: string
+
+  @IsString()
+  @MinLength(8, { message: 'Password minimal 8 karakter' })
+  @MaxLength(128, { message: 'Password maksimal 128 karakter' })
+  password!: string
+}
+
 export class RefreshDto {
   @IsString()
   @Length(1, 200)

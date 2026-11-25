@@ -24,6 +24,7 @@ import { AnnouncementsModule } from './modules/announcements/announcements.modul
 import { BotsModule } from './modules/bots/bots.module'
 import { ActivityModule } from './modules/activity/activity.module'
 import { SponsoredModule } from './modules/sponsored/sponsored.module'
+import { MailModule } from './modules/mail/mail.module'
 import { AdminModule } from './modules/admin/admin.module'
 
 // Satu modul per domain di src/modules/*; tambahkan ke imports saat tugasnya dikerjakan.
@@ -38,6 +39,7 @@ import { AdminModule } from './modules/admin/admin.module'
     RateLimitModule,
     AuthModule,
     SettingsModule,
+    MailModule,
     AnnouncementsModule,
     BotsModule,
     ActivityModule,

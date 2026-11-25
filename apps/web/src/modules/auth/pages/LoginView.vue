@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { t, type MessageKey } from '@retrobook/shared/i18n'
 import { computed, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ApiRequestError } from '@/plugins/http'
 import AppFooter from '@/components/AppFooter.vue'
 import Button from '@/components/Button.vue'
@@ -78,6 +78,7 @@ async function submit() {
 
     <main class="main">
       <p v-if="notice" class="form-error" role="status">{{ notice }}</p>
+      <RouterLink class="forgot" to="/forgot-password">{{ t('auth.forgot.link') }}</RouterLink>
       <p v-if="error" class="form-error" role="alert">{{ error }}</p>
       <p v-if="wait.active.value" class="form-error" role="alert">
         {{ t('error.rateLimited', { n: wait.remaining.value }) }}

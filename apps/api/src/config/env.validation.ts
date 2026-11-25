@@ -8,6 +8,8 @@ export class Env {
   @Matches(/^\d+[smhd]$/) JWT_ACCESS_TTL: string = '15m'
   @Matches(/^\d+[smhd]$/) JWT_REFRESH_TTL: string = '30d'
   @IsString() CORS_ORIGINS: string = 'http://localhost:5173,http://localhost:5174'
+  // Alamat user app untuk tautan di email (reset password).
+  @IsString() APP_URL: string = 'http://localhost:5173'
   @IsInt() @Min(1) @Max(65535) API_PORT: number = 3030
   // Folder unggahan, relatif terhadap direktori kerja API. Pindah ke S3-compatible saat deploy (D-3).
   @IsString() @MinLength(1) UPLOAD_DIR: string = 'uploads'

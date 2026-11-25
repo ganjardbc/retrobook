@@ -100,5 +100,7 @@ export async function request<T>(path: string, opts: Options = {}): Promise<T> {
     if (err.code === 'MAINTENANCE_MODE') hooks.onMaintenance()
     throw err
   }
-  return res.status === 204 ? (undefined as T) : ((await res.json()) as T)
+  // 204 dan 202 tanpa isi (mis. forgot-password) tidak punya JSON untuk diurai.
+  const text = res.status === 204 ? '' : await res.text()
+  return (text ? JSON.parse(text) : undefined) as T
 }

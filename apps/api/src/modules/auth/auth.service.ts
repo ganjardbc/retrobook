@@ -7,6 +7,7 @@ import { AppException } from '../../common/app-exception'
 import type { Env } from '../../config/env.validation'
 import { PrismaService } from '../../prisma/prisma.service'
 import { SettingsService } from '../settings/settings.service'
+import { Mailer } from '../mail/mailer'
 import { LoginDto, RegisterDto } from './dto/auth.dto'
 import { hashToken, newRefreshToken, ttlToMs } from './token.util'
 
@@ -30,6 +31,8 @@ const RESERVED_USERNAMES = new Set([
   'api',
   'static',
   'uploads',
+  'forgot-password',
+  'reset-password',
 ])
 
 const INVALID_CREDENTIALS = () =>
@@ -37,6 +40,7 @@ const INVALID_CREDENTIALS = () =>
 
 type TokenUser = Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl' | 'role'>
 
+const RESET_TTL_MS = 60 * 60 * 1000
 const maintenance = () => new AppException(403, 'MAINTENANCE_MODE', 'Sedang dalam pemeliharaan')
 
 @Injectable()
@@ -49,6 +53,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService<Env, true>,
     private readonly settings: SettingsService,
+    private readonly mailer: Mailer,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -102,6 +107,48 @@ export class AuthService {
     }
     await this.assertNotInMaintenance(user)
     return this.issue(user)
+  }
+
+  /**
+   * AUTH-05: selalu sukses dari sisi pemanggil (tidak membocorkan email mana yang terdaftar). Token acak
+   * sekali pakai berlaku 1 jam; hanya hash-nya yang disimpan; permintaan baru membatalkan yang lama.
+   */
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.prisma.user.findFirst({
+      where: { email, deletedAt: null, isBot: false },
+      select: { id: true, displayName: true },
+    })
+    if (!user) return
+    const token = newRefreshToken()
+    await this.prisma.$transaction([
+      this.prisma.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } }),
+      this.prisma.passwordResetToken.create({
+        data: { userId: user.id, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + RESET_TTL_MS) },
+      }),
+    ])
+    const link = `${this.config.get('APP_URL')}/reset-password?token=${token}`
+    await this.mailer
+      .send({
+        to: email,
+        subject: 'Reset your password',
+        text: `Hi ${user.displayName},\n\nUse this link to choose a new password (valid for 1 hour):\n${link}\n\nIf you did not ask for this, you can ignore this email.`,
+      })
+      .catch(() => undefined) // gagal kirim tidak boleh membedakan respons
+  }
+
+  /** Token sekali pakai: pemakaian bersyarat mencegah dua permintaan bersamaan sama-sama berhasil; semua sesi dicabut. */
+  async resetPassword(token: string, password: string): Promise<void> {
+    const passwordHash = await argon2.hash(password)
+    const invalid = () => new AppException(400, 'VALIDATION_FAILED', 'Tautan reset tidak valid atau sudah kedaluwarsa')
+    await this.prisma.$transaction(async (tx) => {
+      const row = await tx.passwordResetToken.findUnique({ where: { tokenHash: hashToken(token) } })
+      if (!row || row.usedAt || row.expiresAt < new Date()) throw invalid()
+      const used = await tx.passwordResetToken.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: new Date() } })
+      if (used.count !== 1) throw invalid()
+      const updated = await tx.user.updateMany({ where: { id: row.userId, deletedAt: null }, data: { passwordHash } })
+      if (!updated.count) throw invalid()
+      await tx.refreshToken.updateMany({ where: { userId: row.userId, revokedAt: null }, data: { revokedAt: new Date() } })
+    })
   }
 
   async refresh(refreshToken: string, requiredRole?: Role) {
