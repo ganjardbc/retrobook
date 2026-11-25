@@ -1,0 +1,19 @@
+# API produksi: build di satu stage, jalan sebagai user non-root. Konteks build = akar repo.
+FROM node:22-bookworm-slim AS base
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS build
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @retrobook/db exec prisma generate && pnpm --filter @retrobook/shared build && pnpm --filter @retrobook/api build
+
+FROM build AS runtime
+ENV NODE_ENV=production
+RUN mkdir -p /app/apps/api/uploads && chown -R node:node /app/apps/api/uploads
+USER node
+WORKDIR /app/apps/api
+EXPOSE 3030
+# Migrasi dijalankan sebelum API naik; `migrate deploy` aman diulang.
+CMD ["sh", "-c", "pnpm --dir ../../packages/db exec prisma migrate deploy && node dist/main.js"]

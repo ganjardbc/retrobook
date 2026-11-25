@@ -130,7 +130,7 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 | ID | Tugas | Ukuran | Prioritas |
 |---|---|---|---|
 | [x] T-61 | Hardening: daftar periksa keamanan Test 6; CORS, rahasia, log | M | wajib |
-| [ ] T-62 | Docker Compose produksi (web, admin, api, mysql), `.env.production.example`, volume uploads | M | wajib |
+| [ ] T-62 | Docker Compose produksi (web, admin, api, mysql), `.env.production.example`, volume uploads. Berkas siap (`docker-compose.prod.yml`, `deploy/`); tinggal uji `up --build` dari nol saat daemon Docker hidup | M | wajib |
 | [x] T-63 | Uji performa (p95 < 300 ms) dan perbaikan indeks | M | wajib |
 | [ ] T-64 | README akar, panduan menjalankan, label parodi, demo akhir | M | wajib |
 | [ ] T-65 | Seeder lengkap (30 user, 200 post, 120 pertemanan, 300 pesan) | M | wajib |
