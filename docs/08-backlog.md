@@ -114,7 +114,7 @@ Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan t
 | ID | Tugas | Ukuran | PRD |
 |---|---|---|---|
 | [x] T-54 | Moderasi post dan komentar: sembunyikan, tampilkan, hapus, aksi massal | L | ADM-08, 09, BR-07 |
-| [ ] T-55 | Antrean laporan dengan keputusan sekali panggil (tiga klik) | L | ADM-10 |
+| [x] T-55 | Antrean laporan dengan keputusan sekali panggil (tiga klik) | L | ADM-10 |
 | [ ] T-56 | Kata terlarang: kelola, filter saat tulis, tandai konten lama | M | ADM-11, BR-08 |
 | [ ] T-57 | Pengaturan sistem: maintenance mode, buka atau tutup pendaftaran; halaman `/maintenance` | M | ADM-12, BR-12 |
 | [ ] T-58 | Pengumuman dan banner, notifikasi ANNOUNCEMENT | M | ADM-13 |

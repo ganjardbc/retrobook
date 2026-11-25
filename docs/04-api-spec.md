@@ -391,6 +391,8 @@ Autentikasi admin memakai sesi access/refresh yang sama, tetapi endpoint login d
 | GET/POST/PATCH/DELETE | `/admin/sponsored` | Kelola promosi | ADM-16 |
 | GET/PATCH | `/admin/hashtags`, `/admin/hashtags/:id` | `{ hidden }` | ADM-17 |
 
+Status implementasi (T-55): `GET /admin/reports` mengembalikan `{ items, total, nextCursor }` (terbaru dulu, `limit` 1–50, default 20); tiap item memuat `reporter` dan `target` (pratinjau post/komentar/profil, `null` bila sudah tidak ada). `PATCH /admin/reports/:id` memutuskan dalam satu transaksi bersama baris `audit_logs` (`REPORT_<STATUS>[_<ACTION>]`): `DISMISSED` tidak boleh disertai `action` (422); `HIDE_CONTENT` dan `DELETE_CONTENT` hanya untuk post dan komentar (profil: 422); `SUSPEND_USER` menskors penulis target (atau profil yang dilaporkan) dan mencabut refresh token, serta ditolak 422 `ADMIN_TARGET_NOT_ALLOWED` bila targetnya admin. Laporan yang sudah diputuskan: 409 `ALREADY_HANDLED`. Laporan lain untuk target yang sama tidak otomatis ditutup.
+
 ## 12. Pemetaan kebutuhan ke endpoint
 
 Setiap ID Must di PRD punya setidaknya satu baris di dokumen ini; daftar lengkap pemetaan dipakai sebagai dasar [test plan](07-test-plan.md).

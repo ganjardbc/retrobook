@@ -9,11 +9,13 @@ import { AdminDashboardService } from './dashboard/admin-dashboard.service'
 import { RolesGuard } from './roles.guard'
 import { AdminModerationController } from './moderation/admin-moderation.controller'
 import { AdminModerationService } from './moderation/admin-moderation.service'
+import { AdminReportsController } from './reports/admin-reports.controller'
+import { AdminReportsService } from './reports/admin-reports.service'
 
 @Module({
   imports: [AuthModule],
-  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController],
-  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, RolesGuard],
+  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController],
+  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, RolesGuard],
   exports: [AdminAuditService],
 })
 export class AdminModule {}
