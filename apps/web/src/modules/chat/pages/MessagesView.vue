@@ -25,11 +25,18 @@ const conversations = ref<Conversation[]>([])
 const listLoading = ref(true)
 const listFailed = ref(false)
 const query = ref('')
-// ?with=<id> membuka percakapan tertentu (dari jendela chat melayang).
+// Percakapan terbuka disimpan di URL (?with=<id>) supaya tetap sama setelah reload; jendela chat melayang memakai ini juga.
+// replace, bukan push: berpindah percakapan tidak menambah riwayat, jadi panah kembali tetap keluar dari halaman.
 const route = useRoute()
 const router = useRouter()
-const withId = Number(route.query.with)
-const selectedId = ref<number | null>(Number.isInteger(withId) && withId > 0 ? withId : null)
+const selectedId = computed(() => {
+  const id = Number(route.query.with)
+  return Number.isInteger(id) && id > 0 ? id : null
+})
+function select(id: number | null) {
+  const { with: _old, ...rest } = route.query
+  void router.replace({ query: id === null ? rest : { ...rest, with: String(id) } })
+}
 const draft = ref('')
 const log = ref<HTMLElement | null>(null)
 const input = ref<HTMLInputElement | null>(null)
@@ -51,7 +58,12 @@ const contacts = computed<Contact[]>(() => {
   })
   const others = chat.friends
     .filter((friend) => !recentIds.has(friend.user.id))
-    .filter((friend) => !friend.hidden || chat.threads[friend.user.id]?.messages.length)
+    .filter(
+      (friend) =>
+        !friend.hidden ||
+        friend.user.id === selectedId.value ||
+        chat.threads[friend.user.id]?.messages.length,
+    )
     .map((friend) => toContact(friend.user, friend))
   return [...recent, ...others]
     .map((contact) => {
@@ -182,18 +194,26 @@ async function runAction(kind: 'clear' | 'remove') {
 }
 
 function backToList() {
-  selectedId.value = null
+  select(null)
   draft.value = ''
 }
 
 watch(
-  [visibleContacts, compact],
+  [visibleContacts, compact, selectedId],
   ([items, isCompact]) => {
     if (selectedId.value === null && items.length && !query.value && !isCompact) {
-      selectedId.value = items[0]!.user.id
+      select(items[0]!.user.id)
     }
   },
   { immediate: true },
+)
+
+// ?with= menunjuk ke orang yang bukan teman (atau tidak ada): buang setelah daftar teman termuat.
+watch(
+  () => [chat.friendsLoading, chat.friends.length, selectedId.value] as const,
+  ([loading, count, id]) => {
+    if (!loading && count && id !== null && !activeContact.value) select(null)
+  },
 )
 
 watch(
@@ -265,7 +285,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateCompact))
             class="messages__contact"
             :class="{ 'messages__contact--active': contact.user.id === selectedId }"
             type="button"
-            @click="selectedId = contact.user.id"
+            @click="select(contact.user.id)"
           >
             <span class="messages__avatar">
               <Avatar :name="contact.user.displayName" :src="contact.user.avatarUrl" size="m" />
