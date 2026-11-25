@@ -81,6 +81,7 @@ describe('tab Friends dan Photos profil', () => {
     vi.spyOn(usersApi, 'photos').mockResolvedValue({
       items: [1, 2, 3].map(photo),
       nextCursor: null,
+      total: 3,
     })
     vi.spyOn(albumsApi, 'forProfile').mockResolvedValue([])
   })
@@ -93,17 +94,17 @@ describe('tab Friends dan Photos profil', () => {
 
   it('kartu info menampilkan grid enam teman dengan jumlah total dan tautan ke tab Friends', async () => {
     const { w } = await mountAt('/siti')
-    const grid = w.find('.grid')
+    const grid = w.find('.pcard')
     expect(grid.findAll('.grid__item')).toHaveLength(6)
     expect(grid.find('.grid__count').text()).toBe('8')
-    expect(grid.find('.grid__head a').attributes('href')).toBe('/siti/friends')
+    expect(grid.find('.pcard__title a').attributes('href')).toBe('/siti/friends')
     expect(grid.find('.grid__item a').attributes('href')).toBe('/u1')
   })
 
   it('tanpa teman: grid tidak muncul', async () => {
     vi.spyOn(usersApi, 'friends').mockResolvedValue({ items: [], nextCursor: null, total: 0 })
     const { w } = await mountAt('/siti')
-    expect(w.find('.grid').exists()).toBe(false)
+    expect(w.find('.grid__list').exists()).toBe(false)
   })
 
   it('tab Friends: semua teman yang dimuat, tanpa memuat ulang pemuatan awal; aktif ditandai', async () => {
@@ -150,7 +151,7 @@ describe('tab Friends dan Photos profil', () => {
   })
 
   it('tab Photos: kosong dan galat', async () => {
-    vi.spyOn(usersApi, 'photos').mockResolvedValueOnce({ items: [], nextCursor: null })
+    vi.spyOn(usersApi, 'photos').mockResolvedValueOnce({ items: [], nextCursor: null, total: 0 })
     expect((await mountAt('/siti/photos')).w.text()).toContain('No photos to show.')
     setActivePinia(createPinia())
     useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
@@ -166,7 +167,7 @@ describe('tab Friends dan Photos profil', () => {
     vi.spyOn(usersApi, 'profile').mockResolvedValueOnce(
       profile({ id: 8, username: 'budi', displayName: 'Budi' }),
     )
-    vi.spyOn(usersApi, 'photos').mockResolvedValueOnce({ items: [], nextCursor: null })
+    vi.spyOn(usersApi, 'photos').mockResolvedValueOnce({ items: [], nextCursor: null, total: 0 })
     vi.spyOn(usersApi, 'friends').mockResolvedValueOnce({ items: [], nextCursor: null, total: 0 })
     await router.push('/budi/photos')
     await flushPromises()
