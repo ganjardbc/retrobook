@@ -26,6 +26,12 @@ export const postsApi = {
     request<{ likeCount: number; likedByMe: boolean }>(`/posts/${id}/like`, { method: 'DELETE' }),
   share: (id: number, input: { content?: string; privacy: Privacy }) =>
     request<Post>(`/posts/${id}/share`, { method: 'POST', body: input }),
+  save: (id: number) => request<{ savedByMe: boolean }>(`/posts/${id}/save`, { method: 'PUT' }),
+  unsave: (id: number) =>
+    request<{ savedByMe: boolean }>(`/posts/${id}/save`, { method: 'DELETE' }),
+  saved: (cursor?: number | null, limit = 10) =>
+    request<Paged<Post>>(`/saved?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
+  onThisDay: () => request<Paged<Post>>('/on-this-day').then((r) => ({ ...r, nextCursor: null })),
   remove: (id: number) => request<void>(`/posts/${id}`, { method: 'DELETE' }),
   uploadImage: (file: File) => {
     const form = new FormData()

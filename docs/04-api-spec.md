@@ -161,6 +161,9 @@ Status implementasi (T-24): `GET /users/:username/friends` (daftar teman pemilik
 |---|---|---|
 | GET | `/feed` | News feed: post teman dan diri sendiri (cursor). `?sort=recent` (default) atau `?sort=top` (POST-09) |
 | POST | `/posts` | Buat post |
+| PUT / DELETE | `/posts/:id/save` | Simpan / batal simpan (SAV-01), idempoten; post tak terlihat 404. Respons `{ savedByMe }` |
+| GET | `/saved` | Simpanan sendiri (cursor id post, terbaru dulu); yang kini tak terlihat disaring `VisibilityService` |
+| GET | `/on-this-day` | Post sendiri di hari dan bulan yang sama pada tahun lalu (OTD-01), maksimal 50, tanpa cursor |
 | GET | `/posts/:id` | Satu post (untuk tautan notifikasi) |
 | PATCH | `/posts/:id` | Edit; hanya pemilik; mengisi `editedAt` |
 | DELETE | `/posts/:id` | Soft delete; pemilik, atau pemilik dinding pada wall post (BR-04) |

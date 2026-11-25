@@ -125,7 +125,7 @@ export class PostsService {
       include: this.include(viewerId),
     })
     await this.notifyCreated(row.id, viewerId, wallOwner?.id ?? null, tagIds)
-    return this.toDto(row, new Set(), new Map())
+    return this.toDto(row, new Set(), new Set(), new Map())
   }
 
   async groupTimeline(viewerId: number, groupId: number, limit: number, cursor?: number) {
@@ -320,6 +320,79 @@ export class PostsService {
     }
   }
 
+  /** SAV-01: simpan post (idempoten). Post harus terlihat bagi pembaca; selain itu 404 yang sama. */
+  async save(viewerId: number, id: number): Promise<{ savedByMe: boolean }> {
+    await this.findVisible(viewerId, id)
+    await this.prisma.savedPost.upsert({
+      where: { userId_postId: { userId: viewerId, postId: id } },
+      create: { userId: viewerId, postId: id },
+      update: {},
+    })
+    return { savedByMe: true }
+  }
+
+  /** Batal simpan (idempoten); tidak perlu cek visibilitas karena hanya menghapus baris milik sendiri. */
+  async unsave(viewerId: number, id: number): Promise<{ savedByMe: boolean }> {
+    await this.prisma.savedPost.deleteMany({ where: { userId: viewerId, postId: id } })
+    return { savedByMe: false }
+  }
+
+  /** SAV-01: daftar simpanan, terbaru disimpan dulu; yang kini tak terlihat disaring VisibilityService. */
+  async saved(viewerId: number, limit: number, cursor?: number): Promise<Paged<PostDto>> {
+    const rows = await this.prisma.post.findMany({
+      where: {
+        AND: [
+          this.visibility.postWhere(viewerId, true),
+          { savedBy: { some: { userId: viewerId } } },
+        ],
+      },
+      // shortcut: urut menurut id post, bukan waktu simpan; ganti ke kursor (saved_at, id) bila perlu.
+      orderBy: [{ id: 'desc' }],
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      include: this.include(viewerId),
+    })
+    const page = rows.slice(0, limit)
+    return {
+      items: await this.toDtos(viewerId, page),
+      nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+    }
+  }
+
+  /**
+   * OTD-01 (On This Day): post pemilik di hari dan bulan yang sama pada tahun-tahun sebelumnya (UTC),
+   * hanya yang boleh dibaca pembaca. Pemilik = viewer sendiri, jadi aturan privasi tetap lewat postWhere.
+   * shortcut: satu query kandidat 1 hari per tahun lewat rentang OR; paling banyak puluhan tahun.
+   */
+  async onThisDay(viewerId: number, now = new Date()): Promise<{ items: PostDto[] }> {
+    const y = now.getUTCFullYear()
+    const m = now.getUTCMonth()
+    const d = now.getUTCDate()
+    const earliest = await this.prisma.post.aggregate({
+      where: { authorId: viewerId, deletedAt: null },
+      _min: { createdAt: true },
+    })
+    const first = earliest._min.createdAt?.getUTCFullYear()
+    if (first === undefined) return { items: [] }
+    const days: Prisma.PostWhereInput[] = []
+    for (let year = y - 1; year >= first; year--) {
+      const start = new Date(Date.UTC(year, m, d))
+      // 29 Feb tidak ada di tahun biasa: Date.UTC meluap ke 1 Mar, lewati supaya tidak salah hari.
+      if (start.getUTCMonth() !== m) continue
+      days.push({ createdAt: { gte: start, lt: new Date(Date.UTC(year, m, d + 1)) } })
+    }
+    if (days.length === 0) return { items: [] }
+    const rows = await this.prisma.post.findMany({
+      where: {
+        AND: [this.visibility.postWhere(viewerId), { authorId: viewerId }, { OR: days }],
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: 50,
+      include: this.include(viewerId),
+    })
+    return { items: await this.toDtos(viewerId, rows) }
+  }
+
   /** Timeline profil: post `authorId` yang boleh dibaca viewer (aturan yang sama dengan feed). */
   async timeline(
     viewerId: number,
@@ -500,6 +573,11 @@ export class PostsService {
       select: { postId: true },
     })
     const likedIds = new Set(liked.map((l) => l.postId))
+    const saved = await this.prisma.savedPost.findMany({
+      where: { userId: viewerId, postId: { in: rows.map((r) => r.id) } },
+      select: { postId: true },
+    })
+    const savedIds = new Set(saved.map((x) => x.postId))
 
     // Post asal untuk share: hanya yang boleh dilihat pembaca ini (aturan terpusat); selebihnya "tidak tersedia".
     const sharedIds = [
@@ -527,12 +605,13 @@ export class PostsService {
         })
       }
     }
-    return rows.map((r) => this.toDto(r, likedIds, shared, counts))
+    return rows.map((r) => this.toDto(r, likedIds, savedIds, shared, counts))
   }
 
   private toDto(
     row: PostRow,
     likedIds: Set<number | null>,
+    savedIds: Set<number>,
     shared: Map<number, SharedPost>,
     counts?: { likes: Map<number | null, number>; comments: Map<number, number> },
   ): PostDto {
@@ -551,6 +630,7 @@ export class PostsService {
       likeCount: counts?.likes.get(row.id) ?? 0,
       commentCount: counts?.comments.get(row.id) ?? 0,
       likedByMe: likedIds.has(row.id),
+      savedByMe: savedIds.has(row.id),
       likedPreview: row.likes.map((l) => l.user as UserSummary),
       editedAt: row.editedAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),

@@ -156,6 +156,8 @@ Prioritas memakai MoSCoW (Must, Should, Could); kolom Fase mengikuti scope di at
 | NOT-01 | Notes | Could | 3 | Catatan panjang di tab Notes |
 | LIF-01 | Life Event | Could | 3 | Milestone sederhana tampil di timeline |
 | ACT-01 | Activity Log | Could | 3 | Daftar aktivitas sendiri dengan opsi hapus |
+| SAV-01 | Save post | Could | Pasca-R4 | Tautan Save/Unsave di bawah post (Facebook 2015); halaman `/saved` memuat simpanan sendiri, privasi mengikuti `VisibilityService` |
+| OTD-01 | On This Day | Could | Pasca-R4 | Halaman `/on-this-day` memuat post sendiri pada hari dan bulan yang sama di tahun-tahun lalu (Maret 2015) |
 | BOT-01 | Bot AI sebagai teman | Could | Bonus | Akun bot memposting dan membalas komentar; sesuai BR-09 |
 | THM-01 | Tema Time Travel | Could | Bonus | Pengalih tema 2010, 2015, 2020 lewat design token |
 | SPN-01 | Sponsored | Could | Bonus | Kotak promosi internal yang dikelola admin |

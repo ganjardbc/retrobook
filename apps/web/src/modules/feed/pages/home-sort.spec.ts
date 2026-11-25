@@ -21,6 +21,7 @@ const post = (id: number): Post =>
     likeCount: 0,
     commentCount: 0,
     likedByMe: false,
+    savedByMe: false,
     likedPreview: [],
     editedAt: null,
     createdAt: '2026-11-24T00:00:00.000Z',

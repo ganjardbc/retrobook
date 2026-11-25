@@ -39,6 +39,7 @@ export type Post = {
   likeCount: number
   commentCount: number
   likedByMe: boolean
+  savedByMe: boolean
   /** Sampai 2 nama untuk "A, B, and 3 others like this". */
   likedPreview: UserSummary[]
   editedAt: string | null

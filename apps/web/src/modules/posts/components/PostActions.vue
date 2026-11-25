@@ -2,8 +2,8 @@
 import { t } from '@retrobook/shared/i18n'
 
 // Bukan tombol ikon besar: tautan teks seperti era 2015 (UX-04). Comment dan Share menyusul di T-16 dan T-23.
-defineProps<{ liked: boolean; busy?: boolean }>()
-defineEmits<{ 'toggle-like': []; comment: []; share: [] }>()
+defineProps<{ liked: boolean; saved?: boolean; busy?: boolean }>()
+defineEmits<{ 'toggle-like': []; 'toggle-save': []; comment: []; share: [] }>()
 </script>
 
 <template>
@@ -24,6 +24,10 @@ defineEmits<{ 'toggle-like': []; comment: []; share: [] }>()
     <span class="actions__dot" aria-hidden="true">·</span>
     <button class="actions__link" type="button" @click="$emit('share')">
       {{ t('share.action') }}
+    </button>
+    <span class="actions__dot" aria-hidden="true">·</span>
+    <button class="actions__link" type="button" :aria-pressed="saved" @click="$emit('toggle-save')">
+      {{ saved ? t('saved.unsave') : t('saved.action') }}
     </button>
   </div>
 </template>

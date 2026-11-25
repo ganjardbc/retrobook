@@ -115,6 +115,7 @@ describe('titik masuk Report', () => {
       likeCount: 0,
       commentCount: 0,
       likedByMe: false,
+      savedByMe: false,
       likedPreview: [],
       editedAt: null,
       createdAt: new Date().toISOString(),
@@ -155,6 +156,7 @@ describe('titik masuk Report', () => {
         imageUrl: null,
         likeCount: 0,
         likedByMe: false,
+        savedByMe: false,
         createdAt: new Date().toISOString(),
       }) as Comment
     vi.spyOn(commentsApi, 'list').mockResolvedValue({

@@ -35,6 +35,13 @@ const apps: Item[] = [
   { label: 'menu.albums', to: '/albums', icon: 'mdi:image-multiple-outline', tone: 'blue' },
   { label: 'menu.groups', to: '/groups', icon: 'mdi:account-group-outline', tone: 'green' },
   { label: 'menu.events', to: '/events', icon: 'mdi:calendar-month-outline', tone: 'red' },
+  { label: 'menu.saved', to: '/saved', icon: 'mdi:bookmark-outline', tone: 'orange' },
+  {
+    label: 'menu.onThisDay',
+    to: '/on-this-day',
+    icon: 'mdi:calendar-clock-outline',
+    tone: 'green',
+  },
 ]
 
 onMounted(() => {

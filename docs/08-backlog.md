@@ -156,6 +156,16 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 | [x] T-78 | Komentar dengan teks dan/atau satu foto JPG/PNG/WebP | INT-05 |
 | [x] T-79 | Like/unlike komentar dengan hitungan dan state per member | INT-03 |
 | [x] T-80 | Feeling atau aktivitas pada post | POST-08 |
+| [x] T-81 | On This Day: halaman `/on-this-day` dan menu kiri | OTD-01 |
+| [x] T-82 | Save post: Save/Unsave, `/saved`, tabel `saved_posts`, `savedByMe` pada Post | SAV-01 |
+| [ ] T-83 | Year in Review di profil (akhir tahun) | YIR-01 |
+| [ ] T-84 | Pencarian isi post teman (Graph Search ringan, lewat `VisibilityService`) | SRC-05 |
+| [ ] T-85 | Aksesibilitas: fokus keyboard, kontras token, label ARIA | NFR |
+| [ ] T-86 | Tes E2E untuk fitur T-71 sampai T-82 | test plan |
+| [ ] T-87 | Audit privasi endpoint baru (album, grup, event, notes, life event, saved) | R-03 |
+| [ ] T-88 | Performa feed dengan seeder besar (N+1, indeks) | NFR |
+| [ ] T-89 | Polish tampilan 2014: ikon sprite sendiri, favicon, loading state | UX |
+| [ ] T-90 | Skrip dan video demo untuk konten Coderium | demo |
 
 ## Keputusan yang harus diambil (blokir)
 

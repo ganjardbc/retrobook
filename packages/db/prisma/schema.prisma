@@ -115,6 +115,7 @@ model User {
   wallPosts            Post[]         @relation("WallOwner")
   comments             Comment[]
   likes                Like[]
+  savedPosts           SavedPost[]
   postTags             PostTag[]
   friendshipsSent      Friendship[]   @relation("FriendRequester")
   friendshipsReceived  Friendship[]   @relation("FriendAddressee")
@@ -187,6 +188,7 @@ model Post {
   shares        Post[]         @relation("PostShare")
   comments      Comment[]
   likes         Like[]
+  savedBy       SavedPost[]
   tags          PostTag[]
   hashtags      PostHashtag[]
   group         Group?         @relation(fields: [groupId], references: [id], onDelete: SetNull)
@@ -236,6 +238,19 @@ model Like {
   @@index([postId])
   @@index([commentId])
   @@map("likes")
+}
+
+model SavedPost {
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([userId, createdAt])
+  @@map("saved_posts")
 }
 
 model PostTag {

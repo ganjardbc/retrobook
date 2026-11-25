@@ -29,6 +29,7 @@ const mkPost = (over: Partial<Post> = {}): Post => ({
   likeCount: 0,
   commentCount: 0,
   likedByMe: false,
+  savedByMe: false,
   likedPreview: [],
   editedAt: null,
   createdAt: new Date().toISOString(),

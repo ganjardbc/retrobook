@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common'
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
@@ -52,6 +53,18 @@ export class PostsController {
     return this.posts.share(user.id, id, dto)
   }
 
+  @Put(':id/save')
+  @HttpCode(200)
+  save(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+    return this.posts.save(user.id, id)
+  }
+
+  @Delete(':id/save')
+  @HttpCode(200)
+  unsave(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+    return this.posts.unsave(user.id, id)
+  }
+
   @Delete(':id')
   @HttpCode(204)
   async remove(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
@@ -66,6 +79,21 @@ export class FeedController {
   @Get()
   feed(@CurrentUser() user: AuthUser, @Query() q: FeedQueryDto) {
     return this.posts.feed(user.id, q.limit, q.cursor, q.sort)
+  }
+}
+
+@Controller()
+export class SavedController {
+  constructor(private readonly posts: PostsService) {}
+
+  @Get('saved')
+  saved(@CurrentUser() user: AuthUser, @Query() q: CursorQueryDto) {
+    return this.posts.saved(user.id, q.limit, q.cursor)
+  }
+
+  @Get('on-this-day')
+  onThisDay(@CurrentUser() user: AuthUser) {
+    return this.posts.onThisDay(user.id)
   }
 }
 

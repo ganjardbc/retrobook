@@ -139,6 +139,15 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 | created_at | DATETIME | NOT NULL                                                                                                      |                                           |
 | (tabel)    |          | UNIQUE (user_id, post_id), UNIQUE (user_id, comment_id), CHECK tepat satu dari post_id atau comment_id terisi | Mencegah like ganda dan like tanpa target |
 
+### saved_posts (SAV-01)
+
+| Kolom      | Tipe     | Constraint                        | Keterangan                     |
+|------------|----------|-----------------------------------|--------------------------------|
+| user_id    | INT      | PK, FK users.id RESTRICT          | Pemilik simpanan               |
+| post_id    | INT      | PK, FK posts.id CASCADE           | Post yang disimpan             |
+| created_at | DATETIME | NOT NULL                          | Waktu disimpan                 |
+| (tabel)    |          | INDEX (user_id, created_at)       | Daftar simpanan per user       |
+
 ### post_tags, hashtags, post_hashtags
 
 | Tabel         | Kolom                                                        | Constraint                                                     | Keterangan                                                 |
@@ -298,6 +307,8 @@ Semua FK ke users memakai RESTRICT karena user tidak pernah dihapus fisik (soft 
 | posts ke likes                                             | 0..1 ke banyak                                   | post_id                              | CASCADE                                                        |
 | comments ke likes                                          | 0..1 ke banyak                                   | comment_id                           | CASCADE                                                        |
 | users ke likes                                             | 1 ke banyak                                      | user_id                              | RESTRICT                                                       |
+| posts ke saved_posts                                       | 1 ke banyak                                      | post_id                              | CASCADE                                                        |
+| users ke saved_posts                                       | 1 ke banyak                                      | user_id                              | RESTRICT                                                       |
 | posts ke post_tags                                         | 1 ke banyak                                      | post_id                              | CASCADE                                                        |
 | users ke post_tags                                         | 1 ke banyak                                      | user_id                              | RESTRICT                                                       |
 | posts ke post_hashtags                                     | 1 ke banyak                                      | post_id                              | CASCADE                                                        |

@@ -35,6 +35,16 @@ const emit = defineEmits<{
   updated: [post: Post]
 }>()
 const sharing = ref(false)
+async function toggleSave() {
+  try {
+    const r = props.post.savedByMe
+      ? await postsApi.unsave(props.post.id)
+      : await postsApi.save(props.post.id)
+    emit('updated', { ...props.post, savedByMe: r.savedByMe })
+  } catch {
+    /* gagal: tombol tetap pada keadaan semula */
+  }
+}
 const comments = ref<InstanceType<typeof CommentList> | null>(null)
 const editing = ref(false)
 const saving = ref(false)
@@ -212,6 +222,8 @@ async function saveEdit() {
 
     <PostActions
       :liked="post.likedByMe"
+      :saved="post.savedByMe"
+      @toggle-save="toggleSave"
       @toggle-like="emit('toggle-like', post.id)"
       @comment="comments?.focusInput()"
       @share="sharing = !sharing"
