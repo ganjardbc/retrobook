@@ -15,7 +15,7 @@ const browser = await chromium.launch({ headless: true })
 const adminCtx = await browser.newContext({ viewport: size, recordVideo: { dir: outputDir, size } })
 const bobCtx = await browser.newContext({ viewport: size })
 const admin = await adminCtx.newPage()
-const bob = await bobCtx.newPage()
+const author = await bobCtx.newPage()
 await mkdir(outputDir, { recursive: true })
 
 try {
