@@ -228,3 +228,15 @@ Profil memakai cover biru polos dan avatar inisial karena seed tidak menyediakan
 Token visual inti tampak konsisten pada kedua halaman. Pencocokan nilai piksel lebih presisi ditunda sampai aset foto seed tersedia; screenshot ref-1 berukuran kecil dan tidak cukup untuk pengukuran geometri yang andal. Demo video ada di `docs/demo/phase1-demo.webm`.
 4. Perbarui `tokens.css` dan hapus tanda `~` pada dokumen ini.
 5. Buat halaman uji `/dev/tokens` yang menampilkan semua komponen untuk dibandingkan berdampingan dengan referensi.
+
+## 12. Pencocokan visual Fase 2 (T-47)
+
+Screenshot 1440 × 900 dan halaman penuh ada di `docs/demo/phase2-chat.png` dan `docs/demo/phase2-wall.png`; demo video `docs/demo/phase2-demo.webm` (skrip: `scripts/phase2-demo.mjs`, dijalankan terhadap seed dev; Alice dan Bob dua browser).
+
+Cocok dengan ref-1: navbar biru dengan wordmark, kolom pencarian putih, jewel teman/pesan/notifikasi dengan badge merah; kolom kanan berisi Birthdays, People You May Know, dan Chat dengan titik hijau online; jendela chat bergaya docked (kepala biru, gelembung pesan, "Seen", "Bob Miller is typing..."); wall post tampil sebagai "Alice Chen ▸ Bob Miller" dan kotak status memakai placeholder "Write something to ...".
+
+Selisih yang tercatat (bukan diperbaiki diam-diam, sesuai test plan bagian 7):
+1. Menu kiri ref-1 memuat banyak bagian (Favorites, Pages, Groups, Apps); retrobook hanya News Feed, Friends, Pokes. Sengaja, di luar scope PRD.
+2. Chat di ref-1 berupa strip penuh tinggi di tepi kanan layar; di retrobook berupa modul di kolom kanan dan jendela chat melayang di atas feed.
+3. Kolom kanan ref-1 punya kartu berita/grup dan ticker aktivitas; retrobook belum (di luar scope).
+4. Foto profil seed hanya satu; avatar lain inisial.

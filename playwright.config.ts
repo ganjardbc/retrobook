@@ -18,6 +18,7 @@ export default defineConfig({
     {
       command: 'pnpm --filter @retrobook/api dev',
       url: `http://127.0.0.1:${apiPort}/api/health`,
+      env: { RATE_LIMIT_DISABLED: 'true' },
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },

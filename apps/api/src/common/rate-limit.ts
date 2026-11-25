@@ -39,7 +39,8 @@ const MAX_KEYS = 20_000
  */
 @Injectable()
 export class RateLimiter {
-  enabled = process.env.NODE_ENV !== 'test'
+  // RATE_LIMIT_DISABLED=true hanya dipasang oleh Playwright: e2e mendaftarkan lebih dari 5 user dari satu IP.
+  enabled = process.env.NODE_ENV !== 'test' && process.env.RATE_LIMIT_DISABLED !== 'true'
   now: () => number = () => Date.now()
   private readonly buckets = new Map<string, Bucket>()
 
