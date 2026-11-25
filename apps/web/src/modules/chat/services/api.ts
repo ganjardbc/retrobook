@@ -1,10 +1,18 @@
-import type { ChatFriend, ChatMessage, Conversation, Paged } from '@retrobook/shared'
+import type {
+  ChatFriend,
+  FriendActivity,
+  ChatMessage,
+  Conversation,
+  Paged,
+} from '@retrobook/shared'
 import { request } from '@/plugins/http'
 
 const page = (cursor?: number | null, limit = 20) =>
   `?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`
 
 export const chatApi = {
+  /** Ticker aktivitas teman (post, komentar, like), terbaru dulu. */
+  activity: () => request<{ items: FriendActivity[] }>('/activity/friends?limit=5'),
   friends: () => request<{ items: ChatFriend[] }>('/chat/friends'),
   conversations: (cursor?: number | null) =>
     request<Paged<Conversation>>(`/messages/conversations${page(cursor, 10)}`),

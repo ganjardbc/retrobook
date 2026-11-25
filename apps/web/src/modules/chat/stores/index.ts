@@ -1,4 +1,4 @@
-import type { ChatFriend, ChatMessage, UserSummary } from '@retrobook/shared'
+import type { ChatFriend, ChatMessage, FriendActivity, UserSummary } from '@retrobook/shared'
 import { defineStore } from 'pinia'
 import { computed, reactive, ref } from 'vue'
 import { useAuthStore } from '@/modules/auth/stores'
@@ -23,6 +23,8 @@ const TYPING_THROTTLE_MS = 1000
 const TYPING_IDLE_MS = 3000
 /** Indikator lawan hilang sendiri bila tak ada kabar lagi (mis. ia putus di tengah mengetik). */
 const TYPING_EXPIRE_MS = 6000
+/** Ticker aktivitas teman disegarkan berkala; tanpa push realtime (shortcut: polling, ganti event bila perlu). */
+const ACTIVITY_REFRESH_MS = 60_000
 
 const byPresence = (a: ChatFriend, b: ChatFriend) =>
   Number(b.online) - Number(a.online) || a.user.displayName.localeCompare(b.user.displayName)
@@ -43,6 +45,8 @@ export const useChatStore = defineStore('chat', () => {
   const friends = ref<ChatFriend[]>([])
   const friendsLoading = ref(false)
   const friendsFailed = ref(false)
+  const activity = ref<FriendActivity[]>([])
+  let activityTimer: ReturnType<typeof setInterval> | null = null
   /** false: titik online menjadi abu (status tidak diketahui) sampai tersambung lagi. */
   const connected = ref(false)
   const windows = ref<ChatWindow[]>([])
@@ -78,6 +82,14 @@ export const useChatStore = defineStore('chat', () => {
       friendsFailed.value = true
     } finally {
       friendsLoading.value = false
+    }
+  }
+
+  async function loadActivity() {
+    try {
+      activity.value = (await chatApi.activity()).items
+    } catch {
+      /* ticker pelengkap: gagal muat tidak mengganggu chat; coba lagi pada putaran berikutnya */
     }
   }
 
@@ -346,9 +358,14 @@ export const useChatStore = defineStore('chat', () => {
       socket.off('disconnect', onDisconnect)
     }
     void loadFriends()
+    void loadActivity()
+    activityTimer = setInterval(() => void loadActivity(), ACTIVITY_REFRESH_MS)
   }
 
   function stop() {
+    if (activityTimer) clearInterval(activityTimer)
+    activityTimer = null
+    activity.value = []
     stopListening?.()
     stopListening = null
     friends.value = []
@@ -368,6 +385,7 @@ export const useChatStore = defineStore('chat', () => {
     friends,
     friendsLoading,
     friendsFailed,
+    activity,
     connected,
     windows,
     threads,
@@ -375,6 +393,7 @@ export const useChatStore = defineStore('chat', () => {
     totalUnread,
     thread,
     loadFriends,
+    loadActivity,
     loadLatest,
     loadOlder,
     markRead,

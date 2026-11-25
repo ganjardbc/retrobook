@@ -30,6 +30,7 @@ vi.mock('@/plugins/realtime', () => ({ getSocket: () => sock.socket, disconnectR
 vi.mock('@/modules/chat/services/api', () => ({
   chatApi: {
     friends: vi.fn(),
+    activity: vi.fn(),
     conversations: vi.fn(),
     history: vi.fn(),
     send: vi.fn(),
@@ -446,7 +447,8 @@ describe('chat store: mengetik dan terbaca (CHT-04)', () => {
 })
 
 describe('ChatSidebar', () => {
-  const mountSidebar = () => mount(ChatSidebar)
+  const mountSidebar = () =>
+    mount(ChatSidebar, { global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } } })
 
   it('daftar teman: titik hijau dan label Web atau Mobile hanya untuk yang online', async () => {
     await started()
@@ -475,6 +477,30 @@ describe('ChatSidebar', () => {
     api.friends.mockResolvedValue({ items: [] })
     await started()
     expect(mountSidebar().text()).toContain('Add friends to start chatting.')
+  })
+
+  it('ticker aktivitas teman: like, komentar, dan post baru tampil di atas daftar', async () => {
+    const bob = user(2, 'Bob')
+    const item = (type: 'POST' | 'COMMENT' | 'LIKE', id: number, owner = user(3, 'Carol')) => ({
+      type,
+      id,
+      actor: bob,
+      postId: 9,
+      postAuthor: { id: owner.id, displayName: owner.displayName },
+      text: 'x',
+      createdAt: new Date().toISOString(),
+    })
+    api.activity.mockResolvedValue({
+      items: [item('LIKE', 1), item('COMMENT', 2, bob), item('POST', 3, bob)],
+    })
+    await started()
+    await flushPromises()
+    const rows = mountSidebar().findAll('.chat__ticker .chat__item-text')
+    expect(rows.map((r) => r.text())).toEqual([
+      "Bob likes Carol's post.",
+      'Bob commented on their own post.',
+      'Bob posted a new status.',
+    ])
   })
 
   it('kotak cari menyaring berdasarkan nama; klik membuka jendela', async () => {

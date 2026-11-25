@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { t } from '@retrobook/shared/i18n'
+import { Icon } from '@iconify/vue'
 import { computed, ref } from 'vue'
 import Avatar from '@/components/Avatar.vue'
 import { useChatStore } from '@/modules/chat/stores'
@@ -15,43 +16,60 @@ import { formatShortAgo } from '@/helpers/time'
 
 <template>
   <section class="chat" :aria-label="t('chat.title')">
-    <h2 class="chat__head">
-      {{ t('chat.title') }}
-      <span v-if="!chat.connected" class="chat__offline" role="status">{{
-        t('chat.offline')
-      }}</span>
-    </h2>
-    <p v-if="chat.friendsFailed" class="chat__note" role="alert">{{ t('jewel.error') }}</p>
-    <p v-else-if="!chat.friends.length && !chat.friendsLoading" class="chat__note">
-      {{ t('chat.empty') }}
-    </p>
-    <ul v-else class="chat__list">
-      <li v-for="f in shown" :key="f.user.id">
-        <button class="chat__row" type="button" @click="chat.openWindow(f.user)">
-          <Avatar :name="f.user.displayName" :src="f.user.avatarUrl" size="s" />
-          <span class="chat__name">{{ f.user.displayName }}</span>
-          <span
-            v-if="f.unreadCount"
-            class="chat__unread"
-            :aria-label="t('chat.unread', { n: f.unreadCount })"
-            >{{ f.unreadCount }}</span
-          >
-          <template v-if="f.online">
-            <span v-if="f.client" class="chat__client">{{ t(`chat.client.${f.client}`) }}</span>
-            <!-- Socket putus: status tidak diketahui, titik menjadi abu. -->
+    <p v-if="!chat.connected" class="chat__offline" role="status">{{ t('chat.offline') }}</p>
+    <div class="chat__scroll">
+      <ul v-if="chat.activity.length" class="chat__ticker" :aria-label="t('chat.activity.label')">
+        <li v-for="a in chat.activity" :key="`${a.type}-${a.id}`">
+          <RouterLink class="chat__item" :to="`/posts/${a.postId}`">
+            <Avatar :name="a.actor.displayName" :src="a.actor.avatarUrl" size="s" />
+            <span class="chat__item-text">
+              <strong>{{ a.actor.displayName }}</strong>
+              {{
+                t(`chat.activity.${a.type}`, {
+                  owner:
+                    a.postAuthor.id === a.actor.id
+                      ? t('chat.activity.ownerSelf')
+                      : t('chat.activity.owner', { name: a.postAuthor.displayName }),
+                })
+              }}
+            </span>
+          </RouterLink>
+        </li>
+      </ul>
+      <p v-if="chat.friendsFailed" class="chat__note" role="alert">{{ t('jewel.error') }}</p>
+      <p v-else-if="!chat.friends.length && !chat.friendsLoading" class="chat__note">
+        {{ t('chat.empty') }}
+      </p>
+      <ul v-else class="chat__list">
+        <li v-if="!shown.length" class="chat__note" role="status">{{ t('chat.search.empty') }}</li>
+        <li v-for="f in shown" :key="f.user.id">
+          <button class="chat__row" type="button" @click="chat.openWindow(f.user)">
+            <Avatar :name="f.user.displayName" :src="f.user.avatarUrl" size="s" />
+            <span class="chat__name">{{ f.user.displayName }}</span>
             <span
-              class="chat__dot"
-              :class="{ 'chat__dot--stale': !chat.connected }"
-              aria-hidden="true"
-            />
-          </template>
-          <span v-else-if="f.lastSeenAt" class="chat__seen" :title="t('chat.lastSeen')">{{
-            formatShortAgo(f.lastSeenAt)
-          }}</span>
-        </button>
-      </li>
-    </ul>
+              v-if="f.unreadCount"
+              class="chat__unread"
+              :aria-label="t('chat.unread', { n: f.unreadCount })"
+              >{{ f.unreadCount }}</span
+            >
+            <template v-if="f.online">
+              <span v-if="f.client" class="chat__client">{{ t(`chat.client.${f.client}`) }}</span>
+              <!-- Socket putus: status tidak diketahui, titik menjadi abu. -->
+              <span
+                class="chat__dot"
+                :class="{ 'chat__dot--stale': !chat.connected }"
+                aria-hidden="true"
+              />
+            </template>
+            <span v-else-if="f.lastSeenAt" class="chat__seen" :title="t('chat.lastSeen')">{{
+              formatShortAgo(f.lastSeenAt)
+            }}</span>
+          </button>
+        </li>
+      </ul>
+    </div>
     <div class="chat__search">
+      <Icon icon="mdi:magnify" class="chat__search-icon" aria-hidden="true" />
       <input
         v-model="query"
         type="search"
@@ -74,7 +92,7 @@ import { formatShortAgo } from '@/helpers/time'
   display: flex;
   flex-direction: column;
   width: var(--w-chat);
-  background: var(--c-card);
+  padding-top: var(--sp-3);
   border-left: var(--card-border);
 }
 /* UX-11: di bawah 900 px strip disembunyikan bersama kolom kanan. */
@@ -83,29 +101,44 @@ import { formatShortAgo } from '@/helpers/time'
     display: none;
   }
 }
-.chat__head {
+.chat__offline {
   margin: 0;
   padding: var(--sp-2) var(--sp-3);
-  background: var(--c-card-subtle);
-  border-bottom: 1px solid var(--c-border-soft);
-  font-size: var(--fs-base);
-}
-.chat__offline {
-  margin-left: var(--sp-2);
   color: var(--c-text-muted);
-  font-weight: normal;
 }
 .chat__note {
   margin: 0;
   padding: var(--sp-3);
   color: var(--c-text-muted);
 }
-.chat__list {
+.chat__scroll {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.chat__list,
+.chat__ticker {
   margin: 0;
   padding: 0;
-  overflow-y: auto;
   list-style: none;
+}
+.chat__ticker li {
+  border-bottom: var(--card-border);
+}
+.chat__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  color: var(--c-text);
+  text-decoration: none;
+}
+.chat__item:hover {
+  background: var(--c-hover-bg);
+}
+.chat__item-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .chat__row {
   display: flex;
@@ -131,8 +164,8 @@ import { formatShortAgo } from '@/helpers/time'
   white-space: nowrap;
 }
 .chat__client {
-  color: var(--c-text-muted);
-  font-size: var(--fs-small);
+  color: var(--c-online);
+  font-size: 10px;
 }
 .chat__seen {
   color: var(--c-text-muted);
@@ -158,10 +191,23 @@ import { formatShortAgo } from '@/helpers/time'
   text-align: center;
 }
 .chat__search {
-  padding: var(--sp-2) var(--sp-3);
+  position: relative;
   border-top: 1px solid var(--c-border-soft);
+}
+.chat__search-icon {
+  position: absolute;
+  top: 50%;
+  left: var(--sp-2);
+  color: var(--c-text-muted);
+  font-size: 20px;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 .chat__search input {
   width: 100%;
+  padding-left: calc(var(--sp-2) * 4);
+  border: 0;
+  border-radius: 0;
+  box-sizing: border-box;
 }
 </style>

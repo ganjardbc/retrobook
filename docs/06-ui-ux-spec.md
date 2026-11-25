@@ -245,7 +245,7 @@ Cocok dengan ref-1: navbar biru dengan wordmark, kolom pencarian putih, jewel te
 Selisih yang tercatat (bukan diperbaiki diam-diam, sesuai test plan bagian 7):
 1. Menu kiri ref-1 memuat banyak bagian (Favorites, Pages, Groups, Apps); retrobook hanya News Feed, Friends, Pokes. Sengaja, di luar scope PRD.
 2. Chat di ref-1 berupa strip penuh tinggi di tepi kanan layar; di retrobook berupa modul di kolom kanan dan jendela chat melayang di atas feed.
-3. Kolom kanan ref-1 punya kartu berita/grup dan ticker aktivitas; retrobook belum (di luar scope).
+3. Kolom kanan ref-1 punya kartu berita/grup; retrobook belum (di luar scope). Ticker aktivitas teman yang sedang online dan baru chat dalam 60 menit (like, komentar, post baru) sudah ada di atas daftar teman pada `ChatSidebar` (disetujui Ganjar).
 4. Foto profil seed hanya satu; avatar lain inisial.
 
 ### Hasil penyelarasan dengan ref-5 (feed 2015)
