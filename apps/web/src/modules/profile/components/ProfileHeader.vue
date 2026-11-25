@@ -15,6 +15,7 @@ import ReportDialog from '@/modules/posts/components/ReportDialog.vue'
 const props = defineProps<{ profile: Profile }>()
 const store = useProfileStore()
 const photoError = ref('')
+const moreOpen = ref(false)
 const avatarInput = ref<HTMLInputElement | null>(null)
 const coverInput = ref<HTMLInputElement | null>(null)
 
@@ -46,7 +47,8 @@ async function poke() {
 }
 const router = useRouter()
 async function block() {
-  if (!window.confirm(t('profile.action.block.confirm', { name: props.profile.displayName }))) return
+  if (!window.confirm(t('profile.action.block.confirm', { name: props.profile.displayName })))
+    return
   try {
     await blocksApi.block(props.profile.id)
     await router.push('/')
@@ -107,9 +109,26 @@ async function block() {
     <h1 class="header__name">{{ profile.displayName }}</h1>
 
     <div class="header__actions">
-      <Button v-if="profile.relationship === 'SELF'" variant="default" to="/me/edit">{{
-        t('profile.action.updateInfo')
-      }}</Button>
+      <template v-if="profile.relationship === 'SELF'">
+        <Button variant="default" to="/me/edit">{{ t('profile.action.updateInfo') }}</Button>
+        <Button variant="default" to="/me/activity">{{ t('profile.action.activity') }}</Button>
+        <!-- Menu "..." menampung tautan yang jarang dipakai (referensi profil Maret 2015). -->
+        <div class="header__more" @keydown.esc="moreOpen = false">
+          <Button
+            variant="default"
+            :aria-label="t('profile.action.more')"
+            aria-haspopup="true"
+            :aria-expanded="moreOpen"
+            @click="moreOpen = !moreOpen"
+            >&middot;&middot;&middot;</Button
+          >
+          <div v-if="moreOpen" class="header__menu" role="menu">
+            <RouterLink to="/me/blocked" role="menuitem" @click="moreOpen = false">{{
+              t('profile.action.blocked')
+            }}</RouterLink>
+          </div>
+        </div>
+      </template>
       <Button v-if="profile.relationship === 'NONE'" @click="store.relate('send')">{{
         t('profile.action.add')
       }}</Button>
@@ -143,14 +162,6 @@ async function block() {
       <Button v-if="profile.relationship !== 'SELF'" variant="default" @click="block">{{
         t('profile.action.block')
       }}</Button>
-    </div>
-    <div v-if="profile.relationship === 'SELF'" class="header__links">
-      <RouterLink class="header__link" to="/me/activity">{{
-        t('profile.action.activity')
-      }}</RouterLink>
-      <RouterLink class="header__link" to="/me/blocked">{{
-        t('profile.action.blocked')
-      }}</RouterLink>
     </div>
     <ReportDialog
       v-if="reporting"
@@ -189,7 +200,8 @@ async function block() {
 .header__avatar {
   position: absolute;
   left: var(--sp-4);
-  bottom: calc(-1 * var(--sp-4));
+  bottom: calc(-1 * var(--sp-5));
+  z-index: 1;
   padding: 3px;
   background: var(--c-card);
   border: 1px solid var(--c-border);
@@ -198,7 +210,8 @@ async function block() {
 .header__name {
   position: absolute;
   left: calc(var(--avatar-l) + 2 * var(--sp-4) + var(--sp-3));
-  bottom: var(--sp-5);
+  /* Di atas baris tombol: kolom profil selebar halaman lain, jadi nama dan tombol tidak muat sebaris. */
+  bottom: var(--sp-3);
   margin: 0;
   color: var(--c-text-on-brand);
   font-size: var(--fs-name);
@@ -260,14 +273,26 @@ async function block() {
   left: var(--sp-2);
   bottom: var(--sp-2);
 }
-.header__links {
-  display: flex;
-  gap: var(--sp-3);
-  padding: var(--sp-1) var(--sp-3);
+.header__more {
+  position: relative;
 }
-.header__link {
-  align-self: center;
-  color: var(--c-link);
-  font-size: var(--fs-small);
+.header__menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--sp-1));
+  min-width: 140px;
+  background: var(--c-card);
+  border: var(--card-border);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.header__menu a {
+  display: block;
+  padding: var(--sp-2) var(--sp-3);
+  color: var(--c-text);
+  white-space: nowrap;
+}
+.header__menu a:hover {
+  background: var(--c-hover-bg);
+  text-decoration: none;
 }
 </style>

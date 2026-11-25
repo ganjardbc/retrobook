@@ -46,6 +46,15 @@ defineProps<{ profile: Profile }>()
   background: var(--c-card);
   border: var(--card-border);
   border-top: 0;
+  /* Foto profil menimpa tepi kiri bar tab (referensi profil Maret 2015): tab mulai di kanan foto. */
+  padding-left: calc(var(--avatar-l) + 2 * var(--sp-4) + var(--sp-3));
+}
+@media (max-width: 640px) {
+  .tabs {
+    padding-left: 0;
+    margin-top: var(--sp-5);
+    overflow-x: auto;
+  }
 }
 .tabs__tab {
   padding: var(--sp-3) var(--sp-4);

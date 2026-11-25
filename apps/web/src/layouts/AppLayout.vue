@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/modules/auth/stores'
 import BirthdaysCard from '@/modules/friends/components/BirthdaysCard.vue'
@@ -18,6 +18,7 @@ const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const menuOpen = ref(false)
+const isProfile = computed(() => route.meta.layout === 'profile')
 
 // Koneksi realtime hidup selama shell member tampil (logout atau pindah ke tamu memutusnya).
 const chat = useChatStore()
@@ -39,20 +40,24 @@ async function logout() {
 <template>
   <div class="layout" :class="{ 'layout--profile': route.meta.layout === 'profile' }">
     <NavBar @toggle-menu="menuOpen = !menuOpen" @logout="logout" />
-    <div class="layout__cols">
-      <aside class="layout__left" :class="{ 'layout__left--open': menuOpen }"><LeftMenu /></aside>
-      <main class="layout__main"><RouterView /></main>
-      <!-- Kartu di atas, chat di dasar kolom (UI spec 3). -->
-      <aside class="layout__right">
-        <TrendingCard />
-        <SponsoredCard />
-        <BirthdaysCard />
-        <PeopleYouMayKnow />
-        <ChatSidebar />
-      </aside>
+    <div class="layout__body">
+      <div class="layout__cols">
+        <aside class="layout__left" :class="{ 'layout__left--open': menuOpen }"><LeftMenu /></aside>
+        <main class="layout__main"><RouterView /></main>
+        <!-- Kartu di atas, info footer di dasar kolom. -->
+        <!-- Profil: kolom kanan dikosongkan dulu (tanpa footer); lebar total tetap sama. -->
+        <aside v-if="!isProfile" class="layout__right">
+          <TrendingCard />
+          <SponsoredCard />
+          <BirthdaysCard />
+          <PeopleYouMayKnow />
+          <AppFooter class="layout__footer" />
+        </aside>
+      </div>
     </div>
+    <!-- Strip chat menempel di tepi kanan layar, di luar kolom (referensi profil Maret 2015). -->
+    <ChatSidebar />
     <ChatDock />
-    <AppFooter />
   </div>
 </template>
 
@@ -61,16 +66,43 @@ async function logout() {
   display: grid;
   grid-template-columns: var(--w-left) minmax(0, var(--w-feed)) minmax(0, 1fr);
   gap: var(--sp-3);
-  max-width: calc(var(--w-left) + var(--w-feed) + var(--w-right) + 2 * var(--sp-3));
+  max-width: var(--w-content);
   margin: 0 auto;
   padding: var(--sp-3);
 }
-/* Profil: tanpa menu kiri; kolom utama selebar timeline (referensi profil Maret 2015). */
+/* Profil: tanpa menu kiri, lebar total tetap sama dengan halaman lain. */
 .layout--profile .layout__cols {
-  grid-template-columns: minmax(0, var(--w-timeline)) minmax(0, 1fr);
-  max-width: calc(var(--w-timeline) + var(--w-right) + var(--sp-3));
+  grid-template-columns: minmax(0, 1fr);
 }
 .layout--profile .layout__left {
+  display: none;
+}
+.layout__footer {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--sp-2) 0;
+  text-align: left;
+}
+/* Strip chat tetap di kanan: sisakan ruangnya supaya konten tidak tertutup. */
+@media (min-width: 901px) {
+  .layout__body {
+    padding-right: var(--w-chat);
+  }
+}
+/* Kolom kiri dan kanan menempel di bawah navbar saat feed digulir; kolom kanan yang lebih tinggi
+   dari layar bisa digulir sendiri. */
+.layout__left,
+.layout__right {
+  position: sticky;
+  top: calc(var(--h-navbar) + var(--sp-3));
+  align-self: start;
+}
+.layout__right {
+  max-height: calc(100vh - var(--h-navbar) - 2 * var(--sp-3));
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.layout__right::-webkit-scrollbar {
   display: none;
 }
 /* UX-11: satu breakpoint di sekitar 900 px menyembunyikan kolom kanan. */

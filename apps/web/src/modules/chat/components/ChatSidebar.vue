@@ -60,15 +60,24 @@ const shown = computed(() => {
 </template>
 
 <style scoped>
-/* Kolom kanan tinggi penuh di bawah navbar (UI spec 4, ChatSidebar). */
+/* Strip tetap di tepi kanan layar, tinggi penuh di bawah navbar (referensi profil Maret 2015). */
 .chat {
-  position: sticky;
-  top: calc(var(--h-navbar) + var(--sp-3));
+  position: fixed;
+  top: var(--h-navbar);
+  right: 0;
+  bottom: 0;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var(--h-navbar) - 2 * var(--sp-3));
+  width: var(--w-chat);
   background: var(--c-card);
-  border: var(--card-border);
+  border-left: var(--card-border);
+}
+/* UX-11: di bawah 900 px strip disembunyikan bersama kolom kanan. */
+@media (max-width: 900px) {
+  .chat {
+    display: none;
+  }
 }
 .chat__head {
   margin: 0;

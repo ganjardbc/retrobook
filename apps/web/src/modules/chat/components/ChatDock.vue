@@ -6,7 +6,7 @@ const chat = useChatStore()
 </script>
 
 <template>
-  <!-- Jendela di dasar layar, di kiri kolom chat; maksimal tiga (CHT-03). -->
+  <!-- Jendela di dasar layar, di kiri strip chat; maksimal tiga (CHT-03). -->
   <div v-if="chat.windows.length" class="dock">
     <ChatWindow v-for="w in chat.windows" :key="w.user.id" :win="w" />
   </div>
@@ -16,11 +16,8 @@ const chat = useChatStore()
 .dock {
   position: fixed;
   bottom: 0;
-  /* Rata dengan tepi kiri kolom kanan: separuh sisa lebar layar ditambah lebar kolom kanan. */
-  right: calc(
-    max(0px, (100vw - (var(--w-left) + var(--w-feed) + var(--w-right) + 2 * var(--sp-3))) / 2) +
-      var(--w-right) + var(--sp-3)
-  );
+  /* Di kiri strip chat yang menempel di tepi kanan. */
+  right: calc(var(--w-chat) + var(--sp-2));
   z-index: 15;
   display: flex;
   flex-direction: row-reverse;

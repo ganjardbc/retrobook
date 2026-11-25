@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { t } from '@retrobook/shared/i18n'
 import { RouterLink } from 'vue-router'
-import ThemeSwitcher from '@/components/ThemeSwitcher.vue'
 </script>
 
 <template>
   <footer class="footer">
     <span>{{ t('footer.parody') }}</span>
     <RouterLink to="/privacy">{{ t('footer.privacy') }}</RouterLink>
-    <ThemeSwitcher />
   </footer>
 </template>
 

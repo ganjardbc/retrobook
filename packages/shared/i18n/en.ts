@@ -10,6 +10,7 @@ export const en = {
   'profile.action.block': 'Block',
   'profile.action.block.confirm': 'Block {name}? You will no longer see each other.',
   'profile.action.activity': 'View Activity Log',
+  'profile.action.more': 'More',
   'profile.action.blocked': 'Blocked People',
   'blocked.title': 'Blocked People',
   'blocked.empty': "You haven't blocked anyone.",

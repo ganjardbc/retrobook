@@ -64,6 +64,8 @@ Disalin ke `packages/shared/tokens.css`. Nilai bertanda `~` perlu diukur.
   --w-feed: 510px; /* kolom tengah (ukur: profil, 459 sampai 969) */
   --w-timeline: 849px; /* lebar timeline profil: kolom info + tengah (ukur: profil) */
   --w-right: 300px; /* ~ kolom kanan */
+  --w-content: calc(var(--w-left) + var(--w-feed) + var(--w-right) + 2 * var(--sp-3)); /* satu lebar konten untuk semua halaman member */
+  --w-chat: 230px; /* strip chat tetap di tepi kanan (referensi profil Maret 2015) */
   --h-navbar: 42px; /* ukur: profil, baris 54 sampai 95 */
   --h-login-header: 78px; /* ukur: login (156 px pada 2x) */
   --h-cover: 315px; /* ~ cover profil */
@@ -98,7 +100,7 @@ Sumber: ref-2 (profil Maret 2015, 1440 x 900 pada 100 persen) dan ref-3 (login, 
 
 Belum terukur (tetap `~`): `--c-brand-dark`, `--c-link`, `--c-text`, `--c-border` (selisih dengan nilai awal di bawah toleransi), `--c-success-dark`, `--c-danger`, `--w-left`, `--w-right`, `--w-page`, `--h-cover` (cover di referensi terpotong), `--fs-title`, `--fs-small`. Pencocokan visual penuh dilakukan di T-28.
 
-Tema Time Travel (bonus): `[data-theme="2010"]` dan `[data-theme="2020"]` hanya menimpa variabel warna, font, dan radius di atas. Status T-67: pengalih tema ada di footer user app (`ThemeSwitcher`), pilihan disimpan di `localStorage` (`rb.theme`), tema 2015 tanpa atribut. Nilai 2010 dan 2020 adalah perkiraan gaya, belum diukur dari referensi.
+Tema Time Travel (bonus): `[data-theme="2010"]` dan `[data-theme="2020"]` hanya menimpa variabel warna, font, dan radius di atas. Status T-67: pengalih tema (`ThemeSwitcher`) disembunyikan dulu dari footer supaya tampilan konsisten; `main.ts` selalu memasang 2015 (komponen dan helper tetap ada), pilihan disimpan di `localStorage` (`rb.theme`), tema 2015 tanpa atribut. Nilai 2010 dan 2020 adalah perkiraan gaya, belum diukur dari referensi.
 
 ## 3. Layout
 

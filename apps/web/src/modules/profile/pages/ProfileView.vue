@@ -59,7 +59,7 @@ watch(
   flex-direction: column;
 }
 .profile__header {
-  margin-bottom: var(--sp-5);
+  margin-bottom: 0; /* tab langsung di bawah cover; foto profil menimpa baris tab */
 }
 .profile__note {
   padding: var(--sp-4);

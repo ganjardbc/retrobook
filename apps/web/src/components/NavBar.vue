@@ -66,9 +66,15 @@ const auth = useAuthStore()
   align-items: center;
   gap: var(--sp-3);
   height: 100%;
-  max-width: calc(var(--w-left) + var(--w-feed) + var(--w-right) + 2 * var(--sp-3));
+  max-width: var(--w-content);
   margin: 0 auto;
   padding: 0 var(--sp-3);
+}
+/* Sejajar dengan kolom konten yang menyisakan ruang untuk strip chat. */
+@media (min-width: 901px) {
+  .navbar {
+    padding-right: var(--w-chat);
+  }
 }
 .navbar__brand {
   display: flex;

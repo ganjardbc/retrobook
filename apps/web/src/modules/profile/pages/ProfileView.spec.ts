@@ -135,7 +135,11 @@ describe('ProfileView', () => {
     expect(own.w.find('.status').exists()).toBe(true)
     // profil sendiri: Update Info dan kontrol foto, tanpa tombol pertemanan
     expect(own.w.find('.header__actions a').attributes('href')).toBe('/me/edit')
-    expect(own.w.find('.header__actions').text()).toBe('Update Info')
+    const links = own.w.findAll('.header__actions a').map((a) => a.attributes('href'))
+    expect(links).toEqual(['/me/edit', '/me/activity']) // Blocked ada di menu "..."
+    expect(own.w.find('.header__menu').exists()).toBe(false)
+    await own.w.find('.header__more button').trigger('click')
+    expect(own.w.find('.header__menu a').attributes('href')).toBe('/me/blocked')
     expect(own.w.find('.header__photo--avatar').exists()).toBe(true)
     expect(own.w.find('.header__photo--cover').exists()).toBe(true)
     expect(other.w.find('.header__photo').exists()).toBe(false) // orang lain: tanpa kontrol foto

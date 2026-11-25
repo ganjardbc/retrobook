@@ -47,6 +47,8 @@
   --w-feed: 510px; /* kolom tengah (ukur: profil, 459 sampai 969) */
   --w-timeline: 849px; /* lebar timeline profil: kolom info + tengah (ukur: profil) */
   --w-right: 300px; /* ~ kolom kanan */
+  --w-content: calc(var(--w-left) + var(--w-feed) + var(--w-right) + 2 * var(--sp-3)); /* satu lebar konten untuk semua halaman member */
+  --w-chat: 230px; /* strip chat tetap di tepi kanan (referensi profil Maret 2015) */
   --h-navbar: 42px; /* ukur: profil, baris 54 sampai 95 */
   --h-login-header: 78px; /* ukur: login (156 px pada 2x) */
   --h-cover: 315px; /* ~ cover profil */

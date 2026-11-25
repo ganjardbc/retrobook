@@ -7,11 +7,11 @@ import App from '@/App.vue'
 import { router } from '@/core/global-routes'
 import { useAuthStore } from '@/modules/auth/stores'
 import '@/styles/base.css'
-import { applyTheme, readTheme } from '@/helpers/theme'
+import { applyTheme, DEFAULT_THEME } from '@/helpers/theme'
 
 async function bootstrap() {
   document.title = APP_NAME
-  applyTheme(readTheme())
+  applyTheme(DEFAULT_THEME) // pengalih tema disembunyikan dulu; UI tetap 2015
   const app = createApp(App)
   const pinia = createPinia()
   app.use(pinia)
