@@ -9,6 +9,11 @@ export const searchApi = {
     request<Paged<UserSummary>>(
       `/search?q=${encodeURIComponent(q)}&limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`,
     ),
+  /** SRC-05: cari isi post yang boleh dibaca pembaca. */
+  posts: (q: string, cursor?: number | null, limit = 10) =>
+    request<Paged<Post>>(
+      `/search/posts?q=${encodeURIComponent(q)}&limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`,
+    ),
   /** SRC-02: hashtag terbanyak 24 jam terakhir. */
   trending: () => request<{ items: TrendingTag[] }>('/trending'),
   /** POST-10: post publik dengan hashtag ini. */

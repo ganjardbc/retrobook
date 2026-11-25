@@ -11,6 +11,7 @@ import {
   type YearInReview,
 } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
+import { escapeLike } from '../../common/like'
 import { PrismaService } from '../../prisma/prisma.service'
 import { BlockedWordsService } from '../blocked-words/blocked-words.service'
 import { NotificationsService } from '../notifications/notifications.service'
@@ -308,6 +309,33 @@ export class PostsService {
           publicPost,
           { hashtags: { some: { hashtag: { tag: tag.toLowerCase() } } } },
         ],
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      include: this.include(viewerId),
+    })
+    const page = rows.slice(0, limit)
+    return {
+      items: await this.toDtos(viewerId, page),
+      nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+    }
+  }
+
+  /**
+   * SRC-05: cari isi post (mengandung kata kunci, tanpa membedakan huruf besar kecil). Himpunan post
+   * tetap `postWhere` (privasi, blokir, BANNED, hidden, grup), jadi hasil tidak pernah lebih luas dari yang
+   * boleh dibaca pembaca. shortcut: LIKE '%q%' tanpa indeks; ganti ke FULLTEXT bila tabel besar.
+   */
+  async search(
+    viewerId: number,
+    q: string,
+    limit: number,
+    cursor?: number,
+  ): Promise<Paged<PostDto>> {
+    const rows = await this.prisma.post.findMany({
+      where: {
+        AND: [this.visibility.postWhere(viewerId, true), { content: { contains: escapeLike(q) } }],
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit + 1,

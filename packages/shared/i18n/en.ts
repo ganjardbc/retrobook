@@ -79,6 +79,8 @@ export const en = {
   'nav.main': 'Main navigation',
   'search.placeholder': 'Search for people',
   'search.button': 'Search',
+  'search.tab.people': 'People',
+  'search.tab.posts': 'Posts',
   'search.seeAll': 'See all results for "{q}"',
   'search.noResults': 'No results for "{q}".',
   'search.title': 'Search results',

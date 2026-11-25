@@ -157,6 +157,7 @@ Prioritas memakai MoSCoW (Must, Should, Could); kolom Fase mengikuti scope di at
 | LIF-01 | Life Event | Could | 3 | Milestone sederhana tampil di timeline |
 | ACT-01 | Activity Log | Could | 3 | Daftar aktivitas sendiri dengan opsi hapus |
 | SAV-01 | Save post | Could | Pasca-R4 | Tautan Save/Unsave di bawah post (Facebook 2015); halaman `/saved` memuat simpanan sendiri, privasi mengikuti `VisibilityService` |
+| SRC-05 | Cari isi post | Could | Pasca-R4 | Tab Posts di `/search?type=posts`: post yang mengandung kata kunci dan boleh dibaca pembaca (teman, publik, grup anggota); tak pernah lebih luas dari `VisibilityService` |
 | YIR-01 | Year in Review | Could | Pasca-R4 | Halaman `/year-in-review` meringkas satu tahun milik sendiri: jumlah post, foto, like, komentar, dan post terpopuler |
 | OTD-01 | On This Day | Could | Pasca-R4 | Halaman `/on-this-day` memuat post sendiri pada hari dan bulan yang sama di tahun-tahun lalu (Maret 2015) |
 | BOT-01 | Bot AI sebagai teman | Could | Bonus | Akun bot memposting dan membalas komentar; sesuai BR-09 |

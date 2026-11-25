@@ -9,7 +9,7 @@ import { searchApi } from '@/modules/search/services/api'
 
 vi.mock('@/modules/search/services/api', async (orig) => ({
   ...(await orig<typeof import('@/modules/search/services/api')>()),
-  searchApi: { people: vi.fn() },
+  searchApi: { people: vi.fn(), posts: vi.fn() },
 }))
 const api = vi.mocked(searchApi)
 
@@ -178,6 +178,14 @@ describe('SearchView', () => {
     expect(api.people).toHaveBeenCalledWith('bu', null, 10)
     expect(w.findAll('li')).toHaveLength(2)
     expect(w.find('a[href="/budi"]').text()).toBe('Budi')
+  })
+
+  it('tab Posts memanggil pencarian isi post (SRC-05) dan menampilkan keadaan kosong', async () => {
+    api.posts.mockResolvedValue({ items: [], nextCursor: null })
+    const { w } = await mountAt('/search?q=kopi&type=posts')
+    expect(api.posts).toHaveBeenCalledWith('kopi', null)
+    expect(api.people).not.toHaveBeenCalled()
+    expect(w.text()).toContain('No results for "kopi"')
   })
 
   it.each(['/search', '/search?q=', '/search?q=%20b%20'])(
