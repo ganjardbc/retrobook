@@ -1,26 +1,41 @@
 <script setup lang="ts">
+import { PRIVACIES } from '@retrobook/shared'
+import { t } from '@retrobook/shared/i18n'
+import { Icon } from '@iconify/vue'
 import { computed, ref, watch } from 'vue'
+import Button from '@/components/Button.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import FormRow from '@/components/FormRow.vue'
+import IconSelect, { type IconOption } from '@/components/IconSelect.vue'
+import PageCard from '@/components/PageCard.vue'
+import { PRIVACY_ICONS } from '@/helpers/privacy'
 import { useAuthStore } from '@/modules/auth/stores'
 import { useProfileStore } from '@/modules/profile/stores'
 import { ApiRequestError } from '@/plugins/http'
-import Button from '@/components/Button.vue'
 import { notesApi, type NoteItem } from '../services/notes'
 
+const privacyOptions = computed<IconOption[]>(() =>
+  PRIVACIES.map((p) => ({ value: p, label: t(`privacy.${p}`), icon: PRIVACY_ICONS[p] })),
+)
 const profile = useProfileStore()
 const auth = useAuthStore()
 const items = ref<NoteItem[]>([])
+const showForm = ref(false)
 const title = ref('')
 const body = ref('')
 const privacy = ref<NoteItem['privacy']>('FRIENDS')
 const editingId = ref<number | null>(null)
 const error = ref('')
 const isMine = computed(() => auth.user?.id === profile.profile?.id)
+
+const message = (cause: unknown, fallback: string) =>
+  cause instanceof ApiRequestError ? cause.messages.join(' ') : fallback
+
 async function load(username: string) {
   try {
     items.value = (await notesApi.forProfile(username)).items
   } catch (cause) {
-    error.value =
-      cause instanceof ApiRequestError ? cause.messages.join(' ') : 'Notes gagal dimuat.'
+    error.value = message(cause, t('notes.loadError'))
   }
 }
 watch(
@@ -35,8 +50,10 @@ function edit(note: NoteItem) {
   title.value = note.title
   body.value = note.body
   privacy.value = note.privacy
+  showForm.value = true
 }
 function reset() {
+  showForm.value = false
   editingId.value = null
   title.value = ''
   body.value = ''
@@ -54,8 +71,7 @@ async function save() {
     else items.value.unshift(saved)
     reset()
   } catch (cause) {
-    error.value =
-      cause instanceof ApiRequestError ? cause.messages.join(' ') : 'Note gagal disimpan.'
+    error.value = message(cause, t('notes.saveError'))
   }
 }
 async function remove(note: NoteItem) {
@@ -63,81 +79,121 @@ async function remove(note: NoteItem) {
     await notesApi.remove(note.id)
     items.value = items.value.filter((item) => item.id !== note.id)
   } catch (cause) {
-    error.value =
-      cause instanceof ApiRequestError ? cause.messages.join(' ') : 'Note gagal dihapus.'
+    error.value = message(cause, t('notes.deleteError'))
   }
 }
 </script>
 
 <template>
-  <section class="notes">
-    <h2>Notes</h2>
-    <p v-if="error" role="alert">{{ error }}</p>
-    <form v-if="isMine" class="notes__form" @submit.prevent="save">
-      <label>Judul<input v-model="title" maxlength="120" required /></label
-      ><label>Isi note<textarea v-model="body" maxlength="20000" rows="7" required /></label
-      ><label
-        >Privasi<select v-model="privacy">
-          <option value="PUBLIC">Publik</option>
-          <option value="FRIENDS">Teman</option>
-          <option value="ONLY_ME">Hanya saya</option>
-        </select></label
-      >
-      <div>
+  <PageCard :title="t('notes.title')" heading="h2">
+    <template v-if="isMine" #actions>
+      <Button v-if="!showForm" @click="showForm = true">{{ t('notes.write') }}</Button>
+    </template>
+    <form v-if="showForm" class="form" @submit.prevent="save">
+      <FormRow :label="t('notes.name')" for-id="note-title">
+        <input id="note-title" v-model="title" maxlength="120" required />
+      </FormRow>
+      <FormRow :label="t('notes.body')" for-id="note-body">
+        <textarea id="note-body" v-model="body" maxlength="20000" rows="7" required />
+      </FormRow>
+      <FormRow :label="t('notes.privacy')">
+        <IconSelect v-model="privacy" :options="privacyOptions" :label="t('notes.privacy')" />
+      </FormRow>
+      <div class="form__actions">
         <Button type="submit" :disabled="!title.trim() || !body.trim()">{{
-          editingId ? 'Simpan perubahan' : 'Tulis note'
-        }}</Button><Button v-if="editingId" variant="default" @click="reset">Batal</Button>
+          editingId ? t('notes.save') : t('notes.publish')
+        }}</Button>
+        <Button variant="default" @click="reset">{{ t('page.cancel') }}</Button>
       </div>
     </form>
-    <article v-for="note in items" :key="note.id" class="notes__item">
-      <h3>{{ note.title }}</h3>
-      <p class="notes__privacy">{{ note.privacy }}</p>
-      <p class="notes__body">{{ note.body }}</p>
-      <div v-if="isMine" class="notes__actions">
-        <Button variant="default" @click="edit(note)">Edit</Button
-        ><Button variant="default" @click="remove(note)">Hapus</Button>
-      </div>
-    </article>
-    <p v-if="!items.length">Belum ada note.</p>
-  </section>
+    <p v-if="error" class="form-error" role="alert">{{ error }}</p>
+    <ul v-if="items.length" class="list">
+      <li v-for="note in items" :key="note.id" class="item">
+        <div class="item__head">
+          <strong class="item__title">{{ note.title }}</strong>
+          <span class="item__meta">
+            <Icon
+              :icon="PRIVACY_ICONS[note.privacy]"
+              role="img"
+              :aria-label="t(`privacy.${note.privacy}`)"
+            />
+            <time :datetime="note.createdAt">{{
+              new Date(note.createdAt).toLocaleDateString([], { dateStyle: 'medium' })
+            }}</time>
+          </span>
+        </div>
+        <p class="item__body">{{ note.body }}</p>
+        <div v-if="isMine" class="item__actions">
+          <Button variant="default" @click="edit(note)">{{ t('notes.edit') }}</Button>
+          <Button variant="default" @click="remove(note)">{{ t('notes.delete') }}</Button>
+        </div>
+      </li>
+    </ul>
+    <EmptyState
+      v-else-if="!showForm"
+      icon="mdi:note-text-outline"
+      :title="t('notes.empty')"
+      :hint="isMine ? t('notes.emptyHint') : undefined"
+    />
+  </PageCard>
 </template>
 
 <style scoped>
-.notes {
-  display: grid;
-  gap: var(--sp-3);
-  padding: var(--sp-3);
-  background: var(--c-card);
-  border: var(--card-border);
-  border-radius: var(--radius);
-}
-h2,
-h3 {
-  margin: 0;
-}
-.notes__form {
+.form {
   display: grid;
   gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
   padding: var(--sp-3);
   background: var(--c-card-subtle);
-}
-label {
-  display: grid;
-  gap: 4px;
-}
-.notes__item {
-  padding: var(--sp-3);
   border: 1px solid var(--c-border-soft);
 }
-.notes__privacy {
-  color: var(--c-text-muted);
-  font-size: var(--fs-small);
-}
-.notes__body {
-  white-space: pre-wrap;
-}
-.notes__actions {
+.form__actions {
   display: flex;
   gap: var(--sp-2);
+  padding-left: 118px;
+}
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.item {
+  padding: var(--sp-3) 0;
+}
+.item + .item {
+  border-top: 1px solid var(--c-border-soft);
+}
+.item:first-child {
+  padding-top: 0;
+}
+.item__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+.item__title {
+  overflow-wrap: anywhere;
+}
+.item__meta {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sp-1);
+  color: var(--c-text-muted);
+}
+.item__body {
+  margin: var(--sp-1) 0 var(--sp-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.item__actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+@media (max-width: 560px) {
+  .form__actions {
+    padding-left: 0;
+  }
 }
 </style>

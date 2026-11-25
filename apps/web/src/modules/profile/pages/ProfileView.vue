@@ -45,7 +45,8 @@ watch(
       <ProfileTabs :profile="store.profile" />
       <div class="profile__body">
         <aside class="profile__info">
-          <InfoCards :profile="store.profile" />
+          <!-- Tab About sudah menampilkan info yang sama; kartu ini untuk tab lain. -->
+          <InfoCards v-if="route.name !== 'profile-about'" :profile="store.profile" />
           <FriendsGrid :profile="store.profile" :friends="store.friends.items" />
           <LifeEvents />
         </aside>
