@@ -1,4 +1,4 @@
-import type { FeedSort, Paged, Post, PostFeeling, Privacy } from '@retrobook/shared'
+import type { FeedSort, Paged, Post, PostFeeling, Privacy, YearInReview } from '@retrobook/shared'
 import { request } from '@/plugins/http'
 
 export const postsApi = {
@@ -32,6 +32,8 @@ export const postsApi = {
   saved: (cursor?: number | null, limit = 10) =>
     request<Paged<Post>>(`/saved?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
   onThisDay: () => request<Paged<Post>>('/on-this-day').then((r) => ({ ...r, nextCursor: null })),
+  yearInReview: (year?: number) =>
+    request<YearInReview>(`/year-in-review${year ? `?year=${year}` : ''}`),
   remove: (id: number) => request<void>(`/posts/${id}`, { method: 'DELETE' }),
   uploadImage: (file: File) => {
     const form = new FormData()

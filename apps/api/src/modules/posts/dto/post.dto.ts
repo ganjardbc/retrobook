@@ -105,3 +105,12 @@ export class TimelineQueryDto extends CursorQueryDto {
   @Max(2100)
   year?: number
 }
+
+export class YearQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(2004)
+  @Max(2100)
+  year?: number
+}

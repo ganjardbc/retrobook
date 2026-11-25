@@ -69,6 +69,17 @@ export type Comment = {
   createdAt: string
 }
 
+/** YIR-01: ringkasan satu tahun milik sendiri; `years` = tahun yang punya post (terbaru dulu). */
+export type YearInReview = {
+  year: number
+  years: number[]
+  postCount: number
+  photoCount: number
+  likeCount: number
+  commentCount: number
+  topPost: Post | null
+}
+
 export type Paged<T> = { items: T[]; nextCursor: number | null }
 
 /** Satu foto pada tab Photos: gambar dari post yang boleh dilihat pembaca (post asal untuk tautan). */

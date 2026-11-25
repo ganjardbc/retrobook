@@ -2,7 +2,12 @@ import { Module } from '@nestjs/common'
 import { BlockedWordsModule } from '../blocked-words/blocked-words.module'
 import { NotificationsModule } from '../notifications/notifications.module'
 import { UploadsModule } from '../uploads/uploads.module'
-import { FeedController, HashtagsController, PostsController, SavedController } from './posts.controller'
+import {
+  FeedController,
+  HashtagsController,
+  PostsController,
+  SavedController,
+} from './posts.controller'
 import { PostsService } from './posts.service'
 
 @Module({

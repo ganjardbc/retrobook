@@ -35,6 +35,12 @@ const apps: Item[] = [
   { label: 'menu.albums', to: '/albums', icon: 'mdi:image-multiple-outline', tone: 'blue' },
   { label: 'menu.groups', to: '/groups', icon: 'mdi:account-group-outline', tone: 'green' },
   { label: 'menu.events', to: '/events', icon: 'mdi:calendar-month-outline', tone: 'red' },
+  {
+    label: 'menu.yearInReview',
+    to: '/year-in-review',
+    icon: 'mdi:chart-timeline-variant',
+    tone: 'blue',
+  },
   { label: 'menu.saved', to: '/saved', icon: 'mdi:bookmark-outline', tone: 'orange' },
   {
     label: 'menu.onThisDay',

@@ -8,6 +8,7 @@ import {
   type SharedPost,
   type TrendingTag,
   type UserSummary,
+  type YearInReview,
 } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
@@ -391,6 +392,44 @@ export class PostsService {
       include: this.include(viewerId),
     })
     return { items: await this.toDtos(viewerId, rows) }
+  }
+
+  /**
+   * YIR-01: ringkasan tahun (UTC) milik viewer sendiri. Semua hitungan memakai himpunan post yang lolos
+   * postWhere, dan like/komentar menyaring pelaku BANNED/terhapus/terblokir seperti di tempat lain.
+   * Tahun tanpa post tetap dijawab (angka 0, topPost null); yang diminta bukan tahun valid: 400 di DTO.
+   */
+  async yearInReview(viewerId: number, year: number): Promise<YearInReview> {
+    const mine: Prisma.PostWhereInput = {
+      AND: [this.visibility.postWhere(viewerId), { authorId: viewerId }, yearRange(year)],
+    }
+    const ids = (await this.prisma.post.findMany({ where: mine, select: { id: true } })).map(
+      (p) => p.id,
+    )
+    const [photoCount, likeCount, commentCount, top, years] = await Promise.all([
+      this.prisma.post.count({ where: { AND: [mine, { imageUrl: { not: null } }] } }),
+      this.prisma.like.count({
+        where: { postId: { in: ids }, ...this.visibility.likerWhere(viewerId) },
+      }),
+      this.prisma.comment.count({
+        where: { postId: { in: ids }, ...this.visibility.commentWhere(viewerId) },
+      }),
+      this.prisma.post.findFirst({
+        where: mine,
+        orderBy: [{ likes: { _count: 'desc' } }, { id: 'desc' }],
+        include: this.include(viewerId),
+      }),
+      this.timelineYears(viewerId, viewerId),
+    ])
+    return {
+      year,
+      years,
+      postCount: ids.length,
+      photoCount,
+      likeCount,
+      commentCount,
+      topPost: top ? (await this.toDtos(viewerId, [top]))[0]! : null,
+    }
   }
 
   /** Timeline profil: post `authorId` yang boleh dibaca viewer (aturan yang sama dengan feed). */

@@ -11,4 +11,10 @@ export default [
     component: () => import('@/modules/posts/pages/OnThisDayView.vue'),
     meta: { app: true },
   },
+  {
+    path: '/year-in-review',
+    name: 'year-in-review',
+    component: () => import('@/modules/posts/pages/YearInReviewView.vue'),
+    meta: { app: true },
+  },
 ]

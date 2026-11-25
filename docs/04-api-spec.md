@@ -163,6 +163,7 @@ Status implementasi (T-24): `GET /users/:username/friends` (daftar teman pemilik
 | POST | `/posts` | Buat post |
 | PUT / DELETE | `/posts/:id/save` | Simpan / batal simpan (SAV-01), idempoten; post tak terlihat 404. Respons `{ savedByMe }` |
 | GET | `/saved` | Simpanan sendiri (cursor id post, terbaru dulu); yang kini tak terlihat disaring `VisibilityService` |
+| GET | `/year-in-review` | Ringkasan tahun milik sendiri (YIR-01). `?year=` 2004..2100, bawaan tahun berjalan (UTC). Respons `{ year, years, postCount, photoCount, likeCount, commentCount, topPost }`; yang dihitung hanya yang lolos `VisibilityService` |
 | GET | `/on-this-day` | Post sendiri di hari dan bulan yang sama pada tahun lalu (OTD-01), maksimal 50, tanpa cursor |
 | GET | `/posts/:id` | Satu post (untuk tautan notifikasi) |
 | PATCH | `/posts/:id` | Edit; hanya pemilik; mengisi `editedAt` |

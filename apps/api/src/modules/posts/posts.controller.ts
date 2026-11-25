@@ -18,6 +18,7 @@ import {
   FeedQueryDto,
   SharePostDto,
   UpdatePostDto,
+  YearQueryDto,
 } from './dto/post.dto'
 import { PostsService } from './posts.service'
 
@@ -89,6 +90,11 @@ export class SavedController {
   @Get('saved')
   saved(@CurrentUser() user: AuthUser, @Query() q: CursorQueryDto) {
     return this.posts.saved(user.id, q.limit, q.cursor)
+  }
+
+  @Get('year-in-review')
+  yearInReview(@CurrentUser() user: AuthUser, @Query() q: YearQueryDto) {
+    return this.posts.yearInReview(user.id, q.year ?? new Date().getUTCFullYear())
   }
 
   @Get('on-this-day')
