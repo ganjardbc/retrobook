@@ -9,6 +9,7 @@ import { useChatStore } from '@/modules/chat/stores'
 import { pokesApi } from '@/modules/pokes/services/api'
 import { useAuthStore } from '@/modules/auth/stores'
 import { useProfileStore } from '@/modules/profile/stores'
+import { useDismissOnOutside } from '@/composables/dismissOnOutside'
 import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
 import ReportDialog from '@/modules/posts/components/ReportDialog.vue'
@@ -17,6 +18,8 @@ const props = defineProps<{ profile: Profile }>()
 const store = useProfileStore()
 const photoError = ref('')
 const moreOpen = ref(false)
+const moreRoot = ref<HTMLElement | null>(null)
+useDismissOnOutside(moreRoot, moreOpen)
 const avatarInput = ref<HTMLInputElement | null>(null)
 const coverInput = ref<HTMLInputElement | null>(null)
 
@@ -119,7 +122,7 @@ async function block() {
         <Button variant="default" to="/me/edit">{{ t('profile.action.updateInfo') }}</Button>
         <Button variant="default" to="/me/activity">{{ t('profile.action.activity') }}</Button>
         <!-- Menu "..." menampung tautan yang jarang dipakai (referensi profil Maret 2015). -->
-        <div class="header__more" @keydown.esc="moreOpen = false">
+        <div ref="moreRoot" class="header__more">
           <Button
             variant="default"
             :aria-label="t('profile.action.more')"
