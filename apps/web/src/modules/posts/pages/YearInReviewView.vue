@@ -67,7 +67,7 @@ onMounted(() => load())
         </dl>
       </template>
     </PageCard>
-    <template v-if="review?.topPost">
+    <template v-if="review?.topPost && review.topPost.likeCount > 0">
       <h2 class="yir__top">{{ t('yir.top') }}</h2>
       <PostCard :post="review.topPost" @updated="onUpdated" />
     </template>

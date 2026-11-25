@@ -18,8 +18,17 @@ export default tseslint.config(
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ['apps/api/**/*.ts', 'packages/**/*.ts', '*.mjs'],
+    files: ['apps/api/**/*.ts', 'packages/**/*.ts', '**/*.mjs'],
     languageOptions: { globals: globals.node },
+  },
+  // Awalan underscore menandai variabel atau argumen yang sengaja tidak dipakai.
+  {
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
+    },
   },
   // CLAUDE.md: jangan pakai v-html untuk konten pengguna.
   { files: ['**/*.vue'], rules: { 'vue/no-v-html': 'error' } },

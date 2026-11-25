@@ -24,10 +24,32 @@ const hash =
 
 const prisma = new PrismaClient()
 let rng = 42 // deterministik supaya hasil bisa dibandingkan antar-jalan
-const rand = (n) => ((rng = (rng * 1664525 + 1013904223) % 4294967296), Math.floor((rng / 4294967296) * n))
+const rand = (n) => (
+  (rng = (rng * 1664525 + 1013904223) % 4294967296),
+  Math.floor((rng / 4294967296) * n)
+)
 
 async function reset() {
-  for (const m of ['auditLog', 'report', 'notification', 'postHashtag', 'postTag', 'like', 'comment', 'post', 'hashtag', 'message', 'poke', 'block', 'friendship', 'refreshToken', 'blockedWord', 'setting', 'announcement', 'user']) {
+  for (const m of [
+    'auditLog',
+    'report',
+    'notification',
+    'postHashtag',
+    'postTag',
+    'like',
+    'comment',
+    'post',
+    'hashtag',
+    'message',
+    'poke',
+    'block',
+    'friendship',
+    'refreshToken',
+    'blockedWord',
+    'setting',
+    'announcement',
+    'user',
+  ]) {
     await prisma[m].deleteMany()
   }
 }
@@ -36,38 +58,73 @@ async function seed() {
   await reset()
   const users = []
   for (let i = 0; i < N_USERS; i++) {
-    users.push(await prisma.user.create({ data: { username: `perf${i}`, displayName: `Perf ${i}`, email: `perf${i}@perf.test`, passwordHash: hash } }))
+    users.push(
+      await prisma.user.create({
+        data: {
+          username: `perf${i}`,
+          displayName: `Perf ${i}`,
+          email: `perf${i}@perf.test`,
+          passwordHash: hash,
+        },
+      }),
+    )
   }
   const pairs = new Set()
   while (pairs.size < N_FRIENDS) {
-    const a = rand(N_USERS), b = rand(N_USERS)
+    const a = rand(N_USERS),
+      b = rand(N_USERS)
     if (a !== b) pairs.add(`${Math.min(a, b)}-${Math.max(a, b)}`)
   }
   for (const key of pairs) {
     const [a, b] = key.split('-').map(Number)
-    await prisma.friendship.create({ data: { requesterId: users[a].id, addresseeId: users[b].id, pairLowId: users[Math.min(a, b)].id, pairHighId: users[Math.max(a, b)].id, status: 'ACCEPTED' } })
+    await prisma.friendship.create({
+      data: {
+        requesterId: users[a].id,
+        addresseeId: users[b].id,
+        pairLowId: users[Math.min(a, b)].id,
+        pairHighId: users[Math.max(a, b)].id,
+        status: 'ACCEPTED',
+      },
+    })
   }
   const privacies = ['PUBLIC', 'FRIENDS', 'FRIENDS', 'ONLY_ME']
   const posts = []
   for (let i = 0; i < N_POSTS; i++) {
-    posts.push(await prisma.post.create({ data: { authorId: users[rand(N_USERS)].id, content: `Post performa ${i} #perf`, privacy: privacies[rand(4)], createdAt: new Date(Date.now() - i * 60_000) } }))
+    posts.push(
+      await prisma.post.create({
+        data: {
+          authorId: users[rand(N_USERS)].id,
+          content: `Post performa ${i} #perf`,
+          privacy: privacies[rand(4)],
+          createdAt: new Date(Date.now() - i * 60_000),
+        },
+      }),
+    )
   }
   for (const post of posts) {
     const likers = new Set()
     for (let k = 0; k < 2; k++) likers.add(rand(N_USERS))
-    for (const l of likers) await prisma.like.create({ data: { userId: users[l].id, postId: post.id } })
-    await prisma.comment.create({ data: { postId: post.id, authorId: users[rand(N_USERS)].id, content: 'komentar performa' } })
+    for (const l of likers)
+      await prisma.like.create({ data: { userId: users[l].id, postId: post.id } })
+    await prisma.comment.create({
+      data: { postId: post.id, authorId: users[rand(N_USERS)].id, content: 'komentar performa' },
+    })
   }
   return users
 }
 
 async function login(username) {
-  const res = await fetch(`${api}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifier: username, password }) })
+  const res = await fetch(`${api}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identifier: username, password }),
+  })
   if (!res.ok) throw new Error(`login ${username} gagal: ${res.status}`)
   return (await res.json()).accessToken
 }
 
-const percentile = (sorted, p) => sorted[Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1)]
+const percentile = (sorted, p) =>
+  sorted[Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1)]
 
 async function measure(label, path, tokens) {
   const times = []
@@ -75,7 +132,9 @@ async function measure(label, path, tokens) {
     await Promise.all(
       Array.from({ length: PARALLEL }, async (_, i) => {
         const start = performance.now()
-        const res = await fetch(`${api}${path(i)}`, { headers: { Authorization: `Bearer ${tokens[i % tokens.length]}` } })
+        const res = await fetch(`${api}${path(i)}`, {
+          headers: { Authorization: `Bearer ${tokens[i % tokens.length]}` },
+        })
         await res.arrayBuffer()
         if (!res.ok) throw new Error(`${label}: ${res.status}`)
         times.push(performance.now() - start)
@@ -84,7 +143,9 @@ async function measure(label, path, tokens) {
   }
   times.sort((a, b) => a - b)
   const p95 = percentile(times, 95)
-  console.info(`${label.padEnd(24)} n=${times.length} p50=${percentile(times, 50).toFixed(0)}ms p95=${p95.toFixed(0)}ms max=${times.at(-1).toFixed(0)}ms ${p95 < THRESHOLD_MS ? 'OK' : 'LEWAT AMBANG'}`)
+  console.info(
+    `${label.padEnd(24)} n=${times.length} p50=${percentile(times, 50).toFixed(0)}ms p95=${p95.toFixed(0)}ms max=${times.at(-1).toFixed(0)}ms ${p95 < THRESHOLD_MS ? 'OK' : 'LEWAT AMBANG'}`,
+  )
   return p95
 }
 
@@ -93,7 +154,9 @@ async function paginationCheck(token) {
   const seen = new Set()
   let cursor = null
   for (let page = 0; page < 100; page++) {
-    const res = await fetch(`${api}/api/feed?limit=10${cursor ? `&cursor=${cursor}` : ''}`, { headers: { Authorization: `Bearer ${token}` } })
+    const res = await fetch(`${api}/api/feed?limit=10${cursor ? `&cursor=${cursor}` : ''}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
     const body = await res.json()
     for (const item of body.items) {
       if (seen.has(item.id)) throw new Error(`id ganda di feed: ${item.id}`)
@@ -112,7 +175,11 @@ try {
   await paginationCheck(tokens[0])
   const worst = Math.max(
     await measure('GET /feed?limit=10', () => '/api/feed?limit=10', tokens),
-    await measure('GET /users/:u/posts', (i) => `/api/users/perf${i % N_USERS}/posts?limit=10`, tokens),
+    await measure(
+      'GET /users/:u/posts',
+      (i) => `/api/users/perf${i % N_USERS}/posts?limit=10`,
+      tokens,
+    ),
     // T-88: endpoint pasca-R4 dan sort=top (agregat like, batas yang diketahui sejak T-63).
     await measure('GET /feed?sort=top', () => '/api/feed?limit=10&sort=top', tokens),
     await measure('GET /search/posts', () => '/api/search/posts?q=performa&limit=10', tokens),

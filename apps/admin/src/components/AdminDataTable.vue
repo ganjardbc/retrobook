@@ -5,7 +5,7 @@ export type TableColumn<T> = {
   align?: 'left' | 'right'
   width?: string
 }
-const props = withDefaults(
+withDefaults(
   defineProps<{
     columns: TableColumn<Record<string, unknown>>[]
     rows: Record<string, unknown>[]

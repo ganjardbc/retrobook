@@ -165,7 +165,7 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 | [x] T-87 | Audit privasi endpoint baru (album, grup, event, notes, life event, saved) | R-03 |
 | [x] T-88 | Performa feed dengan seeder besar (N+1, indeks) | NFR |
 | [x] T-89 | Polish: favicon SVG sementara (huruf "r" putih di warna brand; ganti bersama logo, D-1), loading state sudah ada (`LoadingRows`) dan kini menghormati reduced-motion. Ikon sprite sendiri ditunda: ikon masih Iconify `mdi` dan menunggu keputusan logo | UX |
-| [ ] T-90 | Skrip dan video demo untuk konten Coderium | demo |
+| [x] T-90 | Skrip demo `scripts/phase4-demo.mjs` (Save, On This Day, Year in Review, cari isi post) merekam `docs/demo/phase4-demo.webm` dan empat tangkapan layar; bisa diulang. Video penuh bergaya konten Coderium (Hyperframes) belum dibuat | demo |
 
 ## Keputusan yang harus diambil (blokir)
 

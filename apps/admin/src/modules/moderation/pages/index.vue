@@ -230,7 +230,7 @@ async function bulk(action: 'hide' | 'show' | 'delete') {
         ><span v-else class="moderation-state moderation-state--visible">Tampil</span></template
       >
       <template #actions="{ row }"
-        ><div class="moderation-actions" v-if="!item(row).deletedAt">
+        ><div v-if="!item(row).deletedAt" class="moderation-actions">
           <button
             class="row-action"
             :title="item(row).hidden ? 'Tampilkan kembali' : 'Sembunyikan'"

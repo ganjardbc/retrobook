@@ -91,10 +91,8 @@ describe('Semua rute admin menolak non-admin (ADM-01)', () => {
     const user = await h.mkUser('biasa')
     const bad: string[] = []
     for (const { method, path } of routes) {
-      const asUser = await request(app.getHttpServer())
-        [method](path)
-        .set('Authorization', `Bearer ${h.tokenOf(user)}`)
-        .send({})
+      const call = request(app.getHttpServer())[method](path)
+      const asUser = await call.set('Authorization', `Bearer ${h.tokenOf(user)}`).send({})
       const anon = await request(app.getHttpServer())[method](path).send({})
       if (asUser.status !== 403) bad.push(`${method.toUpperCase()} ${path} user=${asUser.status}`)
       if (anon.status !== 401) bad.push(`${method.toUpperCase()} ${path} anon=${anon.status}`)
