@@ -305,6 +305,59 @@ describe('Pesan (integrasi)', () => {
     })
   })
 
+  describe('Clear chat dan hapus sesi (per pengguna)', () => {
+    const texts = async (u: User, other: User) =>
+      (await h.as(u).get(`/messages/${other.id}`)).body.items.map(
+        (m: { content: string }) => m.content,
+      )
+
+    it('clear: riwayat kosong bagi saya, utuh bagi lawan; pesan baru muncul lagi', async () => {
+      const { a, b } = await pair()
+      await send(a, b, '1')
+      await send(b, a, '2')
+      const res = await h.as(a).del(`/messages/${b.id}/history`)
+      expect(res.status).toBe(204)
+      expect(await texts(a, b)).toEqual([])
+      expect(await texts(b, a)).toEqual(['2', '1'])
+      expect((await h.as(a).get('/messages/conversations')).body.items).toHaveLength(0)
+      expect((await h.as(a).get('/messages/unread-count')).body).toEqual({ count: 0 })
+      await new Promise((r) => setTimeout(r, 5))
+      await send(b, a, '3')
+      expect(await texts(a, b)).toEqual(['3'])
+      expect((await h.as(a).get('/messages/conversations')).body.items).toHaveLength(1)
+    })
+
+    it('hapus sesi: chat friends menandai hidden sampai ada pesan baru; lawan tak terpengaruh', async () => {
+      const { a, b } = await pair()
+      await send(a, b, '1')
+      expect((await h.as(a).del(`/messages/${b.id}`)).status).toBe(204)
+      const hidden = async (u: User) =>
+        (await h.as(u).get('/chat/friends')).body.items[0].hidden as boolean
+      expect(await hidden(a)).toBe(true)
+      expect(await hidden(b)).toBe(false)
+      expect(await texts(b, a)).toEqual(['1'])
+      await new Promise((r) => setTimeout(r, 5))
+      await send(b, a, '2')
+      expect(await hidden(a)).toBe(false)
+    })
+
+    it('clear saja tidak menyembunyikan teman dari daftar Messages', async () => {
+      const { a, b } = await pair()
+      await send(a, b, '1')
+      await h.as(a).del(`/messages/${b.id}/history`)
+      expect((await h.as(a).get('/chat/friends')).body.items[0].hidden).toBe(false)
+    })
+
+    it('bukan teman atau diri sendiri: 404 dan 422; tanpa token 401', async () => {
+      const a = await h.mkUser('a')
+      const c = await h.mkUser('c')
+      expect((await h.as(a).del(`/messages/${c.id}`)).status).toBe(404)
+      expect((await h.as(a).del(`/messages/${c.id}/history`)).status).toBe(404)
+      expect((await h.as(a).del(`/messages/${a.id}`)).status).toBe(422)
+      expect((await request(app.getHttpServer()).delete(`/api/messages/${c.id}`)).status).toBe(401)
+    })
+  })
+
   describe('GET /chat/friends (sidebar)', () => {
     const connectAs = async (u: User, client?: string) => {
       const s = io(url, {

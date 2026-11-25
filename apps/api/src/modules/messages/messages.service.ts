@@ -97,8 +97,16 @@ export class MessagesService {
     cursor?: number,
   ): Promise<Paged<ChatMessage>> {
     await this.assertPartner(viewerId, otherId)
+    const state = await this.prisma.conversationState.findUnique({
+      where: { userId_peerId: { userId: viewerId, peerId: otherId } },
+    })
     const rows = await this.prisma.message.findMany({
-      where: { deletedAt: null, ...this.between(viewerId, otherId) },
+      where: {
+        deletedAt: null,
+        // Clear chat: pesan sebelum waktu bersih tidak tampil lagi bagi pemiliknya.
+        ...(state ? { createdAt: { gt: state.clearedAt } } : {}),
+        ...this.between(viewerId, otherId),
+      },
       orderBy: { id: 'desc' },
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -138,13 +146,17 @@ export class MessagesService {
     // Satu baris per lawan bicara: id pesan terbaru; MySQL tidak punya DISTINCT ON, jadi GROUP BY.
     const ids = Prisma.join(friends)
     const latest = await this.prisma.$queryRaw<{ id: number }[]>(Prisma.sql`
-      SELECT MAX(id) AS id FROM messages
-      WHERE deleted_at IS NULL
-        AND ((sender_id = ${viewerId} AND receiver_id IN (${ids}))
-          OR (receiver_id = ${viewerId} AND sender_id IN (${ids})))
-      GROUP BY IF(sender_id = ${viewerId}, receiver_id, sender_id)
-      ${cursor ? Prisma.sql`HAVING MAX(id) < ${cursor}` : Prisma.empty}
-      ORDER BY id DESC
+      SELECT MAX(m.id) AS id FROM messages m
+      LEFT JOIN conversation_states cs
+        ON cs.user_id = ${viewerId}
+       AND cs.peer_id = IF(m.sender_id = ${viewerId}, m.receiver_id, m.sender_id)
+      WHERE m.deleted_at IS NULL
+        AND (cs.cleared_at IS NULL OR m.created_at > cs.cleared_at)
+        AND ((m.sender_id = ${viewerId} AND m.receiver_id IN (${ids}))
+          OR (m.receiver_id = ${viewerId} AND m.sender_id IN (${ids})))
+      GROUP BY IF(m.sender_id = ${viewerId}, m.receiver_id, m.sender_id)
+      ${cursor ? Prisma.sql`HAVING MAX(m.id) < ${cursor}` : Prisma.empty}
+      ORDER BY MAX(m.id) DESC
       LIMIT ${limit + 1}`)
     const page = latest.slice(0, limit).map((r) => Number(r.id))
     if (page.length === 0) return { items: [], nextCursor: null }
@@ -184,6 +196,7 @@ export class MessagesService {
     })
     if (users.length === 0) return { items: [] }
     const ids = users.map((u) => u.id)
+    const hidden = await this.hiddenPeers(viewerId, ids)
     const [online, unread] = await Promise.all([
       this.realtime.onlineClients(ids),
       this.prisma.message.groupBy({
@@ -200,9 +213,60 @@ export class MessagesService {
       lastSeenAt: lastSeenAt?.toISOString() ?? null,
       client: online.get(user.id) ?? null,
       unreadCount: unreadBy.get(user.id) ?? 0,
+      hidden: hidden.has(user.id),
     }))
     // sort stabil: urutan nama dari query dipertahankan di dalam kelompok online dan offline
     return { items: [...items.filter((i) => i.online), ...items.filter((i) => !i.online)] }
+  }
+
+  /**
+   * Clear chat: riwayat sampai sekarang disembunyikan dari saya saja; lawan bicara tidak terpengaruh.
+   * Pesan masuk yang belum dibaca ikut dianggap terbaca (tanpa memberi tahu pengirim) supaya badge tidak
+   * menghitung pesan yang sudah tidak tampil.
+   */
+  async clear(viewerId: number, otherId: number): Promise<void> {
+    await this.assertPartner(viewerId, otherId)
+    await this.setState(viewerId, otherId, false)
+  }
+
+  /** Hapus sesi: seperti clear, ditambah percakapan hilang dari daftar Messages sampai ada pesan baru. */
+  async remove(viewerId: number, otherId: number): Promise<void> {
+    await this.assertPartner(viewerId, otherId)
+    await this.setState(viewerId, otherId, true)
+  }
+
+  private async setState(viewerId: number, otherId: number, hide: boolean) {
+    const now = new Date()
+    await this.prisma.$transaction([
+      this.prisma.conversationState.upsert({
+        where: { userId_peerId: { userId: viewerId, peerId: otherId } },
+        create: { userId: viewerId, peerId: otherId, clearedAt: now, hiddenAt: hide ? now : null },
+        update: { clearedAt: now, hiddenAt: hide ? now : null },
+      }),
+      this.prisma.message.updateMany({
+        where: { senderId: otherId, receiverId: viewerId, readAt: null, deletedAt: null },
+        data: { readAt: now },
+      }),
+    ])
+  }
+
+  /** Teman yang sesinya dihapus dan belum ada pesan baru sesudahnya. */
+  private async hiddenPeers(viewerId: number, peerIds: number[]): Promise<Set<number>> {
+    const states = await this.prisma.conversationState.findMany({
+      where: { userId: viewerId, peerId: { in: peerIds }, hiddenAt: { not: null } },
+    })
+    const revived = await Promise.all(
+      states.map((s) =>
+        this.prisma.message.count({
+          where: {
+            deletedAt: null,
+            createdAt: { gt: s.hiddenAt! },
+            ...this.between(viewerId, s.peerId),
+          },
+        }),
+      ),
+    )
+    return new Set(states.filter((_, i) => revived[i] === 0).map((s) => s.peerId))
   }
 
   /** Total pesan belum dibaca dari teman (badge jewel pesan). */

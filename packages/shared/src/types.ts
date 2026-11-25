@@ -147,6 +147,8 @@ export type ChatFriend = {
   /** Terakhir terlihat (ISO); dipakai untuk label "24m" pada teman offline. */
   lastSeenAt: string | null
   unreadCount: number
+  /** Sesi dihapus dan belum ada pesan baru: disembunyikan dari daftar Messages. */
+  hidden: boolean
 }
 
 /** Satu baris daftar percakapan (`GET /messages/conversations`). */

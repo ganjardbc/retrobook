@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -67,6 +68,20 @@ export class MessagesController {
     )
     res.status(duplicate ? 200 : 201)
     return message
+  }
+
+  /** Clear chat: sembunyikan riwayat dari saya saja. */
+  @Delete(':userId/history')
+  @HttpCode(204)
+  async clear(@CurrentUser() user: AuthUser, @Param('userId', ParseIntPipe) userId: number) {
+    await this.messages.clear(user.id, userId)
+  }
+
+  /** Hapus sesi chat: seperti clear, dan hilang dari daftar Messages saya. */
+  @Delete(':userId')
+  @HttpCode(204)
+  async remove(@CurrentUser() user: AuthUser, @Param('userId', ParseIntPipe) userId: number) {
+    await this.messages.remove(user.id, userId)
   }
 
   @Post(':userId/read')

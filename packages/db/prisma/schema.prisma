@@ -123,6 +123,8 @@ model User {
   pokesReceived        Poke[]         @relation("PokeTo")
   messagesSent         Message[]      @relation("MessageSender")
   messagesReceived     Message[]      @relation("MessageReceiver")
+  conversationStates   ConversationState[] @relation("ConvStateOwner")
+  conversationStatesOf ConversationState[] @relation("ConvStatePeer")
   notifications        Notification[] @relation("NotifRecipient")
   notificationsAsActor Notification[] @relation("NotifActor")
   blocksMade           Block[]        @relation("Blocker")
@@ -353,6 +355,21 @@ model Message {
   @@index([senderId, receiverId, createdAt])
   @@index([receiverId, readAt])
   @@map("messages")
+}
+
+/// Status percakapan per pengguna: Clear chat (cleared_at) dan Hapus sesi (hidden_at) hanya berlaku untuk pemiliknya.
+model ConversationState {
+  userId    Int       @map("user_id")
+  peerId    Int       @map("peer_id")
+  clearedAt DateTime  @default(now()) @map("cleared_at")
+  hiddenAt  DateTime? @map("hidden_at")
+
+  user User @relation("ConvStateOwner", fields: [userId], references: [id], onDelete: Restrict)
+  peer User @relation("ConvStatePeer", fields: [peerId], references: [id], onDelete: Restrict)
+
+  @@id([userId, peerId])
+  @@index([peerId])
+  @@map("conversation_states")
 }
 
 model Notification {

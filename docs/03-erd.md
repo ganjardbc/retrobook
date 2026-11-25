@@ -193,6 +193,17 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 | created_at  | DATETIME | NOT NULL              |               |
 | deleted_at  | DATETIME | null                  |               |
 
+### conversation_states
+
+Status percakapan per pengguna; baris dibuat saat Clear chat atau Hapus sesi. Tidak memengaruhi lawan bicara.
+
+| Kolom      | Tipe     | Constraint            | Keterangan                                                                 |
+|------------|----------|-----------------------|----------------------------------------------------------------------------|
+| user_id    | INT      | PK, FK users.id       | Pemilik status                                                             |
+| peer_id    | INT      | PK, FK users.id       | Lawan bicara                                                               |
+| cleared_at | DATETIME | NOT NULL              | Pesan dengan `created_at` <= nilai ini tidak tampil bagi `user_id`          |
+| hidden_at  | DATETIME | null                  | Hapus sesi: disembunyikan dari daftar Messages sampai ada pesan sesudahnya |
+
 ### notifications
 
 | Kolom           | Tipe                                                                                   | Constraint                | Keterangan                      |
@@ -309,6 +320,7 @@ Semua FK ke users memakai RESTRICT karena user tidak pernah dihapus fisik (soft 
 | users ke likes                                             | 1 ke banyak                                      | user_id                              | RESTRICT                                                       |
 | posts ke saved_posts                                       | 1 ke banyak                                      | post_id                              | CASCADE                                                        |
 | users ke saved_posts                                       | 1 ke banyak                                      | user_id                              | RESTRICT                                                       |
+| users ke conversation_states (user_id dan peer_id)         | 1 ke banyak                                      | user_id, peer_id                     | RESTRICT                                                       |
 | posts ke post_tags                                         | 1 ke banyak                                      | post_id                              | CASCADE                                                        |
 | users ke post_tags                                         | 1 ke banyak                                      | user_id                              | RESTRICT                                                       |
 | posts ke post_hashtags                                     | 1 ke banyak                                      | post_id                              | CASCADE                                                        |
