@@ -29,8 +29,10 @@ a { color: inherit; text-decoration: none; }
 .brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 10px; background: #6381b8; color: white; font-family: Georgia, serif; font-size: 24px; font-style: italic; line-height: 1; }
 .sidebar-brand { margin: 0 10px 48px; }
 .workspace-label { padding: 0 11px; margin: 0 0 11px; color: #8594aa; font-size: 9px; font-weight: 750; letter-spacing: 1.35px; }
-.side-nav { display: grid; gap: 5px; }
-.nav-link { position: relative; display: flex; align-items: center; min-height: 43px; gap: 12px; padding: 0 11px; color: #bfcbdb; border-radius: 7px; font-size: 12px; font-weight: 560; transition: background .15s, color .15s; }
+.side-nav { display: grid; gap: 14px; flex: 1; min-height: 0; overflow-y: auto; align-content: start; padding-right: 2px; }
+.nav-group { display: grid; gap: 3px; }
+.nav-group .workspace-label { margin: 0 0 4px; }
+.nav-link { position: relative; display: flex; align-items: center; min-height: 38px; gap: 12px; padding: 0 11px; color: #bfcbdb; border-radius: 7px; font-size: 12px; font-weight: 560; transition: background .15s, color .15s; }
 .nav-link:hover { color: white; background: rgb(255 255 255 / 7%); }
 .nav-link--active { color: white; background: #2b4265; }
 .nav-link--active::before { position: absolute; inset: 9px auto 9px 0; width: 3px; border-radius: 3px; background: #8eabd7; content: ''; }
@@ -39,8 +41,8 @@ a { color: inherit; text-decoration: none; }
 .nav-link--muted { color: #9ba9bc; }
 .nav-link[aria-disabled='true'] { cursor: default; }
 .nav-soon { margin-left: auto; padding: 3px 5px; border-radius: 4px; background: rgb(255 255 255 / 8%); color: #9cabbe; font-size: 7px; font-weight: 750; letter-spacing: .6px; }
-.sidebar-bottom { margin-top: auto; }
-.sidebar-note { display: flex; align-items: center; gap: 8px; margin: 21px 9px 1px; padding: 14px 10px; border-top: 1px solid rgb(255 255 255 / 10%); color: #a3b3c7; font-size: 10px; }
+.sidebar-bottom { margin-top: 8px; flex: none; }
+.sidebar-note { display: flex; align-items: center; gap: 8px; margin: 8px 9px 1px; padding: 14px 10px; border-top: 1px solid rgb(255 255 255 / 10%); color: #a3b3c7; font-size: 10px; }
 .status-dot, .environment-tag i { width: 7px; height: 7px; border-radius: 50%; background: #70c49b; box-shadow: 0 0 0 3px rgb(112 196 155 / 13%); }
 .shell-main { min-height: 100vh; margin-left: 248px; display: flex; flex-direction: column; }
 .topbar { position: sticky; top: 0; z-index: 10; height: 67px; display: flex; align-items: center; justify-content: space-between; padding: 0 37px; border-bottom: 1px solid #e9edf3; background: rgb(255 255 255 / 94%); backdrop-filter: blur(12px); }
