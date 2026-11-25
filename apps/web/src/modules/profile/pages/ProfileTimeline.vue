@@ -93,15 +93,20 @@ function onWallPosted(post: Parameters<typeof list.prepend>[0]) {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  gap: var(--sp-3);
+}
+/* Jarak ke panel tahun hanya bila panelnya ada; tanpa itu timeline selebar header. */
+.timeline-wrap > :last-child:not(:first-child) {
+  margin-left: var(--sp-3);
 }
 @media (max-width: 900px) {
   .timeline-wrap {
     grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-3);
   }
   /* Layar sempit: tahun di atas timeline. */
-  .timeline-wrap > :last-child {
+  .timeline-wrap > :last-child:not(:first-child) {
     order: -1;
+    margin-left: 0;
   }
 }
 .timeline {
