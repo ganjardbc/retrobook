@@ -72,28 +72,72 @@ describe('CommentList', () => {
     expect(w.text()).not.toContain('View 2 comments') // tautan hilang setelah dibuka
   })
 
-  it('autoOpen (detail post): semua halaman dimuat otomatis, tanpa tautan View', async () => {
+  const autoOpenMount = (commentCount: number) =>
+    mount(CommentList, {
+      props: { postId: '1', postAuthorId: '9', commentCount, autoOpen: true },
+      global: { plugins: [router()] },
+    })
+
+  it('autoOpen (detail post): halaman pertama dimuat otomatis; berikutnya saat sentinel terlihat', async () => {
+    let onIntersect: (entries: { isIntersecting: boolean }[]) => void = () => {}
+    const observe = vi.fn()
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(cb: typeof onIntersect) {
+          onIntersect = cb
+        }
+        observe = observe
+        unobserve = vi.fn()
+        disconnect = vi.fn()
+      },
+    )
     const list = vi
       .spyOn(commentsApi, 'list')
       .mockResolvedValueOnce({ items: [mk('1'), mk('2')], nextCursor: '2' })
       .mockResolvedValueOnce({ items: [mk('3')], nextCursor: null })
-    const w = mount(CommentList, {
-      props: { postId: '1', postAuthorId: '9', commentCount: 3, autoOpen: true },
-      global: { plugins: [router()] },
-    })
+    const w = autoOpenMount(3)
     await flushPromises()
-    expect(list).toHaveBeenCalledTimes(2)
+    expect(list).toHaveBeenCalledTimes(1) // belum di-scroll
+    expect(w.findAll('.comment')).toHaveLength(2)
+    expect(w.text()).not.toContain('View')
+    expect(observe).toHaveBeenCalled()
+
+    onIntersect([{ isIntersecting: false }])
+    await flushPromises()
+    expect(list).toHaveBeenCalledTimes(1)
+    onIntersect([{ isIntersecting: true }])
+    await flushPromises()
     expect(list.mock.calls[1]![1]).toBe('2')
     expect(w.findAll('.comment')).toHaveLength(3)
-    expect(w.text()).not.toContain('View')
+    expect(w.find('.comments__sentinel').exists()).toBe(false) // habis
+    vi.unstubAllGlobals()
+  })
+
+  it('autoOpen tanpa IntersectionObserver: halaman pertama otomatis, sisanya lewat tombol', async () => {
+    const list = vi
+      .spyOn(commentsApi, 'list')
+      .mockResolvedValueOnce({ items: [mk('1')], nextCursor: '1' })
+    const w = autoOpenMount(2)
+    await flushPromises()
+    expect(w.findAll('.comment')).toHaveLength(1)
+    expect(w.text()).toContain('View more comments')
+    expect(list).toHaveBeenCalledTimes(1)
+  })
+
+  it('meta komentar: titik memisahkan waktu, Like, Delete, dan Report', async () => {
+    useAuthStore().user = { id: '9', username: 'me', displayName: 'Me' } // pemilik post, bukan penulis komentar
+    vi.spyOn(commentsApi, 'list').mockResolvedValueOnce({ items: [mk('1', '2')], nextCursor: null })
+    const w = autoOpenMount(1)
+    await flushPromises()
+    const meta = w.find('.comment__meta')
+    expect(meta.findAll('button').map((b) => b.text())).toEqual(['Like', 'Delete', 'Report'])
+    expect(meta.findAll('[aria-hidden="true"]').filter((e) => e.text() === '·')).toHaveLength(3)
   })
 
   it('autoOpen tanpa komentar: tidak memanggil server', async () => {
     const list = vi.spyOn(commentsApi, 'list')
-    mount(CommentList, {
-      props: { postId: '1', postAuthorId: '9', commentCount: 0, autoOpen: true },
-      global: { plugins: [router()] },
-    })
+    autoOpenMount(0)
     await flushPromises()
     expect(list).not.toHaveBeenCalled()
   })

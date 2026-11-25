@@ -2,7 +2,7 @@
 import type { Comment } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ApiRequestError } from '@/plugins/http'
 import { commentsApi } from '@/modules/posts/services/comments'
@@ -18,7 +18,7 @@ const props = defineProps<{
   postId: string
   postAuthorId: string
   commentCount: number
-  /** Detail post: buka dan muat semua komentar otomatis. */
+  /** Detail post: buka otomatis dan muat halaman berikutnya saat di-scroll. */
   autoOpen?: boolean
 }>()
 const emit = defineEmits<{ 'count-change': [delta: number] }>()
@@ -68,14 +68,33 @@ async function load(first: boolean) {
   }
 }
 
-/** Muat semua halaman (detail post). Berhenti bila gagal; batas halaman menjaga dari kursor yang tak habis. */
-async function loadAll() {
-  await load(true)
-  for (let page = 0; page < 100 && nextCursor.value && !error.value; page++) await load(false)
-}
+// Detail post: halaman pertama dimuat otomatis, berikutnya saat sentinel di bawah daftar terlihat.
+// Tanpa IntersectionObserver, tombol "View more comments" tetap dipakai.
+const infinite = props.autoOpen && typeof IntersectionObserver !== 'undefined'
+const sentinel = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | undefined
 onMounted(() => {
-  if (props.autoOpen && props.commentCount > 0) void loadAll()
+  if (props.autoOpen && props.commentCount > 0) void load(true)
+  if (!infinite) return
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((e) => e.isIntersecting) && nextCursor.value) void load(false)
+    },
+    { rootMargin: '200px' },
+  )
 })
+onBeforeUnmount(() => observer?.disconnect())
+// Amati ulang setelah tiap halaman: sentinel yang masih terlihat tidak memicu kejadian baru sendiri.
+function watchSentinel() {
+  if (!observer) return
+  observer.disconnect()
+  if (sentinel.value) observer.observe(sentinel.value)
+}
+watch(sentinel, watchSentinel)
+watch(
+  () => comments.value.length,
+  () => void nextTick(watchSentinel),
+)
 
 async function send() {
   const content = draft.value
@@ -195,29 +214,26 @@ defineExpose({ focusInput: () => input.value?.focus() })
                 <Icon icon="mdi:thumb-up-outline" aria-hidden="true" />{{ c.likeCount }}
               </span>
             </template>
-            <button
-              v-if="canDelete(c)"
-              class="comments__link comments__delete"
-              type="button"
-              @click="remove(c)"
-            >
-              {{ t('comments.delete') }}
-            </button>
-            <button
-              v-if="canReport(c)"
-              class="comments__link"
-              type="button"
-              @click="reportingId = c.id"
-            >
-              {{ t('report.action') }}
-            </button>
+            <template v-if="canDelete(c)">
+              <span aria-hidden="true">·</span>
+              <button class="comments__link comments__delete" type="button" @click="remove(c)">
+                {{ t('comments.delete') }}
+              </button>
+            </template>
+            <template v-if="canReport(c)">
+              <span aria-hidden="true">·</span>
+              <button class="comments__link" type="button" @click="reportingId = c.id">
+                {{ t('report.action') }}
+              </button>
+            </template>
           </div>
         </div>
       </li>
     </ul>
 
+    <div v-if="infinite && expanded && nextCursor" ref="sentinel" class="comments__sentinel" />
     <button
-      v-if="expanded && nextCursor"
+      v-else-if="expanded && nextCursor"
       class="comments__link"
       type="button"
       :disabled="loading"
@@ -340,6 +356,9 @@ defineExpose({ focusInput: () => input.value?.focus() })
   color: var(--c-link);
   font: inherit;
   cursor: pointer;
+}
+.comments__sentinel {
+  height: 1px;
 }
 .comments__link:hover:not(:disabled) {
   text-decoration: underline;
