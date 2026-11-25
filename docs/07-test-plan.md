@@ -206,3 +206,9 @@ Karena target visual adalah era 2015, setiap fase diakhiri satu sesi pembandinga
 Satu workflow: pasang PNPM, `prisma migrate deploy` ke MySQL layanan, `pnpm lint`, `pnpm -r test` (Jest dan Vitest), `pnpm build`, lalu Playwright terhadap compose uji. E2E dijalankan pada pull request ke `main` dan sebelum rilis; unit dan integrasi pada setiap push.
 
 Status album, grup, event: `albums.spec.ts`, `groups.spec.ts`, `events.spec.ts` (integrasi) menguji privasi album, blokir, IDOR unggah foto, post grup untuk anggota non-teman, grup CLOSED tidak bisa dimasuki sendiri, admin terakhir grup, dan RSVP.
+
+## Lampiran: audit privasi Fase 3 (T-87)
+
+Semua pembaca post, komentar, like, dan simpanan sudah lewat `VisibilityService`. Audit album, grup, event, notes, dan life event menemukan satu celah: grup publik dari kreator yang berpasangan blokir dengan pemirsa masih muncul di saran grup, `GET /groups/:id`, dan `join` (BR-11). Diperbaiki di `GroupsService` (anggota yang sudah ada tetap bisa membuka grupnya) dan dikunci oleh `apps/api/src/modules/visibility/privacy-audit.spec.ts`.
+
+Sisa yang disengaja dan belum diubah: event tidak punya field privasi (terlihat oleh semua member selain kreator BANNED atau terblokir), serta jumlah anggota grup dan RSVP GOING menghitung semua akun tanpa menyaring BANNED atau terblokir.

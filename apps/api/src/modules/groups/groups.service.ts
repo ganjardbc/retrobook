@@ -4,6 +4,7 @@ import type { GroupSummary } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
 import { PostsService } from '../posts/posts.service'
+import { VisibilityService } from '../visibility/visibility.service'
 import type { CreateGroupDto } from './dto/group.dto'
 
 const groupInclude = (userId: number) =>
@@ -17,6 +18,7 @@ export class GroupsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly postsService: PostsService,
+    private readonly visibility: VisibilityService,
   ) {}
 
   async list(userId: number): Promise<{ items: GroupSummary[]; suggested: GroupSummary[] }> {
@@ -30,7 +32,8 @@ export class GroupsService {
         where: {
           privacy: 'PUBLIC',
           members: { none: { userId } },
-          creator: { deletedAt: null, status: 'ACTIVE' },
+          // BR-11: kreator yang berpasangan blokir dengan pemirsa tidak ditemukan.
+          creator: { AND: [this.visibility.userWhere(userId), { status: 'ACTIVE' }] },
         },
         orderBy: [{ members: { _count: 'desc' } }, { createdAt: 'desc' }],
         take: 12,
@@ -65,8 +68,14 @@ export class GroupsService {
     const group = await this.prisma.group.findFirst({
       where: {
         id: groupId,
-        creator: { deletedAt: null, status: { not: 'BANNED' } },
-        OR: [{ privacy: 'PUBLIC' }, { members: { some: { userId } } }],
+        // Anggota tetap bisa membuka grupnya; non-anggota hanya melihat grup publik dari kreator yang tidak terblokir.
+        OR: [
+          { privacy: 'PUBLIC', creator: this.visibility.userWhere(userId) },
+          {
+            members: { some: { userId } },
+            creator: { deletedAt: null, status: { not: 'BANNED' } },
+          },
+        ],
       },
       include: groupInclude(userId),
     })
@@ -80,7 +89,7 @@ export class GroupsService {
       where: {
         id: groupId,
         privacy: 'PUBLIC',
-        creator: { deletedAt: null, status: { not: 'BANNED' } },
+        creator: this.visibility.userWhere(userId),
       },
     })
     if (!group) throw this.notFound()
