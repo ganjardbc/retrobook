@@ -59,6 +59,9 @@ onMounted(() => void load())
       <template #actions>
         <RouterLink to="/groups">{{ t('groups.title') }}</RouterLink>
         <template v-if="group">
+          <RouterLink v-if="group.isAdmin" :to="`/groups/${group.id}/edit`">{{
+            t('groups.edit')
+          }}</RouterLink>
           <Button v-if="!group.isMember && group.privacy === 'PUBLIC'" @click="join">{{
             t('groups.join')
           }}</Button>
@@ -69,7 +72,7 @@ onMounted(() => void load())
       </template>
       <p v-if="error" class="form-error" role="alert">{{ error }}</p>
       <div v-if="group" class="about">
-        <Avatar :name="group.name" size="ml" />
+        <Avatar :name="group.name" :src="group.avatarUrl" size="ml" />
         <div class="about__text">
           <span class="about__meta"
             >{{

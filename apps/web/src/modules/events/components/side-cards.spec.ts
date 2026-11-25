@@ -24,6 +24,8 @@ const group = (id: number, name: string): GroupSummary => ({
   createdAt: '2026-01-01T00:00:00.000Z',
   memberCount: 4,
   isMember: false,
+  avatarUrl: null,
+  isAdmin: false,
 })
 
 beforeEach(() => vi.resetAllMocks())

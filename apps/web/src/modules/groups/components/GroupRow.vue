@@ -16,6 +16,7 @@ const meta = computed(() => {
   <EntityRow
     :name="group.name"
     :to="`/groups/${group.id}`"
+    :avatar-src="group.avatarUrl"
     :meta="meta"
     :description="compact ? undefined : group.description"
     :compact="compact"

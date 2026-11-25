@@ -26,6 +26,12 @@ export default [
     meta: { app: true },
   },
   {
+    path: '/groups/:id/edit',
+    name: 'group-edit',
+    component: () => import('@/modules/groups/pages/GroupEditView.vue'),
+    meta: { app: true },
+  },
+  {
     path: '/albums',
     name: 'albums',
     component: () => import('@/modules/profile/pages/AlbumsView.vue'),
