@@ -45,6 +45,7 @@ onBeforeUnmount(() => {
     <button
       ref="button"
       class="jewel__btn"
+      :class="{ 'jewel__btn--on': badge }"
       type="button"
       aria-haspopup="true"
       :aria-expanded="open"
@@ -73,9 +74,15 @@ onBeforeUnmount(() => {
   padding: var(--sp-1) var(--sp-2);
   border: 0;
   background: none;
-  color: var(--c-text-on-brand);
+  /* Tanpa kabar: ikon gelap (referensi 2019); ada kabar: terang. */
+  color: var(--c-brand-dark);
   font-size: 16px;
   cursor: pointer;
+}
+.jewel__btn--on,
+.jewel__btn:hover,
+.jewel__btn[aria-expanded='true'] {
+  color: var(--c-text-on-brand);
 }
 .jewel__btn:hover,
 .jewel__btn[aria-expanded='true'] {
