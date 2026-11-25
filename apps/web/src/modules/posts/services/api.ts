@@ -20,6 +20,8 @@ export const postsApi = {
     id: number,
     input: { content: string; privacy: Privacy; feeling?: PostFeeling | null },
   ) => request<Post>(`/posts/${id}`, { method: 'PATCH', body: input }),
+  get: (id: number) => request<Post>(`/posts/${id}`),
+  related: (id: number) => request<Post[]>(`/posts/${id}/related`),
   like: (id: number) =>
     request<{ likeCount: number; likedByMe: boolean }>(`/posts/${id}/like`, { method: 'PUT' }),
   unlike: (id: number) =>

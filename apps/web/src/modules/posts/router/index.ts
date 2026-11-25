@@ -1,5 +1,11 @@
 export default [
   {
+    path: '/posts/:id',
+    name: 'post-detail',
+    component: () => import('@/modules/posts/pages/PostDetailView.vue'),
+    meta: { app: true },
+  },
+  {
     path: '/saved',
     name: 'saved',
     component: () => import('@/modules/posts/pages/SavedView.vue'),

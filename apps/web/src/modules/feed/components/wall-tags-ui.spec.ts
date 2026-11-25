@@ -51,7 +51,21 @@ describe('PostCard: wall post dan tag', () => {
     useAuthStore().user = { id: me.id, username: me.username, displayName: me.displayName }
     return mount(PostCard, { props: { post }, global: { plugins: [router()] } })
   }
-  const names = (w: ReturnType<typeof mountCard>) => w.findAll('.post__who a').map((a) => a.text())
+  const names = (w: ReturnType<typeof mountCard>) =>
+    w.findAll('.post__who a:not(.post__time)').map((a) => a.text())
+
+  it('klik area kartu membuka detail; klik tautan/tombol tidak', async () => {
+    const r = router()
+    useAuthStore().user = { id: 9, username: 'zed', displayName: 'Zed' }
+    const w = mount(PostCard, { props: { post: mkPost({ id: 5 }) }, global: { plugins: [r] } })
+    await w.find('.post__text').trigger('click')
+    await flushPromises()
+    expect(r.currentRoute.value.path).toBe('/posts/5')
+    await r.push('/')
+    await w.find('.post__dots').trigger('click')
+    await flushPromises()
+    expect(r.currentRoute.value.path).toBe('/')
+  })
 
   it('post biasa: hanya nama penulis', () => {
     const w = mountCard(mkPost(), user(9, 'Zed'))

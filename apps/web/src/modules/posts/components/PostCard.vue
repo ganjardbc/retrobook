@@ -9,11 +9,12 @@ import {
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { computed, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ApiRequestError } from '@/plugins/http'
 import { postsApi } from '@/modules/posts/services/api'
 import { useAuthStore } from '@/modules/auth/stores'
 import { formatTime } from '@/helpers/time'
+import { useDismissOnOutside } from '@/composables/dismissOnOutside'
 import Avatar from '@/components/Avatar.vue'
 import HashtagText from '@/modules/posts/components/HashtagText.vue'
 import ReportDialog from '@/modules/posts/components/ReportDialog.vue'
@@ -57,7 +58,18 @@ const privacyOptions = computed<IconOption[]>(() =>
   PRIVACIES.map((p) => ({ value: p, label: t(`privacy.${p}`), icon: PRIVACY_ICONS[p] })),
 )
 const auth = useAuthStore()
+const router = useRouter()
+const route = useRoute()
+const detailPath = computed(() => `/posts/${props.post.id}`)
+// Klik pada teks atau gambar post membuka detail (kecuali sedang menyeleksi teks).
+function openDetail(e: MouseEvent) {
+  if ((e.target as HTMLElement).closest('a')) return // hashtag/tautan tetap berfungsi
+  if (window.getSelection()?.toString()) return
+  if (route.path !== detailPath.value) void router.push(detailPath.value)
+}
 const menuOpen = ref(false)
+const menuRoot = ref<HTMLElement | null>(null)
+useDismissOnOutside(menuRoot, menuOpen)
 const reporting = ref(false)
 const isMine = computed(() => auth.user?.id === props.post.author.id)
 // BR-04: pemilik dinding boleh menghapus wall post dari dindingnya, tetapi tidak mengeditnya.
@@ -136,7 +148,7 @@ async function saveEdit() {
           {{ withOthersText }}
         </span>
         <div class="post__meta">
-          <span>{{ when }}</span>
+          <RouterLink class="post__time" :to="detailPath">{{ when }}</RouterLink>
           <span
             :title="t(`privacy.${post.privacy}`)"
             :aria-label="t(`privacy.${post.privacy}`)"
@@ -146,7 +158,7 @@ async function saveEdit() {
           <span v-if="post.editedAt">· {{ t('post.edited') }}</span>
         </div>
       </div>
-      <div class="post__menu">
+      <div ref="menuRoot" class="post__menu">
         <button
           class="post__dots"
           type="button"
@@ -158,6 +170,9 @@ async function saveEdit() {
           <Icon icon="mdi:chevron-down" aria-hidden="true" />
         </button>
         <div v-if="menuOpen" class="post__dropdown">
+          <RouterLink :to="detailPath" class="post__open" @click="menuOpen = false">
+            {{ t('post.open') }}
+          </RouterLink>
           <button v-if="isMine" type="button" class="post__item" @click="startEdit">
             {{ t('post.edit') }}
           </button>
@@ -209,13 +224,16 @@ async function saveEdit() {
         </div>
       </div>
     </form>
-    <p v-else-if="post.content" class="post__text"><HashtagText :text="post.content" /></p>
+    <p v-else-if="post.content" class="post__text" @click="openDetail">
+      <HashtagText :text="post.content" />
+    </p>
     <img
       v-if="post.imageUrl"
       class="post__image"
       :src="post.imageUrl"
       :alt="t('post.image.alt', { name: post.author.displayName })"
       loading="lazy"
+      @click="openDetail"
     />
 
     <SharedPostCard v-if="post.sharedFrom" :original="post.sharedFrom" />
@@ -276,10 +294,17 @@ async function saveEdit() {
   font-size: var(--fs-post);
   font-weight: bold;
 }
+.post__time {
+  color: inherit;
+}
 .post__meta {
   display: flex;
   gap: var(--sp-1);
   color: var(--c-text-muted);
+}
+.post__text,
+.post__image {
+  cursor: pointer;
 }
 .post__text {
   margin: 0;
@@ -364,17 +389,21 @@ async function saveEdit() {
   border: 1px solid var(--c-border);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
-.post__item {
+.post__item,
+.post__open {
   display: block;
   width: 100%;
   padding: var(--sp-2) var(--sp-3);
   border: 0;
   background: none;
   font: inherit;
+  color: inherit;
   text-align: left;
   cursor: pointer;
 }
-.post__item:hover {
+.post__item:hover,
+.post__open:hover {
   background: var(--c-hover-bg);
+  text-decoration: none;
 }
 </style>
