@@ -34,6 +34,7 @@ watch(
     :label="t('jewel.requests')"
     :count="friends.requests.length"
     :more="!friends.requestsDone"
+    all-to="/friends"
   >
     <p v-if="friends.requestsFailed" class="note" role="alert">{{ t('jewel.error') }}</p>
     <p v-else-if="!friends.requests.length" class="note">{{ t('jewel.requests.empty') }}</p>
@@ -53,9 +54,6 @@ watch(
         </span>
       </li>
     </ul>
-    <RouterLink class="all" to="/friends" @click="open = false">{{
-      t('jewel.requests.seeAll')
-    }}</RouterLink>
   </Jewel>
 </template>
 
@@ -91,12 +89,5 @@ watch(
 .item__actions {
   display: flex;
   gap: var(--sp-2);
-}
-.all {
-  display: block;
-  padding: var(--sp-2) var(--sp-3);
-  border-top: 1px solid var(--c-border);
-  background: var(--c-card-subtle);
-  text-align: center;
 }
 </style>

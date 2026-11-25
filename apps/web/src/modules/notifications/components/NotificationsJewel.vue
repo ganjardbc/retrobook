@@ -29,6 +29,7 @@ const target = (n: AppNotification) => notificationTarget(n, auth.user?.username
     icon="mdi:earth"
     :label="t('jewel.notifications')"
     :count="store.unread"
+    all-to="/notifications"
   >
     <p v-if="store.loading && !store.items.length" class="note">{{ t('jewel.loading') }}</p>
     <p v-else-if="store.failed" class="note" role="alert">{{ t('jewel.error') }}</p>
@@ -44,9 +45,6 @@ const target = (n: AppNotification) => notificationTarget(n, auth.user?.username
         </RouterLink>
       </li>
     </ul>
-    <RouterLink class="all" to="/notifications" @click="open = false">{{
-      t('jewel.notifications.seeAll')
-    }}</RouterLink>
   </Jewel>
 </template>
 
@@ -87,11 +85,5 @@ const target = (n: AppNotification) => notificationTarget(n, auth.user?.username
 .item__time {
   color: var(--c-text-muted);
   font-size: var(--fs-small);
-}
-.all {
-  display: block;
-  padding: var(--sp-2) var(--sp-3);
-  border-top: 1px solid var(--c-border-soft);
-  text-align: center;
 }
 </style>

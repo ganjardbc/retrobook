@@ -2,6 +2,7 @@ import type { ChatFriend, ChatMessage, Conversation, UserSummary } from '@retrob
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import ChatDock from '@/modules/chat/components/ChatDock.vue'
 import ChatSidebar from '@/modules/chat/components/ChatSidebar.vue'
 import MessagesJewel from '@/modules/chat/components/MessagesJewel.vue'
@@ -572,7 +573,13 @@ describe('ChatDock dan ChatWindow', () => {
 })
 
 describe('MessagesJewel', () => {
-  const mountJewel = () => mount(MessagesJewel, { attachTo: document.body })
+  const mountJewel = () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/:p(.*)*', component: { template: '<p />' } }],
+    })
+    return mount(MessagesJewel, { global: { plugins: [router] }, attachTo: document.body })
+  }
   const convo = (u: UserSummary, last: string, unread: number): Conversation => ({
     user: u,
     lastMessage: msg(1, u.id, ME, last),

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+import { t } from '@retrobook/shared/i18n'
 import { computed, onBeforeUnmount, onMounted, ref, useId } from 'vue'
+import { RouterLink } from 'vue-router'
 
 const props = defineProps<{
   icon: string
@@ -8,6 +10,8 @@ const props = defineProps<{
   count?: number
   /** Ada lebih banyak dari `count` (mis. hanya halaman pertama yang termuat): tampil "10+". */
   more?: boolean
+  /** Rute halaman lengkap; bila ada, dasar panel menampilkan tautan "See All". */
+  allTo?: string
 }>()
 const open = defineModel<boolean>('open', { default: false })
 
@@ -59,6 +63,9 @@ onBeforeUnmount(() => {
     <div v-if="open" :id="panelId" class="jewel__panel">
       <div class="jewel__title">{{ label }}</div>
       <slot />
+      <RouterLink v-if="allTo" class="jewel__all" :to="allTo" @click="open = false">{{
+        t('jewel.seeAll')
+      }}</RouterLink>
     </div>
   </div>
 </template>
@@ -115,5 +122,16 @@ onBeforeUnmount(() => {
   background: var(--c-card-subtle);
   border-bottom: 1px solid var(--c-border);
   font-weight: bold;
+}
+.jewel__all {
+  display: block;
+  padding: var(--sp-2) var(--sp-3);
+  border-top: 1px solid var(--c-border);
+  background: var(--c-card-subtle);
+  text-align: center;
+}
+.jewel__all:hover {
+  background: var(--c-hover-bg);
+  text-decoration: none;
 }
 </style>
