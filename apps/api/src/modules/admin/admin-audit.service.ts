@@ -3,10 +3,10 @@ import { Prisma } from '@prisma/client'
 import { PrismaService } from '../../prisma/prisma.service'
 
 export type AdminAuditEntry = {
-  adminId: number
+  adminId: string
   action: string
   targetType?: string
-  targetId?: number
+  targetId?: string
   detail?: Prisma.InputJsonValue
   ip?: string
 }

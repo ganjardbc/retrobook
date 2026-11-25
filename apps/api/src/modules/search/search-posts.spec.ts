@@ -29,7 +29,7 @@ describe('Pencarian isi post (integrasi)', () => {
     await app.close()
   })
 
-  const post = (authorId: number, content: string, extra: object = {}) =>
+  const post = (authorId: string, content: string, extra: object = {}) =>
     h.prisma.post.create({ data: { authorId, content, privacy: Privacy.PUBLIC, ...extra } })
   const contents = (res: { body: { items: { content: string }[] } }) =>
     res.body.items.map((i) => i.content)

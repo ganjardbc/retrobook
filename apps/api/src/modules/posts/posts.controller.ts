@@ -5,7 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   Put,
@@ -32,19 +32,19 @@ export class PostsController {
   }
 
   @Get(':id')
-  get(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  get(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.posts.get(user.id, id)
   }
 
   @Get(':id/related')
-  related(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  related(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.posts.related(user.id, id)
   }
 
   @Patch(':id')
   update(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdatePostDto,
   ) {
     return this.posts.update(user.id, id, dto)
@@ -53,7 +53,7 @@ export class PostsController {
   @Post(':id/share')
   share(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SharePostDto,
   ) {
     return this.posts.share(user.id, id, dto)
@@ -61,19 +61,19 @@ export class PostsController {
 
   @Put(':id/save')
   @HttpCode(200)
-  save(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  save(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.posts.save(user.id, id)
   }
 
   @Delete(':id/save')
   @HttpCode(200)
-  unsave(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  unsave(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.posts.unsave(user.id, id)
   }
 
   @Delete(':id')
   @HttpCode(204)
-  async remove(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  async remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     await this.posts.remove(user.id, id)
   }
 }

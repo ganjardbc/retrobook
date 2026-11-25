@@ -1,5 +1,15 @@
 import { Type } from 'class-transformer'
-import { IsEnum, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator'
+import {
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator'
 import { ReportStatus } from '@prisma/client'
 
 export enum AdminReportAction {
@@ -14,10 +24,8 @@ export class AdminReportsQuery {
   status?: ReportStatus
 
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  cursor?: number
+  @IsUUID('4')
+  cursor?: string
 
   @IsOptional()
   @Type(() => Number)

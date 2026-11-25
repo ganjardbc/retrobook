@@ -31,10 +31,10 @@ describe('Penemuan teman (integrasi)', () => {
 
   const suggestions = async (u: User, qs = '') =>
     (await h.as(u).get(`/friends/suggestions${qs}`)).body.items as {
-      user: { id: number; displayName: string }
+      user: { id: string; displayName: string }
       mutualFriends: number
     }[]
-  const ids = (items: { user: { id: number } }[]) => items.map((i) => i.user.id)
+  const ids = (items: { user: { id: string } }[]) => items.map((i) => i.user.id)
 
   it('tanpa token: 401', async () => {
     expect((await request(app.getHttpServer()).get('/api/friends/suggestions')).status).toBe(401)
@@ -60,11 +60,14 @@ describe('Penemuan teman (integrasi)', () => {
     it('teman dari teman, urut jumlah teman bersama (turun) lalu id; tanpa diri sendiri dan teman', async () => {
       const w = await world()
       const items = await suggestions(w.me)
-      expect(items.map((i) => [i.user.displayName, i.mutualFriends])).toEqual([
-        ['x', 2],
+      const rows = items.map((i) => [i.user.displayName, i.mutualFriends] as const)
+      expect(rows[0]).toEqual(['x', 2])
+      // Seri (jumlah sama) diurut menurut id: deterministik, tetapi bukan urutan sisip.
+      expect(rows.slice(1).sort()).toEqual([
         ['y', 1],
         ['z', 1],
       ])
+      expect(rows).toHaveLength(3)
       expect(Object.keys(items[0]!.user).sort()).toEqual([
         'avatarUrl',
         'displayName',

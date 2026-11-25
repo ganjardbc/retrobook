@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   Req,
@@ -41,7 +41,7 @@ export class AdminAnnouncementsController {
   @Patch(':id')
   update(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateAnnouncementDto,
     @Req() request: Request,
   ) {
@@ -51,7 +51,7 @@ export class AdminAnnouncementsController {
   @Delete(':id')
   remove(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() request: Request,
   ) {
     return this.announcements.remove(admin.id, id, request.ip)

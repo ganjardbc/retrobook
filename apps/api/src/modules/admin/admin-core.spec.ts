@@ -27,7 +27,7 @@ describe('Inti admin (integrasi)', () => {
     await resetDb(h.prisma)
     await app.close()
   })
-  const token = (userId: number) =>
+  const token = (userId: string) =>
     h.prisma.refreshToken.create({
       data: {
         userId,
@@ -78,21 +78,22 @@ describe('Inti admin (integrasi)', () => {
       fn: (tx: unknown) => unknown,
       o?: unknown,
     ) => Promise<unknown>
-    jest
-      .spyOn(prisma, '$transaction')
-      .mockImplementationOnce(((fn: (tx: unknown) => unknown, o?: unknown) =>
-        original(
-          (tx) =>
-            fn(
-              new Proxy(tx as object, {
-                get: (t, p) =>
-                  p === 'auditLog'
-                    ? { create: () => Promise.reject(new Error('audit gagal')) }
-                    : (t as Record<string | symbol, unknown>)[p],
-              }),
-            ),
-          o,
-        )) as never)
+    jest.spyOn(prisma, '$transaction').mockImplementationOnce(((
+      fn: (tx: unknown) => unknown,
+      o?: unknown,
+    ) =>
+      original(
+        (tx) =>
+          fn(
+            new Proxy(tx as object, {
+              get: (t, p) =>
+                p === 'auditLog'
+                  ? { create: () => Promise.reject(new Error('audit gagal')) }
+                  : (t as Record<string | symbol, unknown>)[p],
+            }),
+          ),
+        o,
+      )) as never)
     const failed = await h
       .as(admin)
       .patch(`/admin/users/${user.id}/status`)
@@ -110,9 +111,11 @@ describe('Inti admin (integrasi)', () => {
     expect(await prisma.refreshToken.count({ where: { userId: user.id, revokedAt: null } })).toBe(0)
     const afterToken = await h.as(user).get('/feed')
     expect([afterToken.status, afterToken.body.code]).toEqual([403, 'ACCOUNT_SUSPENDED'])
-    expect((await prisma.auditLog.findMany()).map((l) => l.action)).toEqual([
-      'USER_STATUS_SUSPENDED',
-    ])
+    expect(
+      (await prisma.auditLog.findMany({ orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] })).map(
+        (l) => l.action,
+      ),
+    ).toEqual(['USER_STATUS_SUSPENDED'])
   })
 
   it('ADM-05, 06: reset password mencabut sesi dan memberi password sementara yang berfungsi; hapus = soft delete', async () => {
@@ -179,7 +182,7 @@ describe('Inti admin (integrasi)', () => {
     expect(JSON.stringify(feed.body)).not.toContain('rahasia')
     const adminView = await h.as(admin).get('/admin/posts')
     expect(
-      adminView.body.items.map((i: { id: number; hidden: boolean }) => [i.id, i.hidden]),
+      adminView.body.items.map((i: { id: string; hidden: boolean }) => [i.id, i.hidden]),
     ).toEqual([[post.id, true]])
     expect(
       (await h.as(admin).patch(`/admin/posts/${post.id}`).send({ hidden: false })).status,

@@ -8,7 +8,7 @@ import { Test } from '@nestjs/testing'
 import { AppModule } from '../../../app.module'
 import { configureApp } from '../../../common/configure-app'
 import { resetDb } from '../../../test/db'
-import { testHelpers } from '../../../test/helpers'
+import { testHelpers, MISSING_ID } from '../../../test/helpers'
 
 describe('Pengumuman (integrasi)', () => {
   let app: INestApplication
@@ -59,9 +59,11 @@ describe('Pengumuman (integrasi)', () => {
     expect(recipients).toEqual([admin.id, a.id, b.id].sort())
     expect(recipients).not.toContain(banned.id)
     expect(recipients).not.toContain(bot.id)
-    expect((await h.prisma.auditLog.findMany()).map((l) => l.action)).toEqual([
-      'ANNOUNCEMENT_CREATE',
-    ])
+    expect(
+      (await h.prisma.auditLog.findMany({ orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] })).map(
+        (l) => l.action,
+      ),
+    ).toEqual(['ANNOUNCEMENT_CREATE'])
   })
 
   it('user melihat notifikasi ANNOUNCEMENT dengan judul dan banner aktif; nonaktif menghilangkan keduanya', async () => {
@@ -77,7 +79,7 @@ describe('Pengumuman (integrasi)', () => {
       actor: null,
     })
     expect(
-      (await h.as(a).get('/announcements/active')).body.items.map((i: { id: number }) => i.id),
+      (await h.as(a).get('/announcements/active')).body.items.map((i: { id: string }) => i.id),
     ).toEqual([created.body.id])
     expect(
       (await h.as(admin).patch(`/admin/announcements/${created.body.id}`).send({ active: false }))
@@ -99,12 +101,13 @@ describe('Pengumuman (integrasi)', () => {
     expect(await h.prisma.notification.count({ where: { userId: a.id } })).toBe(0)
     expect((await h.as(admin).del(`/admin/announcements/${body.id}`)).status).toBe(404)
     expect(
-      (await h.as(admin).patch('/admin/announcements/999999').send({ active: false })).status,
+      (await h.as(admin).patch(`/admin/announcements/${MISSING_ID}`).send({ active: false }))
+        .status,
     ).toBe(404)
-    expect((await h.prisma.auditLog.findMany()).map((l) => l.action)).toEqual([
-      'ANNOUNCEMENT_CREATE',
-      'ANNOUNCEMENT_UPDATE',
-      'ANNOUNCEMENT_DELETE',
-    ])
+    expect(
+      (await h.prisma.auditLog.findMany({ orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] })).map(
+        (l) => l.action,
+      ),
+    ).toEqual(['ANNOUNCEMENT_CREATE', 'ANNOUNCEMENT_UPDATE', 'ANNOUNCEMENT_DELETE'])
   })
 })

@@ -9,7 +9,7 @@ import {
 const filters = reactive<AuditFilters>({ adminId: '', action: '', from: '', to: '' })
 const items = ref<AuditLog[]>([])
 const total = ref(0)
-const nextCursor = ref<number | null>(null)
+const nextCursor = ref<string | null>(null)
 const loading = ref(false)
 const error = ref('')
 async function load(more = false) {

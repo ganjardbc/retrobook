@@ -12,14 +12,14 @@ export class NotesService {
     private readonly visibility: VisibilityService,
   ) {}
 
-  listMine(userId: number) {
+  listMine(userId: string) {
     return this.prisma.note.findMany({
       where: { authorId: userId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
     })
   }
 
-  async listProfile(viewerId: number, username: string) {
+  async listProfile(viewerId: string, username: string) {
     const owner = await this.prisma.user.findFirst({
       where: { username, ...this.visibility.userWhere(viewerId) },
       select: { id: true },
@@ -42,7 +42,7 @@ export class NotesService {
     })
   }
 
-  async get(viewerId: number, id: number) {
+  async get(viewerId: string, id: string) {
     const note = await this.prisma.note.findFirst({
       where: { AND: [{ id, deletedAt: null }, this.visibleTo(viewerId)] },
     })
@@ -50,7 +50,7 @@ export class NotesService {
     return note
   }
 
-  async create(authorId: number, dto: CreateNoteDto) {
+  async create(authorId: string, dto: CreateNoteDto) {
     const title = dto.title.trim()
     const body = dto.body.trim()
     if (!title || !body)
@@ -60,7 +60,7 @@ export class NotesService {
     })
   }
 
-  async update(authorId: number, id: number, dto: UpdateNoteDto) {
+  async update(authorId: string, id: string, dto: UpdateNoteDto) {
     await this.assertOwner(authorId, id)
     const data: Prisma.NoteUpdateInput = {}
     if (dto.title !== undefined) {
@@ -76,12 +76,12 @@ export class NotesService {
     return this.prisma.note.update({ where: { id }, data })
   }
 
-  async remove(authorId: number, id: number) {
+  async remove(authorId: string, id: string) {
     await this.assertOwner(authorId, id)
     await this.prisma.note.update({ where: { id }, data: { deletedAt: new Date() } })
   }
 
-  private visibleTo(viewerId: number): Prisma.NoteWhereInput {
+  private visibleTo(viewerId: string): Prisma.NoteWhereInput {
     return {
       OR: [
         { authorId: viewerId },
@@ -96,7 +96,7 @@ export class NotesService {
     }
   }
 
-  private async assertOwner(userId: number, id: number) {
+  private async assertOwner(userId: string, id: string) {
     const note = await this.prisma.note.findFirst({
       where: { id, authorId: userId, deletedAt: null },
       select: { id: true },

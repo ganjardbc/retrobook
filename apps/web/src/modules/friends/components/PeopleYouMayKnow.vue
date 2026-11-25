@@ -26,7 +26,7 @@ onMounted(async () => {
   }
 })
 
-const drop = (id: number) => (rows.value = rows.value.filter((r) => r.user.id !== id))
+const drop = (id: string) => (rows.value = rows.value.filter((r) => r.user.id !== id))
 
 async function add(row: Row) {
   if (row.busy || row.sent) return

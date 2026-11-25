@@ -5,7 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   Query,
 } from '@nestjs/common'
@@ -33,7 +33,7 @@ export class PokesController {
 
   @Delete(':userId')
   @HttpCode(204)
-  async dismiss(@CurrentUser() user: AuthUser, @Param('userId', ParseIntPipe) userId: number) {
+  async dismiss(@CurrentUser() user: AuthUser, @Param('userId', ParseUUIDPipe) userId: string) {
     await this.pokes.dismiss(user.id, userId)
   }
 }

@@ -3,7 +3,7 @@
  * Dipakai di tempat Prisma `cursor` tidak bisa (raw SQL, pemindaian batch). Urutan tidak boleh bergantung
  * pada nilai `id` saja: id tidak dijamin menaik menurut waktu (mis. UUID acak).
  */
-export const afterCursor = (c: { createdAt: Date; id: number }) => ({
+export const afterCursor = (c: { createdAt: Date; id: string }) => ({
   OR: [{ createdAt: { lt: c.createdAt } }, { createdAt: c.createdAt, id: { lt: c.id } }],
 })
 

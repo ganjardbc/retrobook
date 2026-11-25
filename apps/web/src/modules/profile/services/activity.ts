@@ -2,8 +2,8 @@ import { request } from '@/plugins/http'
 
 export type ActivityItem = {
   type: 'POST' | 'COMMENT' | 'LIKE'
-  id: number
-  postId: number
+  id: string
+  postId: string
   text: string
   createdAt: string
 }

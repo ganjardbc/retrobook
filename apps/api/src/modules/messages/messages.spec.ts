@@ -11,7 +11,7 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, MISSING_ID } from '../../test/helpers'
 
 describe('Pesan (integrasi)', () => {
   let app: INestApplication
@@ -42,10 +42,10 @@ describe('Pesan (integrasi)', () => {
     await h.befriend(a, b)
     return { a, b }
   }
-  const send = (from: User, to: User | number, content: string, clientId?: string) =>
+  const send = (from: User, to: User | string, content: string, clientId?: string) =>
     h
       .as(from)
-      .post(`/messages/${typeof to === 'number' ? to : to.id}`)
+      .post(`/messages/${typeof to === 'string' ? to : to.id}`)
       .send({ content, ...(clientId ? { clientId } : {}) })
   const connect = async (u: User) => {
     const s = io(url, {
@@ -127,7 +127,7 @@ describe('Pesan (integrasi)', () => {
     it('diri sendiri 422; id tidak ada 404', async () => {
       const a = await h.mkUser('a')
       expect((await send(a, a, 'x')).status).toBe(422)
-      expect((await send(a, 999999, 'x')).status).toBe(404)
+      expect((await send(a, MISSING_ID, 'x')).status).toBe(404)
     })
 
     it.each([
@@ -221,7 +221,7 @@ describe('Pesan (integrasi)', () => {
   })
 
   describe('urutan menurut waktu, bukan menurut nilai id', () => {
-    /** Baris dengan id lebih besar sengaja lebih lama: urutan yang bergantung pada id akan terbalik. */
+    /** Baris dibuat dengan urutan sisip yang berlawanan dengan urutan waktu: urutan menurut id akan salah. */
     const skewed = async () => {
       const { a, b } = await pair()
       const base = Date.now() - 60_000
@@ -234,9 +234,8 @@ describe('Pesan (integrasi)', () => {
             createdAt: new Date(base - ageMs),
           },
         })
-      const newer = await mk('baru', 0) // id lebih kecil, waktu lebih baru
-      const older = await mk('lama', 30_000) // id lebih besar, waktu lebih lama
-      expect(older.id).toBeGreaterThan(newer.id)
+      const newer = await mk('baru', 0) // waktu lebih baru
+      const older = await mk('lama', 30_000) // waktu lebih lama
       return { a, b, newer, older }
     }
 
@@ -259,7 +258,7 @@ describe('Pesan (integrasi)', () => {
     it('markRead: upToMessageId dan upToCreatedAt dari pesan terbaru menurut waktu', async () => {
       const { a, b, newer } = await skewed()
       const sa = await connect(a)
-      const got = next<{ upToMessageId: number; upToCreatedAt: string }>(sa, 'message:read')
+      const got = next<{ upToMessageId: string; upToCreatedAt: string }>(sa, 'message:read')
       expect((await h.as(b).post(`/messages/${a.id}/read`)).body).toEqual({ updated: 2 })
       expect(await got).toMatchObject({
         upToMessageId: newer.id,
@@ -279,7 +278,9 @@ describe('Pesan (integrasi)', () => {
       const res = await h.as(b).post(`/messages/${a.id}/read`)
       expect(res.status).toBe(200)
       expect(res.body).toEqual({ updated: 1 })
-      const rows = await h.prisma.message.findMany({ orderBy: { id: 'asc' } })
+      const rows = await h.prisma.message.findMany({
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      })
       expect(rows.map((r) => r.readAt !== null)).toEqual([true, false, false])
       expect((await h.as(b).post(`/messages/${a.id}/read`)).body).toEqual({ updated: 0 }) // diulang aman
     })
@@ -489,7 +490,7 @@ describe('Pesan (integrasi)', () => {
     it('offline setelah koneksi terakhir putus; payload presence membawa label klien', async () => {
       const { a, b } = await pair()
       const sb = await connect(b)
-      const presence = next<{ userId: number; online: boolean; client?: string }>(sb, 'presence')
+      const presence = next<{ userId: string; online: boolean; client?: string }>(sb, 'presence')
       const sa = await connectAs(a, 'mobile')
       expect(await presence).toEqual({ userId: a.id, online: true, client: 'MOBILE' })
       expect((await items(b))[0]).toMatchObject({ online: true, client: 'MOBILE' })
@@ -516,8 +517,8 @@ describe('Pesan (integrasi)', () => {
       const { a, b } = await pair()
       const sa = await connect(a)
       const sb = await connect(b)
-      const got = next<{ content: string; senderId: number }>(sb, 'message:new')
-      const ack = await emitAck<{ ok: boolean; message: { id: number; content: string } }>(
+      const got = next<{ content: string; senderId: string }>(sb, 'message:new')
+      const ack = await emitAck<{ ok: boolean; message: { id: string; content: string } }>(
         sa,
         'message:send',
         {
@@ -535,7 +536,7 @@ describe('Pesan (integrasi)', () => {
     it('socket dan REST berbagi idempotensi clientId', async () => {
       const { a, b } = await pair()
       const sa = await connect(a)
-      const ack1 = await emitAck<{ message: { id: number } }>(sa, 'message:send', {
+      const ack1 = await emitAck<{ message: { id: string } }>(sa, 'message:send', {
         toUserId: b.id,
         content: 'x',
         clientId: 'dup',
@@ -609,7 +610,7 @@ describe('Pesan (integrasi)', () => {
         const sa = await connect(a)
         const sa2 = await connect(a)
         const sb = await connect(b)
-        const got = next<{ userId: number; isTyping: boolean }>(sb, 'typing')
+        const got = next<{ userId: string; isTyping: boolean }>(sb, 'typing')
         const own = silent(sa2, 'typing')
         typing(sa, b.id, true)
         expect(await got).toEqual({ userId: a.id, isTyping: true })
@@ -687,7 +688,7 @@ describe('Pesan (integrasi)', () => {
       const sb = await connect(b)
       const m1 = (await send(a, b, '1')).body.id
       const m2 = (await send(a, b, '2')).body.id
-      const got = next<{ byUserId: number; upToMessageId: number; upToCreatedAt: string }>(
+      const got = next<{ byUserId: string; upToMessageId: string; upToCreatedAt: string }>(
         sa,
         'message:read',
       )
@@ -697,7 +698,7 @@ describe('Pesan (integrasi)', () => {
       expect(ack).toEqual({ ok: true, updated: 2 })
       const ev = await got
       expect(ev).toMatchObject({ byUserId: b.id, upToMessageId: m2 }) // m2 dikirim terakhir
-      expect(m1).toBeLessThan(m2)
+      expect(m1).not.toBe(m2)
       expect(Number.isNaN(Date.parse(ev.upToCreatedAt))).toBe(false)
 
       const quiet = silent(sa, 'message:read')

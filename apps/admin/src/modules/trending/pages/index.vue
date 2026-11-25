@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue'
 import { adminTrendingApi, type AdminHashtag } from '@/modules/trending/services/api'
 
 const items = ref<AdminHashtag[]>([])
-const nextCursor = ref<number | null>(null)
+const nextCursor = ref<string | null>(null)
 const q = ref('')
 const error = ref('')
 const loading = ref(false)

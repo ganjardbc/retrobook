@@ -17,10 +17,10 @@ export class SearchService {
    * shortcut: urut abjad nama, belum berdasarkan relevansi (awalan atau teman dulu); naikkan bila perlu.
    */
   async people(
-    viewerId: number,
+    viewerId: string,
     q: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
   ): Promise<Paged<UserSummary>> {
     const like = escapeLike(q)
     const rows = await this.prisma.user.findMany({

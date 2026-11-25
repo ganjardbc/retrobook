@@ -18,7 +18,7 @@ const privacyOptions: IconOption[] = [
 ]
 const route = useRoute()
 const router = useRouter()
-const id = Number(route.params.id)
+const id = String(route.params.id)
 const group = ref<GroupSummary | null>(null)
 const name = ref('')
 const description = ref('')

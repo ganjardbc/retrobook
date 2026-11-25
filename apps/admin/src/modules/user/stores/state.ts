@@ -11,8 +11,8 @@ export const state = () => ({
   detailError: '',
   total: 0,
   limit: 20,
-  cursorStack: [null] as (number | null)[],
+  cursorStack: [null] as (string | null)[],
   pageIndex: 0,
-  nextCursor: null as number | null,
+  nextCursor: null as string | null,
   fetchVersion: 0,
 })

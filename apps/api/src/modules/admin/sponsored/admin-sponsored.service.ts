@@ -31,7 +31,7 @@ export class AdminSponsoredService {
     return { items: await this.prisma.sponsored.findMany({ orderBy: NEWEST_FIRST, select }) }
   }
 
-  create(adminId: number, dto: CreateSponsoredDto, ip?: string) {
+  create(adminId: string, dto: CreateSponsoredDto, ip?: string) {
     this.assertWindow(toDate(dto.startsAt) ?? null, toDate(dto.endsAt) ?? null)
     return this.audit.execute(
       {
@@ -58,7 +58,7 @@ export class AdminSponsoredService {
     )
   }
 
-  update(adminId: number, id: number, dto: UpdateSponsoredDto, ip?: string) {
+  update(adminId: string, id: string, dto: UpdateSponsoredDto, ip?: string) {
     return this.audit.execute(
       {
         adminId,
@@ -92,7 +92,7 @@ export class AdminSponsoredService {
     )
   }
 
-  remove(adminId: number, id: number, ip?: string) {
+  remove(adminId: string, id: string, ip?: string) {
     return this.audit.execute(
       { adminId, action: 'SPONSORED_DELETE', targetType: 'SPONSORED', targetId: id, ip },
       async (tx) => {

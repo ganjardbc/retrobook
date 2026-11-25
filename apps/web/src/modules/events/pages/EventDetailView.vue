@@ -14,7 +14,7 @@ const error = ref('')
 
 onMounted(async () => {
   try {
-    event.value = await eventsApi.get(Number(route.params.id))
+    event.value = await eventsApi.get(String(route.params.id))
   } catch (cause) {
     // 404 (juga untuk pembuat yang diblokir) memakai pesan yang sama.
     error.value =

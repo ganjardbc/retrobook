@@ -22,7 +22,7 @@ export class AdminAnnouncementsService {
   }
 
   /** ADM-13: pengumuman, notifikasi ANNOUNCEMENT ke semua user aktif, dan audit dalam satu transaksi; push realtime setelah commit. */
-  async create(adminId: number, dto: CreateAnnouncementDto, ip?: string) {
+  async create(adminId: string, dto: CreateAnnouncementDto, ip?: string) {
     const created = await this.audit.execute(
       {
         adminId,
@@ -51,7 +51,7 @@ export class AdminAnnouncementsService {
     return created
   }
 
-  update(adminId: number, id: number, dto: UpdateAnnouncementDto, ip?: string) {
+  update(adminId: string, id: string, dto: UpdateAnnouncementDto, ip?: string) {
     return this.audit.execute(
       {
         adminId,
@@ -69,7 +69,7 @@ export class AdminAnnouncementsService {
     )
   }
 
-  remove(adminId: number, id: number, ip?: string) {
+  remove(adminId: string, id: string, ip?: string) {
     return this.audit.execute(
       { adminId, action: 'ANNOUNCEMENT_DELETE', targetType: 'ANNOUNCEMENT', targetId: id, ip },
       async (tx) => {

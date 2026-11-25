@@ -9,7 +9,7 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, MISSING_ID, seqTime } from '../../test/helpers'
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0])
 
@@ -118,7 +118,10 @@ describe('Komentar (integrasi)', () => {
         .as(stranger)
         .post(`/posts/${post.id}/comments`)
         .send({ content: 'hai' })
-      const missing = await h.as(stranger).post('/posts/999999/comments').send({ content: 'hai' })
+      const missing = await h
+        .as(stranger)
+        .post(`/posts/${MISSING_ID}/comments`)
+        .send({ content: 'hai' })
       expect(hidden.status).toBe(404)
       expect(hidden.body).toEqual(missing.body)
       expect(await h.prisma.comment.count()).toBe(0)
@@ -159,9 +162,10 @@ describe('Komentar (integrasi)', () => {
   describe('daftar (GET /posts/:id/comments)', () => {
     it('urut lama ke baru dengan kursor, tanpa duplikat', async () => {
       const { alice, post } = await mkPost()
+      const at = seqTime()
       for (let i = 1; i <= 25; i++) {
         await h.prisma.comment.create({
-          data: { postId: post.id, authorId: alice.id, content: `c${i}` },
+          data: { postId: post.id, authorId: alice.id, content: `c${i}`, createdAt: at() },
         })
       }
       const p1 = (await h.as(alice).get(`/posts/${post.id}/comments`)).body
@@ -184,9 +188,10 @@ describe('Komentar (integrasi)', () => {
 
     it('komentar baru yang masuk saat paginasi tidak menggeser halaman berikutnya', async () => {
       const { alice, post } = await mkPost()
+      const at = seqTime()
       for (let i = 1; i <= 12; i++) {
         await h.prisma.comment.create({
-          data: { postId: post.id, authorId: alice.id, content: `c${i}` },
+          data: { postId: post.id, authorId: alice.id, content: `c${i}`, createdAt: at() },
         })
       }
       const p1 = (await h.as(alice).get(`/posts/${post.id}/comments?limit=5`)).body
@@ -208,7 +213,7 @@ describe('Komentar (integrasi)', () => {
       const bob = await h.mkUser('bob')
       const banned = await h.mkUser('banned')
       const gone = await h.mkUser('gone')
-      const mk = (authorId: number, content: string, extra = {}) =>
+      const mk = (authorId: string, content: string, extra = {}) =>
         h.prisma.comment.create({ data: { postId: post.id, authorId, content, ...extra } })
       await mk(alice.id, 'ok')
       await mk(alice.id, 'dihapus', { deletedAt: new Date() })
@@ -278,7 +283,7 @@ describe('Komentar (integrasi)', () => {
 
     it('komentar tidak ada, sudah dihapus, atau di post yang tidak terlihat: 404', async () => {
       const { alice, bob, post, comment } = await setup()
-      expect((await h.as(alice).del('/comments/999999')).status).toBe(404)
+      expect((await h.as(alice).del(`/comments/${MISSING_ID}`)).status).toBe(404)
       await h.as(bob).del(`/comments/${comment.id}`)
       expect((await h.as(bob).del(`/comments/${comment.id}`)).status).toBe(404)
 
@@ -301,7 +306,7 @@ describe('Komentar (integrasi)', () => {
   it('commentCount di post mengikuti aturan yang sama (komentar sendiri yang hidden ikut dihitung)', async () => {
     const { alice, post } = await mkPost()
     const bob = await h.mkUser('bob')
-    const mk = (authorId: number, extra = {}) =>
+    const mk = (authorId: string, extra = {}) =>
       h.prisma.comment.create({ data: { postId: post.id, authorId, content: 'c', ...extra } })
     await mk(alice.id)
     await mk(bob.id, { hidden: true })

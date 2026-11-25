@@ -5,16 +5,16 @@ import { pokesApi } from '@/modules/pokes/services/api'
 
 export const usePokesStore = defineStore('pokes', () => {
   const items = ref<PokeItem[]>([])
-  const cursor = ref<number | null>(null)
+  const cursor = ref<string | null>(null)
   const done = ref(false)
   const loading = ref(false)
   const failed = ref(false)
   /** Pemilik data; daftar dibersihkan bila akun berganti. */
-  const ownerId = ref<number | null>(null)
+  const ownerId = ref<string | null>(null)
   // Respons yang datang setelah reset atau muat ulang dibuang.
   let generation = 0
 
-  function reset(newOwnerId: number | null = null) {
+  function reset(newOwnerId: string | null = null) {
     generation++
     items.value = []
     cursor.value = null
@@ -50,7 +50,7 @@ export const usePokesStore = defineStore('pokes', () => {
   }
 
   /** Poke balik: poke dari `userId` dianggap dibalas, jadi keluar dari daftar. */
-  async function pokeBack(userId: number): Promise<boolean> {
+  async function pokeBack(userId: string): Promise<boolean> {
     try {
       await pokesApi.poke(userId)
     } catch {
@@ -60,7 +60,7 @@ export const usePokesStore = defineStore('pokes', () => {
     return true
   }
 
-  async function remove(userId: number): Promise<boolean> {
+  async function remove(userId: string): Promise<boolean> {
     try {
       await pokesApi.dismiss(userId)
     } catch {

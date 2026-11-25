@@ -67,7 +67,7 @@ export class AdminUsersService {
     }
   }
 
-  async detail(id: number) {
+  async detail(id: string) {
     const user = await this.prisma.user.findFirst({
       where: { id, deletedAt: null },
       select: {
@@ -84,7 +84,7 @@ export class AdminUsersService {
     return { ...user, postCount, commentCount, reportCount }
   }
 
-  updateStatus(adminId: number, id: number, dto: UpdateAdminUserStatusDto, ip?: string) {
+  updateStatus(adminId: string, id: string, dto: UpdateAdminUserStatusDto, ip?: string) {
     return this.audit.execute(
       {
         adminId,
@@ -122,7 +122,7 @@ export class AdminUsersService {
     )
   }
 
-  updateRole(adminId: number, id: number, dto: UpdateAdminUserRoleDto, ip?: string) {
+  updateRole(adminId: string, id: string, dto: UpdateAdminUserRoleDto, ip?: string) {
     return this.audit.execute(
       {
         adminId,
@@ -154,7 +154,7 @@ export class AdminUsersService {
     )
   }
 
-  async resetPassword(adminId: number, id: number, ip?: string) {
+  async resetPassword(adminId: string, id: string, ip?: string) {
     const current = await this.prisma.user.findFirst({
       where: { id, deletedAt: null },
       select: { id: true },
@@ -188,7 +188,7 @@ export class AdminUsersService {
     return { temporaryPassword, ...result }
   }
 
-  delete(adminId: number, id: number, ip?: string) {
+  delete(adminId: string, id: string, ip?: string) {
     return this.audit.execute(
       {
         adminId,
@@ -218,7 +218,7 @@ export class AdminUsersService {
     )
   }
 
-  private async assertAnotherActiveAdmin(tx: Prisma.TransactionClient, excludingId: number) {
+  private async assertAnotherActiveAdmin(tx: Prisma.TransactionClient, excludingId: string) {
     const otherActiveAdmins = await tx.user.count({
       where: {
         role: Role.ADMIN,

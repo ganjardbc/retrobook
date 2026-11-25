@@ -1,9 +1,6 @@
-import { Type } from 'class-transformer'
-import { IsInt, Min } from 'class-validator'
+import { IsUUID } from 'class-validator'
 
 export class PokeDto {
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  userId!: number
+  @IsUUID('4')
+  userId!: string
 }

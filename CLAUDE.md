@@ -95,6 +95,7 @@ pnpm --filter @retrobook/db migrate:test   # migrasi ke DB uji (TEST_DATABASE_UR
 - Pertemanan: **satu baris per pasangan**; `pair_low_id` dan `pair_high_id` diisi min dan max oleh service (BR-01). Terima, poke ulang, dan tindakan admin berjalan dalam satu transaksi.
 - Setiap aksi tulis admin menulis satu baris `audit_logs` dalam **transaksi yang sama**; audit log tidak punya endpoint ubah atau hapus (ADM-14).
 - Admin terakhir tidak bisa dihapus, dinonaktifkan, atau diturunkan rolenya (BR-14).
+- **Semua id (PK dan FK) adalah UUID v4**, string `CHAR(36)` huruf kecil (`@default(uuid())`); bukan integer. Jangan mengurutkan atau membandingkan id (`a - b`, `Math.min/max`, `ORDER BY id`): urutkan dengan `createdAt` lalu `id` (`apps/api/src/common/keyset.ts`), bandingkan string dengan `<`/`cmp`. Param path memakai `ParseUUIDPipe`, DTO `@IsUUID('4')`, payload socket `isId()`.
 - Semua FK ke `users` memakai RESTRICT; CASCADE hanya untuk data turunan (lihat ERD bagian 5). Waktu disimpan UTC.
 - Migrasi Prisma: satu migrasi bernama deskriptif per perubahan; jangan mengedit migrasi yang sudah dijalankan. Perubahan merusak dilakukan bertahap (tambah, salin, hapus pada migrasi berikutnya).
 

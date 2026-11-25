@@ -21,7 +21,7 @@ function focusStatusDraft() {
   statusBox.value?.focusDraft()
 }
 
-async function onDelete(id: number) {
+async function onDelete(id: string) {
   try {
     await postsApi.remove(id)
     feed.remove(id)
@@ -31,7 +31,7 @@ async function onDelete(id: number) {
 }
 
 const likeFailed = ref(false)
-async function onLike(id: number) {
+async function onLike(id: string) {
   likeFailed.value = !(await feed.toggleLike(id))
 }
 

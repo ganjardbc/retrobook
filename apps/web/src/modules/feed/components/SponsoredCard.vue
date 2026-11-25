@@ -4,7 +4,7 @@ import { onMounted, ref } from 'vue'
 import { request } from '@/plugins/http'
 
 type Sponsored = {
-  id: number
+  id: string
   title: string
   body: string
   imageUrl: string | null

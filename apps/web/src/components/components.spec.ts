@@ -67,7 +67,7 @@ describe('AppLayout', () => {
     localStorage.clear()
     session.clear()
     setActivePinia(createPinia())
-    useAuthStore().user = { id: 1, username: 'budi', displayName: 'Budi' }
+    useAuthStore().user = { id: '1', username: 'budi', displayName: 'Budi' }
   })
 
   it('menampilkan navbar, menu kiri, konten halaman, dan label parodi', async () => {

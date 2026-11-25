@@ -37,10 +37,11 @@ describe('Kata terlarang (integrasi)', () => {
     expect((await h.as(admin).get('/admin/blocked-words')).body.items).toHaveLength(1)
     expect((await h.as(admin).del(`/admin/blocked-words/${add.body.id}`)).status).toBe(200)
     expect((await h.as(admin).del(`/admin/blocked-words/${add.body.id}`)).status).toBe(404)
-    expect((await h.prisma.auditLog.findMany()).map((a) => a.action)).toEqual([
-      'BLOCKED_WORD_ADD',
-      'BLOCKED_WORD_REMOVE',
-    ])
+    expect(
+      (await h.prisma.auditLog.findMany({ orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] })).map(
+        (a) => a.action,
+      ),
+    ).toEqual(['BLOCKED_WORD_ADD', 'BLOCKED_WORD_REMOVE'])
   })
 
   it('tulis: post dan komentar memuat kata tetap tersimpan (201) tetapi ditandai; yang bersih tidak', async () => {
@@ -79,6 +80,6 @@ describe('Kata terlarang (integrasi)', () => {
     const add = await h.as(admin).post('/admin/blocked-words').send({ word: 'obat' })
     expect([add.body.flaggedPosts, add.body.flaggedComments]).toEqual([1, 0])
     const list = await h.as(admin).get('/admin/posts?filter=flagged')
-    expect(list.body.items.map((p: { id: number }) => p.id)).toEqual([old.id])
+    expect(list.body.items.map((p: { id: string }) => p.id)).toEqual([old.id])
   })
 })

@@ -9,7 +9,7 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, MISSING_ID } from '../../test/helpers'
 
 describe('Share post (integrasi)', () => {
   let app: INestApplication
@@ -37,7 +37,7 @@ describe('Share post (integrasi)', () => {
     })
     return { alice, bob, carol, post }
   }
-  const share = (u: Parameters<typeof h.as>[0], id: number, body: object = {}) =>
+  const share = (u: Parameters<typeof h.as>[0], id: string, body: object = {}) =>
     h.as(u).post(`/posts/${id}/share`).send(body)
 
   describe('membuat share', () => {
@@ -82,7 +82,7 @@ describe('Share post (integrasi)', () => {
     it('hanya post yang terlihat oleh pembagi: 404 sama dengan post tidak ada, tidak ada baris dibuat', async () => {
       const { alice, bob, post } = await world('FRIENDS')
       const hidden = await share(bob, post.id)
-      const missing = await share(bob, 999999)
+      const missing = await share(bob, MISSING_ID)
       expect(hidden.status).toBe(404)
       expect(hidden.body).toEqual(missing.body)
       expect(await h.prisma.post.count()).toBe(1)
@@ -115,7 +115,7 @@ describe('Share post (integrasi)', () => {
       expect(
         (await request(app.getHttpServer()).post(`/api/posts/${post.id}/share`).send({})).status,
       ).toBe(401)
-      expect((await share(bob, 'abc' as unknown as number)).status).toBe(400)
+      expect((await share(bob, 'abc')).status).toBe(400)
     })
 
     it('share dari share merujuk post asal pertama (tanpa rantai)', async () => {
@@ -141,9 +141,9 @@ describe('Share post (integrasi)', () => {
   describe('membaca share: post asal mengikuti visibilitas PEMBACA', () => {
     const readFeed = async (viewer: Parameters<typeof h.as>[0]) =>
       (await h.as(viewer).get('/feed')).body.items
-    const mkShare = async (bob: Parameters<typeof h.as>[0] & { id: number }, postId: number) =>
+    const mkShare = async (bob: Parameters<typeof h.as>[0] & { id: string }, postId: string) =>
       (await share(bob, postId, { privacy: 'PUBLIC', content: 'komentar bob' })).body as {
-        id: number
+        id: string
       }
 
     it('asal masih terlihat: disematkan lengkap di detail, feed, dan timeline', async () => {

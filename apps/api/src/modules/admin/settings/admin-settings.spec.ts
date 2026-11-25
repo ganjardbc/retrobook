@@ -44,7 +44,11 @@ describe('Pengaturan sistem (integrasi)', () => {
     ).toBe(400)
     const res = await h.as(admin).patch('/admin/settings').send({ registrationOpen: false })
     expect(res.body).toEqual({ maintenanceMode: false, registrationOpen: false })
-    expect((await h.prisma.auditLog.findMany()).map((a) => a.action)).toEqual(['SETTINGS_UPDATE'])
+    expect(
+      (await h.prisma.auditLog.findMany({ orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] })).map(
+        (a) => a.action,
+      ),
+    ).toEqual(['SETTINGS_UPDATE'])
   })
 
   it('pendaftaran ditutup: register 403 REGISTRATION_CLOSED; dibuka lagi berlaku langsung', async () => {

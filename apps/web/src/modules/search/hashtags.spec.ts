@@ -88,10 +88,10 @@ describe('TrendingCard', () => {
 })
 
 describe('HashtagView', () => {
-  const post = (id: number): Post =>
+  const post = (id: string): Post =>
     ({
       id,
-      author: { id: 1, username: 'a', displayName: 'A', avatarUrl: null, isBot: false },
+      author: { id: '1', username: 'a', displayName: 'A', avatarUrl: null, isBot: false },
       wallOwner: null,
       sharedFrom: null,
       content: `isi #retro ${id}`,
@@ -117,7 +117,7 @@ describe('HashtagView', () => {
   }
 
   it('memuat post untuk tag di URL (huruf kecil) dan menampilkan judulnya', async () => {
-    api.hashtagPosts.mockResolvedValue({ items: [post(1), post(2)], nextCursor: null })
+    api.hashtagPosts.mockResolvedValue({ items: [post('1'), post('2')], nextCursor: null })
     const { w } = await open('Retro')
     expect(api.hashtagPosts).toHaveBeenCalledWith('retro', null)
     expect(w.find('h1').text()).toBe('Posts tagged #retro')
@@ -129,7 +129,7 @@ describe('HashtagView', () => {
     api.hashtagPosts.mockResolvedValue({ items: [], nextCursor: null })
     const { w, router } = await open('sepi')
     expect(w.text()).toContain('No public posts with this hashtag yet.')
-    api.hashtagPosts.mockResolvedValue({ items: [post(9)], nextCursor: null })
+    api.hashtagPosts.mockResolvedValue({ items: [post('9')], nextCursor: null })
     await router.push('/hashtag/ramai')
     await flushPromises()
     expect(api.hashtagPosts).toHaveBeenLastCalledWith('ramai', null)

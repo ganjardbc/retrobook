@@ -1,9 +1,10 @@
 import { Transform, Type } from 'class-transformer'
 import {
-  IsISO8601,
   IsInt,
+  IsISO8601,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -12,10 +13,8 @@ import {
 import { CursorQueryDto } from '../../posts/dto/post.dto'
 
 export class SendRequestDto {
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  userId!: number
+  @IsUUID('4')
+  userId!: string
 }
 
 export class FriendsQueryDto extends CursorQueryDto {

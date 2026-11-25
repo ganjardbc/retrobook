@@ -17,18 +17,24 @@ const router = () =>
     routes: [{ path: '/:p(.*)*', component: { template: '<p/>' } }],
   })
 const stubs = { teleport: true }
-const receipt = { id: 1, targetType: 'POST', targetId: 5, reason: 'SPAM', createdAt: '' } as const
+const receipt = {
+  id: '1',
+  targetType: 'POST',
+  targetId: '5',
+  reason: 'SPAM',
+  createdAt: '',
+} as const
 
 beforeEach(() => {
   setActivePinia(createPinia())
   vi.restoreAllMocks()
-  useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
+  useAuthStore().user = { id: '1', username: 'me', displayName: 'Me' }
 })
 
 describe('ReportDialog (INT-04)', () => {
   const open = () =>
     mount(ReportDialog, {
-      props: { targetType: 'POST', targetId: 5 },
+      props: { targetType: 'POST', targetId: '5' },
       global: { stubs },
     })
 
@@ -45,7 +51,7 @@ describe('ReportDialog (INT-04)', () => {
     await flushPromises()
     expect(create).toHaveBeenCalledWith({
       targetType: 'POST',
-      targetId: 5,
+      targetId: '5',
       reason: 'SPAM',
       note: 'iklan',
     })
@@ -59,7 +65,7 @@ describe('ReportDialog (INT-04)', () => {
     await w.find('input[value="OTHER"]').setValue()
     await w.find('form').trigger('submit')
     await flushPromises()
-    expect(create).toHaveBeenCalledWith({ targetType: 'POST', targetId: 5, reason: 'OTHER' })
+    expect(create).toHaveBeenCalledWith({ targetType: 'POST', targetId: '5', reason: 'OTHER' })
   })
 
   it.each([
@@ -95,9 +101,9 @@ describe('ReportDialog (INT-04)', () => {
 })
 
 describe('titik masuk Report', () => {
-  const post = (authorId: number): Post =>
+  const post = (authorId: string): Post =>
     ({
-      id: 5,
+      id: '5',
       author: {
         id: authorId,
         username: `u${authorId}`,
@@ -123,7 +129,7 @@ describe('titik masuk Report', () => {
 
   it('PostCard: Report dari menu membuka dialog untuk post itu dan menutup menu', async () => {
     const w = mount(PostCard, {
-      props: { post: post(2) },
+      props: { post: post('2') },
       global: { plugins: [router()], stubs },
     })
     expect(w.find('[role="dialog"]').exists()).toBe(false)
@@ -135,16 +141,19 @@ describe('titik masuk Report', () => {
   })
 
   it('PostCard: post sendiri tidak punya Report', async () => {
-    const w = mount(PostCard, { props: { post: post(1) }, global: { plugins: [router()], stubs } })
+    const w = mount(PostCard, {
+      props: { post: post('1') },
+      global: { plugins: [router()], stubs },
+    })
     await w.find('.post__dots').trigger('click')
     expect(w.findAll('.post__item').map((b) => b.text())).toEqual(['Edit', 'Delete'])
   })
 
   it('CommentList: Report hanya pada komentar orang lain, membuka dialog untuk komentar itu', async () => {
-    const mk = (id: number, authorId: number): Comment =>
+    const mk = (id: string, authorId: string): Comment =>
       ({
         id,
-        postId: 5,
+        postId: '5',
         author: {
           id: authorId,
           username: `u${authorId}`,
@@ -160,12 +169,12 @@ describe('titik masuk Report', () => {
         createdAt: new Date().toISOString(),
       }) as Comment
     vi.spyOn(commentsApi, 'list').mockResolvedValue({
-      items: [mk(10, 1), mk(11, 2)],
+      items: [mk('10', '1'), mk('11', '2')],
       nextCursor: null,
     })
     const create = vi.spyOn(reportsApi, 'create').mockResolvedValue(receipt)
     const w = mount(CommentList, {
-      props: { postId: 5, commentCount: 2, postAuthorId: 9 },
+      props: { postId: '5', commentCount: 2, postAuthorId: '9' },
       global: { plugins: [router()], stubs },
     })
     await w.find('.comments__link').trigger('click')
@@ -179,7 +188,7 @@ describe('titik masuk Report', () => {
     await flushPromises()
     expect(create).toHaveBeenCalledWith({
       targetType: 'COMMENT',
-      targetId: 11,
+      targetId: '11',
       reason: 'HARASSMENT',
     })
   })

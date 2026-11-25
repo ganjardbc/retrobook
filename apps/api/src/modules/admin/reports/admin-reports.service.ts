@@ -59,7 +59,7 @@ export class AdminReportsService {
   }
 
   /** ADM-10: satu panggilan memutuskan laporan, menjalankan aksi pada target, dan menulis audit dalam satu transaksi. */
-  decide(adminId: number, id: number, dto: DecideReportDto, ip?: string) {
+  decide(adminId: string, id: string, dto: DecideReportDto, ip?: string) {
     if (dto.status === 'DISMISSED' && dto.action) {
       throw new AppException(
         422,
@@ -101,7 +101,7 @@ export class AdminReportsService {
   private async apply(
     tx: Prisma.TransactionClient,
     type: ReportTargetType,
-    targetId: number,
+    targetId: string,
     action: AdminReportAction,
   ) {
     const gone = () => new AppException(404, 'NOT_FOUND', 'Target laporan tidak ditemukan')

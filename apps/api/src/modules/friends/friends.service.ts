@@ -41,7 +41,7 @@ export class FriendsService {
   ) {}
 
   /** FRD-01. Permintaan silang (lawan sudah mengirim) langsung menjadi ACCEPTED. */
-  async sendRequest(viewerId: number, targetId: number): Promise<FriendshipResult> {
+  async sendRequest(viewerId: string, targetId: string): Promise<FriendshipResult> {
     if (viewerId === targetId) {
       throw new AppException(
         422,
@@ -81,7 +81,7 @@ export class FriendsService {
   }
 
   /** FRD-02: hanya penerima yang bisa menerima. Diulang tetap aman. */
-  async accept(viewerId: number, requesterId: number): Promise<FriendshipResult> {
+  async accept(viewerId: string, requesterId: string): Promise<FriendshipResult> {
     const row = await this.prisma.friendship.findFirst({
       where: {
         requesterId,
@@ -96,7 +96,7 @@ export class FriendsService {
   }
 
   /** Tolak (penerima) atau batalkan (pengirim): menghapus baris PENDING. */
-  async cancelOrReject(viewerId: number, otherId: number): Promise<void> {
+  async cancelOrReject(viewerId: string, otherId: string): Promise<void> {
     const { count } = await this.prisma.friendship.deleteMany({
       where: { ...pairOf(viewerId, otherId), status: 'PENDING' },
     })
@@ -104,7 +104,7 @@ export class FriendsService {
   }
 
   /** FRD-03: menghapus baris untuk kedua arah. */
-  async unfriend(viewerId: number, otherId: number): Promise<void> {
+  async unfriend(viewerId: string, otherId: string): Promise<void> {
     const { count } = await this.prisma.friendship.deleteMany({
       where: { ...pairOf(viewerId, otherId), status: 'ACCEPTED' },
     })
@@ -112,7 +112,7 @@ export class FriendsService {
   }
 
   /** Permintaan masuk yang PENDING, terbaru dulu; pengirim yang BANNED/terhapus disembunyikan. */
-  async incoming(viewerId: number, limit: number, cursor?: number): Promise<Paged<FriendRequest>> {
+  async incoming(viewerId: string, limit: number, cursor?: string): Promise<Paged<FriendRequest>> {
     const rows = await this.prisma.friendship.findMany({
       where: {
         addresseeId: viewerId,
@@ -136,7 +136,7 @@ export class FriendsService {
 
   /** Syarat Friendship: teman ACCEPTED milik `userId` (kedua arah), pihak lain tidak BANNED/terhapus dan cocok `q`. */
   private acceptedWhere(
-    userId: number,
+    userId: string,
     q?: string,
     viewerId = userId,
   ): Prisma.FriendshipWhereInput {
@@ -161,12 +161,12 @@ export class FriendsService {
   }
 
   /** Jumlah teman yang boleh terlihat (profil, FRD-04). */
-  count(userId: number): Promise<number> {
+  count(userId: string): Promise<number> {
     return this.prisma.friendship.count({ where: this.acceptedWhere(userId) })
   }
 
   /** Hubungan `viewerId` dengan `otherId` untuk profil. */
-  async relationshipOf(viewerId: number, otherId: number): Promise<Relationship> {
+  async relationshipOf(viewerId: string, otherId: string): Promise<Relationship> {
     if (viewerId === otherId) return 'SELF'
     const row = await this.prisma.friendship.findUnique({
       where: { pairLowId_pairHighId: pairOf(viewerId, otherId) },
@@ -179,9 +179,9 @@ export class FriendsService {
 
   /** FRD-04: teman (ACCEPTED, kedua arah), terbaru dulu, `q` memfilter nama atau username. */
   async list(
-    viewerId: number,
+    viewerId: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
     q?: string,
     blockedById = viewerId,
   ): Promise<FriendsPage> {
@@ -213,8 +213,8 @@ export class FriendsService {
 
   private async resolveExisting(
     row: Friendship,
-    viewerId: number,
-    targetId: number,
+    viewerId: string,
+    targetId: string,
   ): Promise<FriendshipResult> {
     if (row.status === 'ACCEPTED') {
       throw new AppException(409, 'ALREADY_FRIENDS', 'Kalian sudah berteman')
@@ -227,7 +227,7 @@ export class FriendsService {
   }
 
   /** `requesterId` dikabari bahwa `accepterId` menerima; notifikasi dibuat dalam transaksi yang sama. */
-  private async acceptRow(id: number, requesterId: number, accepterId: number) {
+  private async acceptRow(id: string, requesterId: string, accepterId: string) {
     const notif = await this.prisma.$transaction(async (tx) => {
       // Bersyarat pada PENDING: dua penerimaan serentak tidak saling menimpa.
       const { count } = await tx.friendship.updateMany({

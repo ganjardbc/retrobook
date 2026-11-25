@@ -50,25 +50,25 @@ export class AdminModerationService {
     return this.list('COMMENT', query)
   }
 
-  async setPostHidden(adminId: number, id: number, hidden: boolean, ip?: string) {
+  async setPostHidden(adminId: string, id: string, hidden: boolean, ip?: string) {
     return this.setHidden(adminId, 'POST', id, hidden, ip)
   }
 
-  async setCommentHidden(adminId: number, id: number, hidden: boolean, ip?: string) {
+  async setCommentHidden(adminId: string, id: string, hidden: boolean, ip?: string) {
     return this.setHidden(adminId, 'COMMENT', id, hidden, ip)
   }
 
-  async deletePost(adminId: number, id: number, ip?: string) {
+  async deletePost(adminId: string, id: string, ip?: string) {
     return this.deleteOne(adminId, 'POST', id, ip)
   }
 
-  async deleteComment(adminId: number, id: number, ip?: string) {
+  async deleteComment(adminId: string, id: string, ip?: string) {
     return this.deleteOne(adminId, 'COMMENT', id, ip)
   }
 
   async bulkPosts(
-    adminId: number,
-    ids: number[],
+    adminId: string,
+    ids: string[],
     action: AdminModerationBulkAction,
     reason?: string,
     ip?: string,
@@ -77,8 +77,8 @@ export class AdminModerationService {
   }
 
   async bulkComments(
-    adminId: number,
-    ids: number[],
+    adminId: string,
+    ids: string[],
     action: AdminModerationBulkAction,
     reason?: string,
     ip?: string,
@@ -162,7 +162,7 @@ export class AdminModerationService {
           select: { targetId: true, status: true },
         })
       : []
-    const reportCounts = new Map<number, { total: number; pending: number }>()
+    const reportCounts = new Map<string, { total: number; pending: number }>()
     for (const report of reports) {
       const count = reportCounts.get(report.targetId) ?? { total: 0, pending: 0 }
       count.total += 1
@@ -184,9 +184,9 @@ export class AdminModerationService {
   }
 
   private setHidden(
-    adminId: number,
+    adminId: string,
     kind: 'POST' | 'COMMENT',
-    id: number,
+    id: string,
     hidden: boolean,
     ip?: string,
   ) {
@@ -211,7 +211,7 @@ export class AdminModerationService {
     )
   }
 
-  private deleteOne(adminId: number, kind: 'POST' | 'COMMENT', id: number, ip?: string) {
+  private deleteOne(adminId: string, kind: 'POST' | 'COMMENT', id: string, ip?: string) {
     return this.audit.execute(
       {
         adminId,
@@ -235,9 +235,9 @@ export class AdminModerationService {
   }
 
   private bulk(
-    adminId: number,
+    adminId: string,
     kind: 'POST' | 'COMMENT',
-    ids: number[],
+    ids: string[],
     action: AdminModerationBulkAction,
     reason?: string,
     ip?: string,

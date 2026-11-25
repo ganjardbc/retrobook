@@ -11,7 +11,7 @@ import { useProfileStore } from '@/modules/profile/stores'
 import EditProfileView from '@/modules/profile/pages/EditProfileView.vue'
 
 const profile = (over: Partial<Profile> = {}): Profile => ({
-  id: 1,
+  id: '1',
   username: 'me',
   displayName: 'Me Lama',
   avatarUrl: null,
@@ -44,7 +44,7 @@ const field = (w: ReturnType<typeof mount>, name: string) => w.find(`[name="${na
 describe('EditProfileView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useAuthStore().user = { id: 1, username: 'me', displayName: 'Me Lama' }
+    useAuthStore().user = { id: '1', username: 'me', displayName: 'Me Lama' }
     vi.restoreAllMocks()
     vi.spyOn(usersApi, 'profile').mockResolvedValue(profile())
   })

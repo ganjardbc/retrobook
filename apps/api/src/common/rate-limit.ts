@@ -92,7 +92,7 @@ export class RateLimitGuard implements CanActivate {
   canActivate(ctx: ExecutionContext): boolean {
     const rule = this.reflector.get<RateRule | undefined>(RULE, ctx.getHandler())
     if (!rule) return true
-    const req = ctx.switchToHttp().getRequest<{ ip?: string; user?: { id: number } }>()
+    const req = ctx.switchToHttp().getRequest<{ ip?: string; user?: { id: string } }>()
     const id = rule.by === 'user' ? req.user?.id : (req.ip ?? 'unknown')
     // Tanpa identitas (user belum terautentikasi): JwtAuthGuard sudah menolaknya lebih dulu.
     if (id !== undefined) this.limiter.check(rule, id)

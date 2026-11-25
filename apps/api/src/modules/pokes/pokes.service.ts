@@ -25,7 +25,7 @@ export class PokesService {
   ) {}
 
   /** Poke atau poke balik. Bukan teman, diblokir, atau tidak ada: 404 yang sama (tidak membocorkan). */
-  async poke(viewerId: number, targetId: number): Promise<{ userId: number; createdAt: string }> {
+  async poke(viewerId: string, targetId: string): Promise<{ userId: string; createdAt: string }> {
     if (viewerId === targetId) {
       throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'Tidak bisa mem-poke diri sendiri')
     }
@@ -65,7 +65,7 @@ export class PokesService {
   }
 
   /** Poke aktif yang diterima: belum dilihat atau dibalas, dari teman yang masih boleh terlihat. */
-  async list(viewerId: number, limit: number, cursor?: number): Promise<Paged<PokeItem>> {
+  async list(viewerId: string, limit: number, cursor?: string): Promise<Paged<PokeItem>> {
     const rows = await this.prisma.poke.findMany({
       where: {
         toUserId: viewerId,
@@ -91,7 +91,7 @@ export class PokesService {
   }
 
   /** "Remove": tandai poke dari `fromId` sebagai sudah dilihat. */
-  async dismiss(viewerId: number, fromId: number): Promise<void> {
+  async dismiss(viewerId: string, fromId: string): Promise<void> {
     const { count } = await this.prisma.poke.updateMany({
       where: { fromUserId: fromId, toUserId: viewerId, seenAt: null },
       data: { seenAt: new Date() },

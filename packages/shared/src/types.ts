@@ -2,7 +2,7 @@
 import type { Privacy, ReportReason, ReportTargetType } from './enums'
 
 export type UserSummary = {
-  id: number
+  id: string
   username: string
   displayName: string
   avatarUrl: string | null
@@ -14,7 +14,7 @@ export type UserSummary = {
  * komentar milik share itu sendiri, bukan milik post asal.
  */
 export type SharedPost = {
-  id: number
+  id: string
   author: UserSummary
   content: string
   imageUrl: string | null
@@ -22,8 +22,8 @@ export type SharedPost = {
 }
 
 export type Post = {
-  id: number
-  groupId?: number | null
+  id: string
+  groupId?: string | null
   author: UserSummary
   wallOwner: UserSummary | null
   /**
@@ -48,12 +48,12 @@ export type Post = {
 
 export type GroupPrivacy = 'PUBLIC' | 'CLOSED'
 export type GroupSummary = {
-  id: number
+  id: string
   name: string
   description: string
   privacy: GroupPrivacy
   avatarUrl: string | null
-  createdBy: number
+  createdBy: string
   createdAt: string
   memberCount: number
   isMember: boolean
@@ -62,8 +62,8 @@ export type GroupSummary = {
 }
 
 export type Comment = {
-  id: number
-  postId: number
+  id: string
+  postId: string
   author: UserSummary
   content: string
   imageUrl: string | null
@@ -83,10 +83,10 @@ export type YearInReview = {
   topPost: Post | null
 }
 
-export type Paged<T> = { items: T[]; nextCursor: number | null }
+export type Paged<T> = { items: T[]; nextCursor: string | null }
 
 /** Satu foto pada tab Photos: gambar dari post yang boleh dilihat pembaca (post asal untuk tautan). */
-export type ProfilePhoto = { postId: number; url: string; createdAt: string }
+export type ProfilePhoto = { postId: string; url: string; createdAt: string }
 
 /** Hubungan pemanggil dengan pemilik profil (docs/04-api-spec.md bagian 3). */
 export type Relationship = 'SELF' | 'FRIENDS' | 'REQUEST_SENT' | 'REQUEST_RECEIVED' | 'NONE'
@@ -110,7 +110,7 @@ export type Profile = UserSummary & {
 /** Permintaan pertemanan masuk (GET /friends/requests). */
 /** Notifikasi dari API (`GET /notifications` dan event `notification:new`). */
 export type AppNotification = {
-  id: number
+  id: string
   type:
     | 'LIKE'
     | 'COMMENT'
@@ -121,9 +121,9 @@ export type AppNotification = {
     | 'WALL_POST'
     | 'ANNOUNCEMENT'
   actor: UserSummary | null
-  postId: number | null
-  commentId: number | null
-  announcementId?: number | null
+  postId: string | null
+  commentId: string | null
+  announcementId?: string | null
   text: string
   readAt: string | null
   createdAt: string
@@ -131,9 +131,9 @@ export type AppNotification = {
 
 /** Pesan chat 1-ke-1 (`/messages` dan event `message:new`). */
 export type ChatMessage = {
-  id: number
-  senderId: number
-  receiverId: number
+  id: string
+  senderId: string
+  receiverId: string
   content: string
   readAt: string | null
   createdAt: string
@@ -142,11 +142,11 @@ export type ChatMessage = {
 /** Satu baris aktivitas teman di sidebar chat (`GET /activity/friends`). */
 export type FriendActivity = {
   type: 'POST' | 'COMMENT' | 'LIKE'
-  id: number
+  id: string
   actor: UserSummary
-  postId: number
+  postId: string
   /** Penulis post yang disukai atau dikomentari; untuk type POST sama dengan actor. */
-  postAuthor: { id: number; displayName: string }
+  postAuthor: { id: string; displayName: string }
   /** Cuplikan isi (post atau komentar), maksimal 100 karakter. */
   text: string
   createdAt: string
@@ -172,9 +172,9 @@ export type TrendingTag = { tag: string; count: number }
 
 /** Tanda terima `POST /reports` (INT-04). */
 export type ReportReceipt = {
-  id: number
+  id: string
   targetType: ReportTargetType
-  targetId: number
+  targetId: string
   reason: ReportReason
   createdAt: string
 }
@@ -190,7 +190,7 @@ export type FriendRequest = { user: UserSummary; createdAt: string }
 /** Daftar teman: Paged biasa ditambah jumlah total (tab Friends menampilkan jumlah, FRD-04). */
 export type FriendsPage = Paged<UserSummary> & { total: number }
 
-export type FriendshipResult = { userId: number; status: 'PENDING' | 'ACCEPTED' }
+export type FriendshipResult = { userId: string; status: 'PENDING' | 'ACCEPTED' }
 
 export type AuthSession = {
   user: Pick<UserSummary, 'id' | 'username' | 'displayName'> & { avatarUrl?: string | null }

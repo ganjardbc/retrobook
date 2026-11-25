@@ -3,7 +3,7 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   Req,
@@ -36,7 +36,7 @@ export class AdminBotsController {
   @Patch(':id')
   update(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateBotDto,
     @Req() request: Request,
   ) {

@@ -11,7 +11,7 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, MISSING_ID } from '../../test/helpers'
 
 describe('Poke (integrasi)', () => {
   let app: INestApplication
@@ -42,11 +42,11 @@ describe('Poke (integrasi)', () => {
     await h.befriend(a, b)
     return { a, b }
   }
-  const poke = (from: User, to: User | number) =>
+  const poke = (from: User, to: User | string) =>
     h
       .as(from)
       .post('/pokes')
-      .send({ userId: typeof to === 'number' ? to : to.id })
+      .send({ userId: typeof to === 'string' ? to : to.id })
   const list = async (u: User, qs = '') => (await h.as(u).get(`/pokes${qs}`)).body
   const rows = () => h.prisma.poke.findMany()
 
@@ -126,11 +126,11 @@ describe('Poke (integrasi)', () => {
 
     it('user tidak ada: 404 yang sama', async () => {
       const a = await h.mkUser('a')
-      const res = await poke(a, 999999)
+      const res = await poke(a, MISSING_ID)
       expect(res.status).toBe(404)
     })
 
-    it.each([[{}], [{ userId: 'x' }], [{ userId: 0 }], [{ userId: 1, extra: 1 }]])(
+    it.each([[{}], [{ userId: 'x' }], [{ userId: 7 }], [{ userId: MISSING_ID, extra: 1 }]])(
       'body %j ditolak 400',
       async (body) => {
         const a = await h.mkUser('a')
@@ -184,7 +184,7 @@ describe('Poke (integrasi)', () => {
         s.on('connect', () => res())
         s.on('connect_error', rej)
       })
-      const gotPoke = new Promise<{ from: { id: number } }>((res) => s.once('poke:new', res))
+      const gotPoke = new Promise<{ from: { id: string } }>((res) => s.once('poke:new', res))
       const gotNotif = new Promise<{ type: string }>((res) => s.once('notification:new', res))
       await poke(a, b)
       expect((await gotPoke).from.id).toBe(a.id)

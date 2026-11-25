@@ -10,7 +10,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
   const loading = ref(false)
   const failed = ref(false)
   /** Id yang belum dibaca saat dropdown dibuka; dipakai untuk sorotan sampai ditutup. */
-  const fresh = ref<Set<number>>(new Set())
+  const fresh = ref<Set<string>>(new Set())
   /** Notifikasi realtime terakhir; jewel lain (mis. permintaan teman) memantaunya. */
   const lastReceived = ref<AppNotification | null>(null)
 

@@ -94,8 +94,7 @@ async function logout() {
         <div class="topbar-right">
           <span class="environment-tag"><i /> INTERNAL</span>
           <div class="profile-chip">
-            <span class="avatar">{{ initials }}</span
-            ><span class="profile-name"
+            <span class="avatar">{{ initials }}</span><span class="profile-name"
               >{{ auth.user?.displayName ?? 'Administrator' }}<small>Administrator</small></span
             >
           </div>

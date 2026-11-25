@@ -20,7 +20,7 @@ export class ReportsService {
    * (aturan terpusat di VisibilityService); selain itu 404 yang sama, jadi laporan tidak bisa dipakai
    * untuk menebak keberadaan konten tersembunyi. `target_id` tanpa FK, jadi divalidasi di sini.
    */
-  async create(reporterId: number, dto: CreateReportDto): Promise<ReportReceipt> {
+  async create(reporterId: string, dto: CreateReportDto): Promise<ReportReceipt> {
     const ownerId = await this.ownerOf(reporterId, dto.targetType, dto.targetId)
     if (ownerId === reporterId) {
       throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'Tidak bisa melaporkan diri sendiri')
@@ -52,7 +52,7 @@ export class ReportsService {
   }
 
   /** Pemilik target yang terlihat bagi pelapor (penulis post/komentar, atau user itu sendiri); 404 bila tidak. */
-  private async ownerOf(viewerId: number, type: ReportTargetType, id: number): Promise<number> {
+  private async ownerOf(viewerId: string, type: ReportTargetType, id: string): Promise<string> {
     if (type === 'POST') {
       const post = await this.prisma.post.findFirst({
         where: { AND: [{ id }, this.visibility.postWhere(viewerId)] },

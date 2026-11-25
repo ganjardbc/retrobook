@@ -7,7 +7,7 @@ import { ApiRequestError } from '@/plugins/http'
 import { reportsApi } from '@/modules/posts/services/reports'
 
 // INT-04: dialog Report untuk post, komentar, dan profil; alasan wajib dipilih, catatan opsional.
-const props = defineProps<{ targetType: ReportTargetType; targetId: number }>()
+const props = defineProps<{ targetType: ReportTargetType; targetId: string }>()
 const emit = defineEmits<{ close: [] }>()
 
 const reason = ref<ReportReason | null>(null)

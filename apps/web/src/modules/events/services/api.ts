@@ -2,7 +2,7 @@ import { request } from '@/plugins/http'
 
 export type RsvpStatus = 'GOING' | 'MAYBE' | 'DECLINED'
 export type EventItem = {
-  id: number
+  id: string
   title: string
   description: string
   location: string
@@ -18,11 +18,11 @@ export const eventsApi = {
         ? `/events?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`
         : '/events',
     ),
-  get: (id: number) => request<EventItem>(`/events/${id}`),
+  get: (id: string) => request<EventItem>(`/events/${id}`),
   create: (input: { title: string; description: string; location: string; startsAt: string }) =>
     request<EventItem>('/events', { method: 'POST', body: input }),
-  rsvp: (id: number, status: RsvpStatus) =>
-    request<{ eventId: number; status: RsvpStatus; rsvpCount: number }>(`/events/${id}/rsvp`, {
+  rsvp: (id: string, status: RsvpStatus) =>
+    request<{ eventId: string; status: RsvpStatus; rsvpCount: number }>(`/events/${id}/rsvp`, {
       method: 'PUT',
       body: { status },
     }),

@@ -6,7 +6,7 @@ import { ApiRequestError } from '@/plugins/http'
 import { postsApi } from '@/modules/posts/services/api'
 import Button from '@/components/Button.vue'
 
-const props = defineProps<{ postId: number }>()
+const props = defineProps<{ postId: string }>()
 const emit = defineEmits<{ shared: [post: Post]; cancel: [] }>()
 
 const content = ref('')

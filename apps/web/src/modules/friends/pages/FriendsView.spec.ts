@@ -7,20 +7,20 @@ import { friendsApi } from '@/modules/friends/services/api'
 import { useAuthStore } from '@/modules/auth/stores'
 import FriendsView from '@/modules/friends/pages/FriendsView.vue'
 
-const u = (id: number, name: string): UserSummary => ({
+const u = (id: string, name: string): UserSummary => ({
   id,
   username: name.toLowerCase(),
   displayName: name,
   avatarUrl: null,
   isBot: false,
 })
-const request = (id: number, name: string): FriendRequest => ({
+const request = (id: string, name: string): FriendRequest => ({
   user: u(id, name),
   createdAt: '2026-11-24T00:00:00.000Z',
 })
 const page = (
   items: UserSummary[],
-  nextCursor: number | null,
+  nextCursor: string | null,
   total = items.length,
 ): FriendsPage => ({ items, nextCursor, total })
 
@@ -37,17 +37,17 @@ const mountView = async () => {
 describe('FriendsView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
+    useAuthStore().user = { id: '1', username: 'me', displayName: 'Me' }
     vi.restoreAllMocks()
   })
   afterEach(() => vi.useRealTimers())
 
   it('menampilkan permintaan masuk dan daftar teman dengan jumlah', async () => {
     vi.spyOn(friendsApi, 'requests').mockResolvedValue({
-      items: [request(7, 'Siti')],
+      items: [request('7', 'Siti')],
       nextCursor: null,
     })
-    vi.spyOn(friendsApi, 'list').mockResolvedValue(page([u(2, 'Budi'), u(3, 'Citra')], null))
+    vi.spyOn(friendsApi, 'list').mockResolvedValue(page([u('2', 'Budi'), u('3', 'Citra')], null))
     const w = await mountView()
     expect(w.text()).toContain('Friend Requests')
     expect(w.text()).toContain('Siti')
@@ -67,18 +67,18 @@ describe('FriendsView', () => {
 
   it('Confirm: memanggil API, permintaan hilang dan teman baru muncul di daftar', async () => {
     vi.spyOn(friendsApi, 'requests').mockResolvedValue({
-      items: [request(7, 'Siti')],
+      items: [request('7', 'Siti')],
       nextCursor: null,
     })
-    vi.spyOn(friendsApi, 'list').mockResolvedValue(page([u(2, 'Budi')], null))
+    vi.spyOn(friendsApi, 'list').mockResolvedValue(page([u('2', 'Budi')], null))
     const accept = vi
       .spyOn(friendsApi, 'accept')
-      .mockResolvedValue({ userId: 7, status: 'ACCEPTED' })
+      .mockResolvedValue({ userId: '7', status: 'ACCEPTED' })
     const w = await mountView()
     const confirm = w.findAll('button').find((b) => b.text() === 'Confirm')!
     await confirm.trigger('click')
     await flushPromises()
-    expect(accept).toHaveBeenCalledWith(7)
+    expect(accept).toHaveBeenCalledWith('7')
     expect(w.text()).not.toContain('Friend Requests')
     expect(w.text()).toContain('2 friends')
     expect(w.findAll('.row')[0]!.text()).toContain('Siti')
@@ -86,7 +86,7 @@ describe('FriendsView', () => {
 
   it('Delete Request memanggil API reject; galat menampilkan pesan dan permintaan tetap ada', async () => {
     vi.spyOn(friendsApi, 'requests').mockResolvedValue({
-      items: [request(7, 'Siti')],
+      items: [request('7', 'Siti')],
       nextCursor: null,
     })
     vi.spyOn(friendsApi, 'list').mockResolvedValue(page([], null, 0))
@@ -103,7 +103,7 @@ describe('FriendsView', () => {
 
   it('Unfriend meminta konfirmasi dulu', async () => {
     vi.spyOn(friendsApi, 'requests').mockResolvedValue({ items: [], nextCursor: null })
-    vi.spyOn(friendsApi, 'list').mockResolvedValue(page([u(2, 'Budi')], null))
+    vi.spyOn(friendsApi, 'list').mockResolvedValue(page([u('2', 'Budi')], null))
     const unfriend = vi.spyOn(friendsApi, 'unfriend').mockResolvedValue(undefined)
     const confirm = vi.spyOn(window, 'confirm')
     const w = await mountView()
@@ -114,7 +114,7 @@ describe('FriendsView', () => {
     confirm.mockReturnValueOnce(true)
     await btn().trigger('click')
     await flushPromises()
-    expect(unfriend).toHaveBeenCalledWith(2)
+    expect(unfriend).toHaveBeenCalledWith('2')
     expect(w.text()).toContain('No friends yet.')
   })
 
@@ -122,21 +122,21 @@ describe('FriendsView', () => {
     vi.spyOn(friendsApi, 'requests').mockResolvedValue({ items: [], nextCursor: null })
     const list = vi
       .spyOn(friendsApi, 'list')
-      .mockResolvedValueOnce(page([u(2, 'Budi')], 2, 2))
-      .mockResolvedValueOnce(page([u(3, 'Citra')], null, 2))
+      .mockResolvedValueOnce(page([u('2', 'Budi')], '2', 2))
+      .mockResolvedValueOnce(page([u('3', 'Citra')], null, 2))
     const w = await mountView()
     const more = () => w.findAll('button').find((b) => b.text() === 'Load more')
     expect(more()).toBeTruthy()
     await more()!.trigger('click')
     await flushPromises()
-    expect(list.mock.calls[1]![0]).toBe(2)
+    expect(list.mock.calls[1]![0]).toBe('2')
     expect(w.findAll('.row')).toHaveLength(2)
     expect(more()).toBeUndefined()
   })
 
   it('pencarian memakai debounce dan hanya satu panggilan untuk beberapa ketikan', async () => {
     vi.spyOn(friendsApi, 'requests').mockResolvedValue({ items: [], nextCursor: null })
-    const list = vi.spyOn(friendsApi, 'list').mockResolvedValue(page([u(2, 'Budi')], null))
+    const list = vi.spyOn(friendsApi, 'list').mockResolvedValue(page([u('2', 'Budi')], null))
     const w = await mountView()
     list.mockClear()
     vi.useFakeTimers()
@@ -155,7 +155,7 @@ describe('FriendsView', () => {
   it('hasil pencarian kosong menampilkan pesan khusus', async () => {
     vi.spyOn(friendsApi, 'requests').mockResolvedValue({ items: [], nextCursor: null })
     vi.spyOn(friendsApi, 'list')
-      .mockResolvedValueOnce(page([u(2, 'Budi')], null))
+      .mockResolvedValueOnce(page([u('2', 'Budi')], null))
       .mockResolvedValueOnce(page([], null, 0))
     const w = await mountView()
     vi.useFakeTimers()
@@ -170,7 +170,7 @@ describe('FriendsView', () => {
     vi.spyOn(friendsApi, 'requests').mockResolvedValue({ items: [], nextCursor: null })
     vi.spyOn(friendsApi, 'list')
       .mockRejectedValueOnce(new Error('x'))
-      .mockResolvedValueOnce(page([u(2, 'Budi')], null))
+      .mockResolvedValueOnce(page([u('2', 'Budi')], null))
     const w = await mountView()
     expect(w.text()).toContain('Could not load friends.')
     await w

@@ -80,7 +80,7 @@ export class PostsService {
     private readonly blockedWords: BlockedWordsService,
   ) {}
 
-  async create(viewerId: number, dto: CreatePostDto): Promise<PostDto> {
+  async create(viewerId: string, dto: CreatePostDto): Promise<PostDto> {
     const content = dto.content ?? ''
     const imageUrl = dto.imageUrl ?? null
     if (!content.trim() && !imageUrl) throw empty()
@@ -134,7 +134,7 @@ export class PostsService {
     return this.toDto(row, new Set(), new Set(), new Map())
   }
 
-  async groupTimeline(viewerId: number, groupId: number, limit: number, cursor?: number) {
+  async groupTimeline(viewerId: string, groupId: string, limit: number, cursor?: string) {
     await this.assertGroupMember(viewerId, groupId)
     const rows = await this.prisma.post.findMany({
       where: { AND: [{ groupId }, this.visibility.postWhere(viewerId, true)] },
@@ -150,7 +150,7 @@ export class PostsService {
     }
   }
 
-  private async assertGroupMember(userId: number, groupId: number) {
+  private async assertGroupMember(userId: string, groupId: string) {
     const member = await this.prisma.groupMember.findUnique({
       where: { groupId_userId: { groupId, userId } },
       select: { groupId: true },
@@ -158,7 +158,7 @@ export class PostsService {
     if (!member) throw new AppException(404, 'NOT_FOUND', 'Grup tidak ditemukan')
   }
 
-  async get(viewerId: number, id: number): Promise<PostDto> {
+  async get(viewerId: string, id: string): Promise<PostDto> {
     const row = await this.findVisible(viewerId, id)
     return (await this.toDtos(viewerId, [row]))[0]!
   }
@@ -167,7 +167,7 @@ export class PostsService {
    * Halaman detail post: post lain dari penulis yang sama (di grup yang sama untuk post grup), lalu
    * dilengkapi post terbaru dari feed bila kurang. Semuanya lewat VisibilityService; post asal 404 bila tak terlihat.
    */
-  async related(viewerId: number, id: number, limit = 5): Promise<PostDto[]> {
+  async related(viewerId: string, id: string, limit = 5): Promise<PostDto[]> {
     const base = await this.findVisible(viewerId, id)
     const order = [{ createdAt: 'desc' as const }, { id: 'desc' as const }]
     const same = await this.prisma.post.findMany({
@@ -199,7 +199,7 @@ export class PostsService {
     return this.toDtos(viewerId, rows)
   }
 
-  async update(viewerId: number, id: number, dto: UpdatePostDto): Promise<PostDto> {
+  async update(viewerId: string, id: string, dto: UpdatePostDto): Promise<PostDto> {
     const current = await this.findVisible(viewerId, id)
     if (current.authorId !== viewerId) {
       throw new AppException(403, 'FORBIDDEN', 'Hanya pemilik yang bisa mengubah post')
@@ -242,7 +242,7 @@ export class PostsService {
     return (await this.toDtos(viewerId, [row]))[0]!
   }
 
-  async remove(viewerId: number, id: number): Promise<void> {
+  async remove(viewerId: string, id: string): Promise<void> {
     const current = await this.findVisible(viewerId, id)
     if (current.authorId !== viewerId && current.wallOwnerId !== viewerId) {
       throw new AppException(403, 'FORBIDDEN', 'Hanya pemilik yang bisa menghapus post')
@@ -255,7 +255,7 @@ export class PostsService {
    * share merujuk post asal pertamanya (tanpa rantai). Siapa yang boleh melihat isi asal ditentukan
    * saat dibaca (toDtos), jadi membagikan post FRIENDS ke publik tidak membocorkan isinya.
    */
-  async share(viewerId: number, id: number, dto: SharePostDto): Promise<PostDto> {
+  async share(viewerId: string, id: string, dto: SharePostDto): Promise<PostDto> {
     const original = await this.findVisible(viewerId, id)
     let rootId = original.id
     if (original.sharedFromId !== null) {
@@ -287,9 +287,9 @@ export class PostsService {
    * tetap id post.
    */
   async feed(
-    viewerId: number,
+    viewerId: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
     sort: FeedSort = 'recent',
   ): Promise<Paged<PostDto>> {
     const where = this.visibility.feedWhere(viewerId, await this.friendIds(viewerId))
@@ -317,10 +317,10 @@ export class PostsService {
    * peringkat). Naikkan jendela atau simpan kolom like_count bila perlu.
    */
   private async topFeed(
-    viewerId: number,
+    viewerId: string,
     where: Prisma.PostWhereInput,
     limit: number,
-    cursor?: number,
+    cursor?: string,
   ): Promise<Paged<PostDto>> {
     const candidates = await this.prisma.post.findMany({
       where,
@@ -362,7 +362,7 @@ export class PostsService {
    * hanya post publik yang terlihat bagi pembaca ini, jadi post terhapus, disembunyikan, penulis BANNED,
    * dan pasangan blokir tidak ikut (aturan terpusat di VisibilityService).
    */
-  async trending(viewerId: number): Promise<{ items: TrendingTag[] }> {
+  async trending(viewerId: string): Promise<{ items: TrendingTag[] }> {
     const rows = await this.prisma.postHashtag.groupBy({
       by: ['hashtagId'],
       where: {
@@ -379,15 +379,19 @@ export class PostsService {
       select: { id: true, tag: true },
     })
     const byId = new Map(tags.map((t) => [t.id, t.tag]))
-    return { items: rows.map((r) => ({ tag: byId.get(r.hashtagId)!, count: r._count.postId })) }
+    // Seri (jumlah sama) diurut menurut nama tag, bukan id: id acak tidak bermakna bagi pembaca.
+    const items = rows
+      .map((r) => ({ tag: byId.get(r.hashtagId)!, count: r._count.postId }))
+      .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
+    return { items }
   }
 
   /** POST-10: post publik dengan hashtag ini; tag tidak dikenal memberi daftar kosong (tidak membocorkan apa pun). */
   async byHashtag(
-    viewerId: number,
+    viewerId: string,
     tag: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
   ): Promise<Paged<PostDto>> {
     const rows = await this.prisma.post.findMany({
       where: {
@@ -419,16 +423,16 @@ export class PostsService {
    * per permintaan; ganti ke FULLTEXT bila tabel besar.
    */
   async search(
-    viewerId: number,
+    viewerId: string,
     q: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
   ): Promise<Paged<PostDto>> {
     const visible = this.visibility.postWhere(viewerId, true)
     const like = escapeLike(q)
     const found: PostRow[] = []
     // Kursor = id post terakhir yang sudah dipindai; posisinya dicari lewat (createdAt, id)-nya.
-    let before: { id: number; createdAt: Date } | null = null
+    let before: { id: string; createdAt: Date } | null = null
     if (cursor) {
       before = await this.prisma.post.findUnique({
         where: { id: cursor },
@@ -438,7 +442,7 @@ export class PostsService {
     }
     let scanned = false
     for (let batch = 0; batch < SEARCH_MAX_BATCHES; batch++) {
-      const candidates: { id: number; createdAt: Date }[] = await this.prisma.post.findMany({
+      const candidates: { id: string; createdAt: Date }[] = await this.prisma.post.findMany({
         where: {
           content: { contains: like },
           deletedAt: null,
@@ -474,7 +478,7 @@ export class PostsService {
   }
 
   /** SAV-01: simpan post (idempoten). Post harus terlihat bagi pembaca; selain itu 404 yang sama. */
-  async save(viewerId: number, id: number): Promise<{ savedByMe: boolean }> {
+  async save(viewerId: string, id: string): Promise<{ savedByMe: boolean }> {
     await this.findVisible(viewerId, id)
     await this.prisma.savedPost.upsert({
       where: { userId_postId: { userId: viewerId, postId: id } },
@@ -485,13 +489,13 @@ export class PostsService {
   }
 
   /** Batal simpan (idempoten); tidak perlu cek visibilitas karena hanya menghapus baris milik sendiri. */
-  async unsave(viewerId: number, id: number): Promise<{ savedByMe: boolean }> {
+  async unsave(viewerId: string, id: string): Promise<{ savedByMe: boolean }> {
     await this.prisma.savedPost.deleteMany({ where: { userId: viewerId, postId: id } })
     return { savedByMe: false }
   }
 
   /** SAV-01: daftar simpanan, terbaru disimpan dulu; yang kini tak terlihat disaring VisibilityService. */
-  async saved(viewerId: number, limit: number, cursor?: number): Promise<Paged<PostDto>> {
+  async saved(viewerId: string, limit: number, cursor?: string): Promise<Paged<PostDto>> {
     const rows = await this.prisma.post.findMany({
       where: {
         AND: [
@@ -517,7 +521,7 @@ export class PostsService {
    * hanya yang boleh dibaca pembaca. Pemilik = viewer sendiri, jadi aturan privasi tetap lewat postWhere.
    * shortcut: satu query kandidat 1 hari per tahun lewat rentang OR; paling banyak puluhan tahun.
    */
-  async onThisDay(viewerId: number, now = new Date()): Promise<{ items: PostDto[] }> {
+  async onThisDay(viewerId: string, now = new Date()): Promise<{ items: PostDto[] }> {
     const y = now.getUTCFullYear()
     const m = now.getUTCMonth()
     const d = now.getUTCDate()
@@ -551,7 +555,7 @@ export class PostsService {
    * postWhere, dan like/komentar menyaring pelaku BANNED/terhapus/terblokir seperti di tempat lain.
    * Tahun tanpa post tetap dijawab (angka 0, topPost null); yang diminta bukan tahun valid: 400 di DTO.
    */
-  async yearInReview(viewerId: number, year: number): Promise<YearInReview> {
+  async yearInReview(viewerId: string, year: number): Promise<YearInReview> {
     const mine: Prisma.PostWhereInput = {
       AND: [this.visibility.postWhere(viewerId), { authorId: viewerId }, yearRange(year)],
     }
@@ -586,10 +590,10 @@ export class PostsService {
 
   /** Timeline profil: post `authorId` yang boleh dibaca viewer (aturan yang sama dengan feed). */
   async timeline(
-    viewerId: number,
-    authorId: number,
+    viewerId: string,
+    authorId: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
     year?: number,
   ): Promise<Paged<PostDto>> {
     const rows = await this.prisma.post.findMany({
@@ -618,7 +622,7 @@ export class PostsService {
    * shortcut: satu cek per tahun antara post tertua dan terbaru (paling banyak puluhan); ganti ke satu
    * query agregat bila rentang tahun membengkak.
    */
-  async timelineYears(viewerId: number, authorId: number): Promise<number[]> {
+  async timelineYears(viewerId: string, authorId: string): Promise<number[]> {
     const where: Prisma.PostWhereInput = {
       AND: [this.visibility.postWhere(viewerId), { OR: [{ authorId }, { wallOwnerId: authorId }] }],
     }
@@ -641,7 +645,7 @@ export class PostsService {
   }
 
   /** Pemilik dinding harus teman penulis; selain itu 404 yang sama (tidak membocorkan keberadaan). */
-  private async resolveWallOwner(viewerId: number, username: string) {
+  private async resolveWallOwner(viewerId: string, username: string) {
     const owner = await this.prisma.user.findFirst({
       where: {
         username,
@@ -665,7 +669,7 @@ export class PostsService {
   }
 
   /** WAL-02: hanya teman penulis yang boleh di-tag. */
-  private async resolveTags(viewerId: number, ids: number[]): Promise<number[]> {
+  private async resolveTags(viewerId: string, ids: string[]): Promise<string[]> {
     if (ids.length === 0) return []
     const friends = await this.prisma.user.findMany({
       where: {
@@ -685,10 +689,10 @@ export class PostsService {
    * post itu memang boleh dilihatnya (aturan terpusat); pemilik dinding tidak mendapat TAG ganda.
    */
   private async notifyCreated(
-    postId: number,
-    actorId: number,
-    wallOwnerId: number | null,
-    tagIds: number[],
+    postId: string,
+    actorId: string,
+    wallOwnerId: string | null,
+    tagIds: string[],
   ) {
     if (wallOwnerId !== null) {
       await this.notifications.notify({ userId: wallOwnerId, actorId, type: 'WALL_POST', postId })
@@ -702,7 +706,7 @@ export class PostsService {
   }
 
   /** Post yang boleh dibaca viewer, atau 404 yang sama untuk semua sebab (tidak membocorkan keberadaan). */
-  private async findVisible(viewerId: number, id: number): Promise<PostRow> {
+  private async findVisible(viewerId: string, id: string): Promise<PostRow> {
     const row = await this.prisma.post.findFirst({
       where: { AND: [{ id }, this.visibility.postWhere(viewerId, true)] },
       include: this.include(viewerId),
@@ -711,7 +715,7 @@ export class PostsService {
     return row
   }
 
-  private include(viewerId: number) {
+  private include(viewerId: string) {
     return postInclude(this.visibility.likerWhere(viewerId), this.visibility.userWhere(viewerId))
   }
 
@@ -722,7 +726,7 @@ export class PostsService {
   }
 
   /** Id teman ACCEPTED viewer (dua arah) untuk mempersempit kandidat feed lewat indeks. */
-  private async friendIds(viewerId: number): Promise<number[]> {
+  private async friendIds(viewerId: string): Promise<string[]> {
     const rows = await this.prisma.friendship.findMany({
       where: { status: 'ACCEPTED', OR: [{ requesterId: viewerId }, { addresseeId: viewerId }] },
       select: { requesterId: true, addresseeId: true },
@@ -731,7 +735,7 @@ export class PostsService {
   }
 
   /** Jumlah like dan komentar yang terlihat bagi viewer untuk satu halaman post (dua query terindeks). */
-  private async counts(viewerId: number, ids: number[]) {
+  private async counts(viewerId: string, ids: string[]) {
     const [likes, comments] = await Promise.all([
       this.prisma.like.groupBy({
         by: ['postId'],
@@ -750,7 +754,7 @@ export class PostsService {
     }
   }
 
-  private async toDtos(viewerId: number, rows: PostRow[]): Promise<PostDto[]> {
+  private async toDtos(viewerId: string, rows: PostRow[]): Promise<PostDto[]> {
     const counts = await this.counts(
       viewerId,
       rows.map((r) => r.id),
@@ -772,9 +776,9 @@ export class PostsService {
 
     // Post asal untuk share: hanya yang boleh dilihat pembaca ini (aturan terpusat); selebihnya "tidak tersedia".
     const sharedIds = [
-      ...new Set(rows.map((r) => r.sharedFromId).filter((x): x is number => x !== null)),
+      ...new Set(rows.map((r) => r.sharedFromId).filter((x): x is string => x !== null)),
     ]
-    const shared = new Map<number, SharedPost>()
+    const shared = new Map<string, SharedPost>()
     if (sharedIds.length > 0) {
       const originals = await this.prisma.post.findMany({
         where: { AND: [{ id: { in: sharedIds } }, this.visibility.postWhere(viewerId)] },
@@ -801,10 +805,10 @@ export class PostsService {
 
   private toDto(
     row: PostRow,
-    likedIds: Set<number | null>,
-    savedIds: Set<number>,
-    shared: Map<number, SharedPost>,
-    counts?: { likes: Map<number | null, number>; comments: Map<number, number> },
+    likedIds: Set<string | null>,
+    savedIds: Set<string>,
+    shared: Map<string, SharedPost>,
+    counts?: { likes: Map<string | null, number>; comments: Map<string, number> },
   ): PostDto {
     return {
       id: row.id,

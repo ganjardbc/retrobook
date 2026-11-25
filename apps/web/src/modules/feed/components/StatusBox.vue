@@ -23,7 +23,7 @@ import TagSuggestions from '@/modules/feed/components/TagSuggestions.vue'
 const props = defineProps<{
   wallOwner?: Pick<UserSummary, 'username' | 'displayName'>
   /** Post grup (GRP-01): privasi tidak dipilih dan teman tidak bisa di-tag. */
-  groupId?: number
+  groupId?: string
 }>()
 const emit = defineEmits<{ posted: [post: Post] }>()
 // Router opsional: komponen ini juga dipakai di tes tanpa router.

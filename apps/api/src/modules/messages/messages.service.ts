@@ -17,9 +17,9 @@ const userSummary = {
 } satisfies Prisma.UserSelect
 
 type Row = {
-  id: number
-  senderId: number
-  receiverId: number
+  id: string
+  senderId: string
+  receiverId: string
   content: string
   readAt: Date | null
   createdAt: Date
@@ -61,8 +61,8 @@ export class MessagesService {
 
   /** Kirim pesan. Pengulangan `clientId` yang sama mengembalikan pesan yang sama (`duplicate: true`). */
   async send(
-    senderId: number,
-    toUserId: number,
+    senderId: string,
+    toUserId: string,
     rawContent: string,
     clientId?: string,
   ): Promise<{ message: ChatMessage; duplicate: boolean }> {
@@ -92,10 +92,10 @@ export class MessagesService {
 
   /** Riwayat dengan satu user: terbaru dulu, `cursor` menuju pesan yang lebih lama. */
   async history(
-    viewerId: number,
-    otherId: number,
+    viewerId: string,
+    otherId: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
   ): Promise<Paged<ChatMessage>> {
     await this.assertPartner(viewerId, otherId)
     const state = await this.prisma.conversationState.findUnique({
@@ -120,7 +120,7 @@ export class MessagesService {
   }
 
   /** Tandai semua pesan dari `fromId` sebagai terbaca; memberi tahu pengirim bila ada yang berubah. */
-  async markRead(viewerId: number, fromId: number): Promise<{ updated: number }> {
+  async markRead(viewerId: string, fromId: string): Promise<{ updated: number }> {
     await this.assertPartner(viewerId, fromId)
     const where = { senderId: fromId, receiverId: viewerId, readAt: null, deletedAt: null }
     // Pesan terbaru menurut waktu (bukan nilai id terbesar); semua yang tak lebih baru ikut ditandai.
@@ -145,9 +145,9 @@ export class MessagesService {
 
   /** Percakapan dengan teman saat ini: pesan terakhir dan jumlah belum dibaca, terbaru dulu. */
   async conversations(
-    viewerId: number,
+    viewerId: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
   ): Promise<Paged<Conversation>> {
     const friends = await this.friendIds(viewerId)
     if (friends.length === 0) return { items: [], nextCursor: null }
@@ -164,7 +164,7 @@ export class MessagesService {
       after = Prisma.sql`AND (t.created_at, t.id) < (${c.createdAt}, ${c.id})`
     }
     const ids = Prisma.join(friends)
-    const latest = await this.prisma.$queryRaw<{ id: number }[]>(Prisma.sql`
+    const latest = await this.prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
       SELECT t.id FROM (
         SELECT m.id, m.created_at,
           ROW_NUMBER() OVER (
@@ -182,7 +182,7 @@ export class MessagesService {
       WHERE t.rn = 1 ${after}
       ORDER BY t.created_at DESC, t.id DESC
       LIMIT ${limit + 1}`)
-    const page = latest.slice(0, limit).map((r) => Number(r.id))
+    const page = latest.slice(0, limit).map((r) => r.id)
     if (page.length === 0) return { items: [], nextCursor: null }
 
     const [rows, unread] = await Promise.all([
@@ -211,7 +211,7 @@ export class MessagesService {
    * CHT-02: teman untuk sidebar chat. Online dulu, lalu nama; sampai 200 teman (sidebar menyaring sendiri).
    * Teman BANNED, terhapus, atau terblokir tidak ikut (aturan terpusat).
    */
-  async chatFriends(viewerId: number): Promise<{ items: ChatFriend[] }> {
+  async chatFriends(viewerId: string): Promise<{ items: ChatFriend[] }> {
     const users = await this.prisma.user.findMany({
       where: { AND: [this.visibility.userWhere(viewerId), this.visibility.friendOf(viewerId)] },
       orderBy: { displayName: 'asc' },
@@ -248,18 +248,18 @@ export class MessagesService {
    * Pesan masuk yang belum dibaca ikut dianggap terbaca (tanpa memberi tahu pengirim) supaya badge tidak
    * menghitung pesan yang sudah tidak tampil.
    */
-  async clear(viewerId: number, otherId: number): Promise<void> {
+  async clear(viewerId: string, otherId: string): Promise<void> {
     await this.assertPartner(viewerId, otherId)
     await this.setState(viewerId, otherId, false)
   }
 
   /** Hapus sesi: seperti clear, ditambah percakapan hilang dari daftar Messages sampai ada pesan baru. */
-  async remove(viewerId: number, otherId: number): Promise<void> {
+  async remove(viewerId: string, otherId: string): Promise<void> {
     await this.assertPartner(viewerId, otherId)
     await this.setState(viewerId, otherId, true)
   }
 
-  private async setState(viewerId: number, otherId: number, hide: boolean) {
+  private async setState(viewerId: string, otherId: string, hide: boolean) {
     const now = new Date()
     await this.prisma.$transaction([
       this.prisma.conversationState.upsert({
@@ -275,7 +275,7 @@ export class MessagesService {
   }
 
   /** Teman yang sesinya dihapus dan belum ada pesan baru sesudahnya. */
-  private async hiddenPeers(viewerId: number, peerIds: number[]): Promise<Set<number>> {
+  private async hiddenPeers(viewerId: string, peerIds: string[]): Promise<Set<string>> {
     const states = await this.prisma.conversationState.findMany({
       where: { userId: viewerId, peerId: { in: peerIds }, hiddenAt: { not: null } },
     })
@@ -294,7 +294,7 @@ export class MessagesService {
   }
 
   /** Total pesan belum dibaca dari teman (badge jewel pesan). */
-  async unreadCount(viewerId: number): Promise<{ count: number }> {
+  async unreadCount(viewerId: string): Promise<{ count: number }> {
     const count = await this.prisma.message.count({
       where: {
         receiverId: viewerId,
@@ -310,7 +310,7 @@ export class MessagesService {
    * CHT-04: indikator mengetik. Fire-and-forget: kegagalan (bukan teman, diblokir) diam saja supaya tidak
    * membocorkan apa pun. `true` dibatasi satu per detik per pasangan; `false` selalu diteruskan.
    */
-  async typing(senderId: number, toUserId: number, isTyping: boolean): Promise<void> {
+  async typing(senderId: string, toUserId: string, isTyping: boolean): Promise<void> {
     try {
       await this.assertPartner(senderId, toUserId)
     } catch {
@@ -332,8 +332,8 @@ export class MessagesService {
   }
 
   private async create(
-    senderId: number,
-    receiverId: number,
+    senderId: string,
+    receiverId: string,
     content: string,
   ): Promise<ChatMessage> {
     const message = toDto(
@@ -345,7 +345,7 @@ export class MessagesService {
     return message
   }
 
-  private between(a: number, b: number): Prisma.MessageWhereInput {
+  private between(a: string, b: string): Prisma.MessageWhereInput {
     return {
       OR: [
         { senderId: a, receiverId: b },
@@ -354,7 +354,7 @@ export class MessagesService {
     }
   }
 
-  private async friendIds(viewerId: number): Promise<number[]> {
+  private async friendIds(viewerId: string): Promise<string[]> {
     const rows = await this.prisma.user.findMany({
       where: { AND: [this.visibility.userWhere(viewerId), this.visibility.friendOf(viewerId)] },
       select: { id: true },
@@ -362,7 +362,7 @@ export class MessagesService {
     return rows.map((r) => r.id)
   }
 
-  private async assertPartner(viewerId: number, otherId: number) {
+  private async assertPartner(viewerId: string, otherId: string) {
     if (viewerId === otherId) {
       throw new AppException(
         422,

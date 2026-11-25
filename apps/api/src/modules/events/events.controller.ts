@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common'
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common'
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
 import { CreateEventDto, EventRangeDto, RsvpDto } from './dto/event.dto'
 import { EventsService } from './events.service'
@@ -13,7 +13,7 @@ export class EventsController {
   }
 
   @Get(':id')
-  get(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  get(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.events.get(user.id, id)
   }
 
@@ -23,7 +23,11 @@ export class EventsController {
   }
 
   @Put(':id/rsvp')
-  rsvp(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number, @Body() dto: RsvpDto) {
+  rsvp(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RsvpDto,
+  ) {
     return this.events.rsvp(user.id, id, dto.status)
   }
 }

@@ -107,8 +107,12 @@ onMounted(load)
         </div>
         <div class="reports-actions">
           <button class="button button--quiet" @click="toggle(s)">
-            {{ s.active ? 'Nonaktifkan' : 'Aktifkan' }}</button
-          ><button class="button button--danger" @click="remove(s)">Hapus</button>
+            {{ s.active ? 'Nonaktifkan' : 'Aktifkan' }}</button><button
+            class="button button--danger"
+            @click="remove(s)"
+          >
+            Hapus
+          </button>
         </div>
       </li>
     </ul>

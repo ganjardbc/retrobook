@@ -17,8 +17,8 @@ const router = () =>
   })
 
 const mkPost = (over: Partial<Post> = {}): Post => ({
-  id: 1,
-  author: { id: 1, username: 'budi', displayName: 'Budi', avatarUrl: null, isBot: false },
+  id: '1',
+  author: { id: '1', username: 'budi', displayName: 'Budi', avatarUrl: null, isBot: false },
   wallOwner: null,
   sharedFrom: null,
   content: 'halo',
@@ -54,7 +54,7 @@ describe('StatusBox', () => {
   })
 
   it('kirim: memanggil API dengan privasi terpilih, menambah ke feed, membersihkan form', async () => {
-    const created = mkPost({ id: 10, content: 'baru', privacy: 'PUBLIC' })
+    const created = mkPost({ id: '10', content: 'baru', privacy: 'PUBLIC' })
     const spy = vi.spyOn(postsApi, 'create').mockResolvedValue(created)
     const w = mount(StatusBox)
     await w.find('textarea').setValue('baru')
@@ -62,7 +62,7 @@ describe('StatusBox', () => {
     await w.find('form').trigger('submit')
     await flushPromises()
     expect(spy).toHaveBeenCalledWith({ content: 'baru', privacy: 'PUBLIC', imageUrl: null })
-    expect(useFeedStore().items[0]?.id).toBe(10)
+    expect(useFeedStore().items[0]?.id).toBe('10')
     expect((w.find('textarea').element as HTMLTextAreaElement).value).toBe('')
   })
 
@@ -117,7 +117,7 @@ describe('StatusBox', () => {
     vi.spyOn(postsApi, 'uploadImage').mockResolvedValue({ url: '/uploads/a.png' })
     const create = vi
       .spyOn(postsApi, 'create')
-      .mockResolvedValue(mkPost({ id: 2, imageUrl: '/uploads/a.png' }))
+      .mockResolvedValue(mkPost({ id: '2', imageUrl: '/uploads/a.png' }))
     const w = mount(StatusBox)
     const input = w.find('input[type="file"]')
     Object.defineProperty(input.element, 'files', {
@@ -136,7 +136,7 @@ describe('StatusBox', () => {
 describe('PostCard', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useAuthStore().user = { id: 1, username: 'budi', displayName: 'Budi' }
+    useAuthStore().user = { id: '1', username: 'budi', displayName: 'Budi' }
   })
 
   it('isi ditampilkan sebagai teks, bukan HTML (XSS)', () => {
@@ -174,7 +174,7 @@ describe('PostCard', () => {
     const theirs = mount(PostCard, {
       props: {
         post: mkPost({
-          author: { id: 2, username: 'siti', displayName: 'Siti', avatarUrl: null, isBot: false },
+          author: { id: '2', username: 'siti', displayName: 'Siti', avatarUrl: null, isBot: false },
         }),
       },
       global: { plugins: [router()] },
@@ -185,7 +185,7 @@ describe('PostCard', () => {
 
   it('hapus: emit hanya setelah konfirmasi', async () => {
     const w = mount(PostCard, {
-      props: { post: mkPost({ id: 7 }) },
+      props: { post: mkPost({ id: '7' }) },
       global: { plugins: [router()] },
     })
     const confirm = vi.spyOn(window, 'confirm')
@@ -196,20 +196,20 @@ describe('PostCard', () => {
     await w.find('.post__dots').trigger('click')
     confirm.mockReturnValueOnce(true)
     await w.findAll('.post__item')[1]!.trigger('click') // [0] = Edit, [1] = Delete
-    expect(w.emitted('delete')).toEqual([[7]])
+    expect(w.emitted('delete')).toEqual([['7']])
   })
 
   it('gambar punya alt; aksi Like berubah jadi Unlike; Like memancarkan event', async () => {
     const w = mount(PostCard, {
-      props: { post: mkPost({ id: 4, imageUrl: '/uploads/a.png' }) },
+      props: { post: mkPost({ id: '4', imageUrl: '/uploads/a.png' }) },
       global: { plugins: [router()] },
     })
     expect(w.find('img.post__image').attributes('alt')).toBe('Photo posted by Budi')
     const like = w.find('.actions__link')
     expect(like.text()).toBe('Like')
     await like.trigger('click')
-    expect(w.emitted('toggle-like')).toEqual([[4]])
-    await w.setProps({ post: mkPost({ id: 4, likedByMe: true, likeCount: 1 }) })
+    expect(w.emitted('toggle-like')).toEqual([['4']])
+    await w.setProps({ post: mkPost({ id: '4', likedByMe: true, likeCount: 1 }) })
     expect(w.find('.actions__link').text()).toBe('Unlike')
     expect(w.find('.likes').text()).toContain('You like this.')
   })

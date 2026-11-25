@@ -27,7 +27,7 @@ describe('Audit privasi endpoint Fase 3 (integrasi)', () => {
     await app.close()
   })
 
-  const block = (blocker: { id: number }, blocked: { id: number }) =>
+  const block = (blocker: { id: string }, blocked: { id: string }) =>
     h.prisma.block.create({ data: { blockerId: blocker.id, blockedId: blocked.id } })
 
   describe('grup', () => {
@@ -80,7 +80,7 @@ describe('Audit privasi endpoint Fase 3 (integrasi)', () => {
         data: { createdBy: banned.id, title: 'Banned', description: '', location: '', startsAt },
       })
       expect(
-        (await h.as(viewer).get('/events')).body.items.map((e: { id: number }) => e.id),
+        (await h.as(viewer).get('/events')).body.items.map((e: { id: string }) => e.id),
       ).toEqual([ok.id])
       expect((await h.as(viewer).get(`/events/${hidden.id}`)).status).toBe(404)
       expect(
@@ -116,7 +116,7 @@ describe('Audit privasi endpoint Fase 3 (integrasi)', () => {
           .map((r) => r.title)
           .sort()
       for (const path of ['notes', 'life-events']) {
-        const as = async (u: { id: number }, v: Parameters<typeof h.as>[0]) =>
+        const as = async (u: { id: string }, v: Parameters<typeof h.as>[0]) =>
           titles(await h.as(v).get(`/users/${owner.username}/${path}`))
         expect(await as(owner, owner)).toEqual(['FRIENDS', 'ONLY_ME', 'PUBLIC'])
         expect(await as(friend, friend)).toEqual(['FRIENDS', 'PUBLIC'])

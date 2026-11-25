@@ -39,7 +39,7 @@ describe('Album (integrasi)', () => {
     const pub = (await mk(owner, 'PUBLIC')).body
     const fr = (await mk(owner, 'FRIENDS')).body
     const me = (await mk(owner, 'ONLY_ME')).body
-    const status = async (u: typeof owner, id: number) =>
+    const status = async (u: typeof owner, id: string) =>
       (await h.as(u).get(`/albums/${id}`)).status
     expect([
       await status(stranger, pub.id),
@@ -57,7 +57,7 @@ describe('Album (integrasi)', () => {
       await status(owner, me.id),
     ]).toEqual([200, 200, 200])
     const names = async (u: typeof owner) =>
-      (await h.as(u).get(`/users/${owner.username}/albums`)).body.map((a: { id: number }) => a.id)
+      (await h.as(u).get(`/users/${owner.username}/albums`)).body.map((a: { id: string }) => a.id)
     expect(await names(stranger)).toEqual([pub.id])
     expect((await names(friend)).sort()).toEqual([pub.id, fr.id].sort())
   })

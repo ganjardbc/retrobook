@@ -17,6 +17,7 @@ import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { PrismaService } from '../../prisma/prisma.service'
 import { resetDb } from '../../test/db'
+import { pairOf } from '../friends/pair'
 
 describe('Save dan On This Day (integrasi)', () => {
   let app: INestApplication
@@ -62,8 +63,7 @@ describe('Save dan On This Day (integrasi)', () => {
       data: {
         requesterId: a.id,
         addresseeId: b.id,
-        pairLowId: Math.min(a.id, b.id),
-        pairHighId: Math.max(a.id, b.id),
+        ...pairOf(a.id, b.id),
         status,
       },
     })

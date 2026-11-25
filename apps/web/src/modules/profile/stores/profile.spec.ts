@@ -9,7 +9,7 @@ import { usersApi } from '@/modules/profile/services/api'
 import { useProfileStore } from '@/modules/profile/stores'
 
 const profile = (over: Partial<Profile> = {}): Profile => ({
-  id: 7,
+  id: '7',
   username: 'siti',
   displayName: 'Siti',
   avatarUrl: null,
@@ -26,8 +26,8 @@ const profile = (over: Partial<Profile> = {}): Profile => ({
   createdAt: '2026-01-01T00:00:00.000Z',
   ...over,
 })
-const post = (id: number): Post => ({ id, content: `p${id}` }) as Post
-const page = (ids: number[], next: number | null = null): Paged<Post> => ({
+const post = (id: string): Post => ({ id, content: `p${id}` }) as Post
+const page = (ids: string[], next: string | null = null): Paged<Post> => ({
   items: ids.map(post),
   nextCursor: next,
 })
@@ -40,7 +40,7 @@ describe('profile store', () => {
 
   it('years: dimuat bersama profil; gagal memuat tidak merusak profil', async () => {
     vi.spyOn(usersApi, 'profile').mockResolvedValue(profile())
-    vi.spyOn(usersApi, 'timeline').mockResolvedValue(page([1]))
+    vi.spyOn(usersApi, 'timeline').mockResolvedValue(page(['1']))
     const years = vi.spyOn(usersApi, 'years').mockResolvedValue({ items: [2015, 2014] })
     const s = useProfileStore()
     await s.load('siti')
@@ -60,29 +60,29 @@ describe('profile store', () => {
     vi.spyOn(usersApi, 'years').mockResolvedValue({ items: [2015, 2014] })
     const tl = vi
       .spyOn(usersApi, 'timeline')
-      .mockResolvedValueOnce(page([5, 4], 4))
-      .mockResolvedValueOnce(page([2]))
-      .mockResolvedValueOnce(page([5, 4]))
+      .mockResolvedValueOnce(page(['5', '4'], '4'))
+      .mockResolvedValueOnce(page(['2']))
+      .mockResolvedValueOnce(page(['5', '4']))
     const s = useProfileStore()
     await s.load('siti')
     await vi.waitFor(() => expect(s.timeline.items).toHaveLength(2))
     await s.setYear(2014)
     expect(s.year).toBe(2014)
-    expect(s.timeline.items.map((p) => p.id)).toEqual([2])
+    expect(s.timeline.items.map((p) => p.id)).toEqual(['2'])
     expect(tl).toHaveBeenLastCalledWith('siti', null, undefined, 2014)
     await s.setYear(2014) // sama: tidak memuat lagi
     expect(tl).toHaveBeenCalledTimes(2)
     await s.setYear(null)
-    expect(s.timeline.items.map((p) => p.id)).toEqual([5, 4])
+    expect(s.timeline.items.map((p) => p.id)).toEqual(['5', '4'])
     expect(tl).toHaveBeenLastCalledWith('siti', null, undefined, null)
   })
 
   it('load: memuat profil lalu timeline dengan username yang benar', async () => {
     vi.spyOn(usersApi, 'profile').mockResolvedValue(profile())
-    const tl = vi.spyOn(usersApi, 'timeline').mockResolvedValue(page([2, 1]))
+    const tl = vi.spyOn(usersApi, 'timeline').mockResolvedValue(page(['2', '1']))
     const s = useProfileStore()
     await s.load('siti')
-    await vi.waitFor(() => expect(s.timeline.items.map((p) => p.id)).toEqual([2, 1]))
+    await vi.waitFor(() => expect(s.timeline.items.map((p) => p.id)).toEqual(['2', '1']))
     expect(s.state).toBe('ready')
     expect(tl).toHaveBeenCalledWith('siti', null, undefined, null)
   })
@@ -115,7 +115,7 @@ describe('profile store', () => {
     let releaseOld!: (p: Profile) => void
     vi.spyOn(usersApi, 'profile')
       .mockImplementationOnce(() => new Promise((r) => (releaseOld = r)))
-      .mockResolvedValueOnce(profile({ id: 8, username: 'budi', displayName: 'Budi' }))
+      .mockResolvedValueOnce(profile({ id: '8', username: 'budi', displayName: 'Budi' }))
     vi.spyOn(usersApi, 'timeline').mockResolvedValue(page([]))
     const s = useProfileStore()
     const old = s.load('siti')
@@ -137,14 +137,14 @@ describe('profile store', () => {
     it('send: NONE -> REQUEST_SENT; permintaan silang langsung FRIENDS (+1 teman)', async () => {
       const send = vi
         .spyOn(friendsApi, 'send')
-        .mockResolvedValueOnce({ userId: 7, status: 'PENDING' })
+        .mockResolvedValueOnce({ userId: '7', status: 'PENDING' })
       const s = await ready('NONE')
       expect(await s.relate('send')).toBe(true)
-      expect(send).toHaveBeenCalledWith(7)
+      expect(send).toHaveBeenCalledWith('7')
       expect(s.profile?.relationship).toBe('REQUEST_SENT')
       expect(s.profile?.friendCount).toBe(3)
 
-      send.mockResolvedValueOnce({ userId: 7, status: 'ACCEPTED' })
+      send.mockResolvedValueOnce({ userId: '7', status: 'ACCEPTED' })
       const s2 = await (async () => (setActivePinia(createPinia()), ready('NONE')))()
       await s2.relate('send')
       expect(s2.profile?.relationship).toBe('FRIENDS')
@@ -153,7 +153,7 @@ describe('profile store', () => {
 
     it('cancel dan reject: kembali NONE; accept: FRIENDS dan +1; unfriend: NONE dan -1', async () => {
       vi.spyOn(friendsApi, 'reject').mockResolvedValue(undefined)
-      vi.spyOn(friendsApi, 'accept').mockResolvedValue({ userId: 7, status: 'ACCEPTED' })
+      vi.spyOn(friendsApi, 'accept').mockResolvedValue({ userId: '7', status: 'ACCEPTED' })
       vi.spyOn(friendsApi, 'unfriend').mockResolvedValue(undefined)
 
       let s = await ready('REQUEST_SENT')
@@ -189,10 +189,10 @@ describe('profile store', () => {
     const png = () => new File([new Uint8Array(10)], 'a.png', { type: 'image/png' })
     const ready = async () => {
       vi.spyOn(usersApi, 'profile').mockResolvedValue(
-        profile({ id: 1, username: 'me', relationship: 'SELF' }),
+        profile({ id: '1', username: 'me', relationship: 'SELF' }),
       )
       vi.spyOn(usersApi, 'timeline').mockResolvedValue(page([]))
-      useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
+      useAuthStore().user = { id: '1', username: 'me', displayName: 'Me' }
       const s = useProfileStore()
       await s.load('me')
       return s
@@ -201,7 +201,7 @@ describe('profile store', () => {
     it('avatar: memperbarui profil dan sesi (navbar), mengembalikan null', async () => {
       const up = vi
         .spyOn(meApi, 'uploadAvatar')
-        .mockResolvedValue(profile({ id: 1, avatarUrl: '/uploads/a.png' }))
+        .mockResolvedValue(profile({ id: '1', avatarUrl: '/uploads/a.png' }))
       const s = await ready()
       expect(await s.uploadPhoto('avatar', png())).toBeNull()
       expect(up).toHaveBeenCalled()
@@ -211,7 +211,7 @@ describe('profile store', () => {
 
     it('cover: memperbarui cover saja; sesi tidak berubah', async () => {
       vi.spyOn(meApi, 'uploadCover').mockResolvedValue(
-        profile({ id: 1, coverUrl: '/uploads/c.png' }),
+        profile({ id: '1', coverUrl: '/uploads/c.png' }),
       )
       const s = await ready()
       expect(await s.uploadPhoto('cover', png())).toBeNull()

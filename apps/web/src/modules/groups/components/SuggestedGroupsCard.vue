@@ -7,7 +7,7 @@ import Button from '@/components/Button.vue'
 import { groupsApi } from '@/modules/groups/services/api'
 
 const groups = ref<GroupSummary[]>([])
-const busy = ref<number | null>(null)
+const busy = ref<string | null>(null)
 
 onMounted(async () => {
   try {

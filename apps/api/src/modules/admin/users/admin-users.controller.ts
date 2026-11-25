@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -35,14 +35,14 @@ export class AdminUsersController {
   }
 
   @Get(':id')
-  detail(@Param('id', ParseIntPipe) id: number) {
+  detail(@Param('id', ParseUUIDPipe) id: string) {
     return this.users.detail(id)
   }
 
   @Patch(':id/status')
   updateStatus(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateAdminUserStatusDto,
     @Req() request: Request,
   ) {
@@ -52,7 +52,7 @@ export class AdminUsersController {
   @Patch(':id/role')
   updateRole(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateAdminUserRoleDto,
     @Req() request: Request,
   ) {
@@ -62,7 +62,7 @@ export class AdminUsersController {
   @Post(':id/reset-password')
   resetPassword(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() request: Request,
   ) {
     return this.users.resetPassword(admin.id, id, request.ip)
@@ -71,7 +71,7 @@ export class AdminUsersController {
   @Delete(':id')
   remove(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() request: Request,
   ) {
     return this.users.delete(admin.id, id, request.ip)

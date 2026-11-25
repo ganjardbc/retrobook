@@ -7,10 +7,10 @@ import HomeView from '@/modules/feed/pages/HomeView.vue'
 import { useAuthStore } from '@/modules/auth/stores'
 import { postsApi } from '@/modules/posts/services/api'
 
-const post = (id: number): Post =>
+const post = (id: string): Post =>
   ({
     id,
-    author: { id: 1, username: 'a', displayName: 'A', avatarUrl: null, isBot: false },
+    author: { id: '1', username: 'a', displayName: 'A', avatarUrl: null, isBot: false },
     wallOwner: null,
     sharedFrom: null,
     content: `p${id}`,
@@ -36,9 +36,9 @@ describe('HomeView: sort feed (POST-09)', () => {
   it('dropdown Most Recent / Top Stories; memilih Top Stories memuat ulang dengan sort=top', async () => {
     const spy = vi
       .spyOn(postsApi, 'feed')
-      .mockResolvedValueOnce({ items: [post(2), post(1)], nextCursor: null })
-      .mockResolvedValueOnce({ items: [post(1), post(2)], nextCursor: null })
-    useAuthStore().user = { id: 1, username: 'a', displayName: 'A' }
+      .mockResolvedValueOnce({ items: [post('2'), post('1')], nextCursor: null })
+      .mockResolvedValueOnce({ items: [post('1'), post('2')], nextCursor: null })
+    useAuthStore().user = { id: '1', username: 'a', displayName: 'A' }
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [{ path: '/', component: HomeView }],

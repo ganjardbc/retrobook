@@ -9,7 +9,7 @@ import type {
 } from '@/modules/moderation/services/types'
 
 const moderation = useModerationStore()
-const selected = ref<number[]>([])
+const selected = ref<string[]>([])
 const actionError = ref('')
 const notice = ref('')
 const searchInput = ref('')
@@ -55,7 +55,7 @@ function item(row: Record<string, unknown>) {
 function comment(value: ModerationItem): value is ModerationComment {
   return 'post' in value
 }
-function toggle(id: number) {
+function toggle(id: string) {
   selected.value = selected.value.includes(id)
     ? selected.value.filter((value) => value !== id)
     : [...selected.value, id]
@@ -78,7 +78,7 @@ async function setHidden(row: Record<string, unknown>, hidden: boolean) {
   actionError.value = ''
   notice.value = ''
   try {
-    await moderation.setHidden(Number(row.id), hidden)
+    await moderation.setHidden(item(row).id, hidden)
     selected.value = []
     notice.value = hidden ? 'Konten disembunyikan.' : 'Konten ditampilkan kembali.'
   } catch (error) {
@@ -198,11 +198,11 @@ async function bulk(action: 'hide' | 'show' | 'delete') {
       <template #cell-selection="{ row }"
         ><input
           type="checkbox"
-          :checked="selected.includes(Number(row.id))"
+          :checked="selected.includes(item(row).id)"
           :disabled="Boolean(item(row).deletedAt)"
           :aria-label="`Pilih item ${row.id}`"
           @click.stop
-          @change="toggle(Number(row.id))"
+          @change="toggle(item(row).id)"
       /></template>
       <template #cell-content="{ row }"
         ><div class="moderation-content">
@@ -237,8 +237,7 @@ async function bulk(action: 'hide' | 'show' | 'delete') {
             :aria-label="item(row).hidden ? 'Tampilkan kembali' : 'Sembunyikan'"
             @click.stop="setHidden(row, !item(row).hidden)"
           >
-            {{ item(row).hidden ? '◉' : '⊘' }}</button
-          ><button
+            {{ item(row).hidden ? '◉' : '⊘' }}</button><button
             class="row-action row-action--delete"
             title="Hapus"
             aria-label="Hapus"
@@ -253,12 +252,14 @@ async function bulk(action: 'hide' | 'show' | 'delete') {
         ><button
           v-if="moderation.filter || searchInput"
           class="button button--quiet"
-          @click="() => {
-            moderation.filter = ''
-            moderation.from = ''
-            moderation.to = ''
-            searchInput = ''
-          }"
+          @click="
+            () => {
+              moderation.filter = ''
+              moderation.from = ''
+              moderation.to = ''
+              searchInput = ''
+            }
+          "
         >
           Bersihkan filter
         </button></template

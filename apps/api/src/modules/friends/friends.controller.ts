@@ -5,7 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   Query,
 } from '@nestjs/common'
@@ -39,7 +39,7 @@ export class FriendsController {
 
   @Post('requests/:userId/accept')
   @HttpCode(200)
-  accept(@CurrentUser() user: AuthUser, @Param('userId', ParseIntPipe) userId: number) {
+  accept(@CurrentUser() user: AuthUser, @Param('userId', ParseUUIDPipe) userId: string) {
     return this.friends.accept(user.id, userId)
   }
 
@@ -47,7 +47,7 @@ export class FriendsController {
   @HttpCode(204)
   async cancelOrReject(
     @CurrentUser() user: AuthUser,
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('userId', ParseUUIDPipe) userId: string,
   ) {
     await this.friends.cancelOrReject(user.id, userId)
   }
@@ -69,7 +69,7 @@ export class FriendsController {
 
   @Delete(':userId')
   @HttpCode(204)
-  async unfriend(@CurrentUser() user: AuthUser, @Param('userId', ParseIntPipe) userId: number) {
+  async unfriend(@CurrentUser() user: AuthUser, @Param('userId', ParseUUIDPipe) userId: string) {
     await this.friends.unfriend(user.id, userId)
   }
 }

@@ -17,11 +17,11 @@ const missing = ref(false)
 const likeFailed = ref(false)
 // Post utama dan daftar related memakai composable yang sama supaya like/komentar/edit konsisten.
 const main = usePostList(async () => ({
-  items: [await postsApi.get(Number(route.params.id))],
+  items: [await postsApi.get(String(route.params.id))],
   nextCursor: null,
 }))
 const related = usePostList(async () => ({
-  items: await postsApi.related(Number(route.params.id)),
+  items: await postsApi.related(String(route.params.id)),
   nextCursor: null,
 }))
 
@@ -38,16 +38,16 @@ async function load() {
 // Pindah ke post lain lewat daftar related: muat ulang di halaman yang sama.
 watch(() => route.params.id, load, { immediate: true })
 
-async function onDelete(id: number) {
+async function onDelete(id: string) {
   try {
     await postsApi.remove(id)
-    if (id === Number(route.params.id)) void router.replace('/')
+    if (id === String(route.params.id)) void router.replace('/')
     else related.remove(id)
   } catch {
     /* gagal: kartu tetap ada */
   }
 }
-const onLike = async (list: typeof main, id: number) => {
+const onLike = async (list: typeof main, id: string) => {
   likeFailed.value = !(await list.toggleLike(id))
 }
 const onUpdated = (list: typeof main, post: Post) => list.replace(post)

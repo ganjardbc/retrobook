@@ -4,6 +4,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
@@ -27,10 +28,8 @@ export class AdminUsersQuery {
   role?: Role
 
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  cursor?: number
+  @IsUUID('4')
+  cursor?: string
 
   @IsOptional()
   @Type(() => Number)

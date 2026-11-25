@@ -41,7 +41,8 @@ describe('Antrean laporan admin (integrasi)', () => {
     })
     return { admin, reporter, author, post, report }
   }
-  const audits = () => h.prisma.auditLog.findMany()
+  const audits = () =>
+    h.prisma.auditLog.findMany({ orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] })
 
   it('non-admin: 403; daftar memuat pratinjau target', async () => {
     const { admin, reporter, report } = await setup()

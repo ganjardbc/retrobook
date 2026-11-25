@@ -24,11 +24,11 @@ const showForm = ref(false)
 const title = ref('')
 const body = ref('')
 const privacy = ref<NoteItem['privacy']>('FRIENDS')
-const editingId = ref<number | null>(null)
+const editingId = ref<string | null>(null)
 const error = ref('')
-const expanded = ref(new Set<number>())
+const expanded = ref(new Set<string>())
 const LONG_NOTE = 200
-function toggle(id: number) {
+function toggle(id: string) {
   const next = new Set(expanded.value)
   if (!next.delete(id)) next.add(id)
   expanded.value = next

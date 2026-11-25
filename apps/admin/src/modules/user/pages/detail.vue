@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { isUuid } from '@retrobook/shared'
 import { useRoute, useRouter } from 'vue-router'
 import { AdminApiError } from '@/modules/auth/services/api'
 import { adminUsersApi } from '@/modules/user/services/api'
@@ -9,14 +10,14 @@ import type { UserRole, UserStatus } from '@/modules/user/services/types'
 const route = useRoute()
 const router = useRouter()
 const users = useUserStore()
-const id = Number(route.params.id)
+const id = String(route.params.id)
 const busy = ref(false)
 const error = ref('')
 const notice = ref('')
 const temporaryPassword = ref('')
 const user = computed(() => users.currentUser)
 onMounted(() => {
-  if (Number.isInteger(id) && id > 0) void users.fetchDetail(id)
+  if (isUuid(id)) void users.fetchDetail(id)
   else void router.replace('/users')
 })
 function friendly(errorValue: unknown) {
@@ -156,8 +157,7 @@ function date(value: string | null) {
       <div class="detail-badges">
         <span class="user-pill" :class="`user-pill--${user.role.toLowerCase()}`">{{
           user.role === 'ADMIN' ? 'Admin' : 'Pengguna'
-        }}</span
-        ><span class="user-status" :class="`user-status--${user.status.toLowerCase()}`"
+        }}</span><span class="user-status" :class="`user-status--${user.status.toLowerCase()}`"
           ><i />{{
             user.status === 'ACTIVE'
               ? 'Aktif'
@@ -216,8 +216,7 @@ function date(value: string | null) {
             :disabled="busy"
             @click="changeStatus(user.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE')"
           >
-            {{ user.status === 'ACTIVE' ? 'Tangguhkan akun' : 'Aktifkan akun' }}</button
-          ><button
+            {{ user.status === 'ACTIVE' ? 'Tangguhkan akun' : 'Aktifkan akun' }}</button><button
             v-if="user.status !== 'BANNED'"
             class="button button--warning"
             :disabled="busy"

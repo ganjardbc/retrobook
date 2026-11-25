@@ -7,7 +7,7 @@ const json = (status: number, body?: unknown) =>
 const expired = () =>
   json(401, { statusCode: 401, message: 'Sesi kedaluwarsa', code: 'TOKEN_EXPIRED' })
 const tokens = (n: number) => ({
-  user: { id: 1, username: 'budi', displayName: 'Budi' },
+  user: { id: '1', username: 'budi', displayName: 'Budi' },
   accessToken: `access-${n}`,
   refreshToken: `refresh-${n}`,
 })

@@ -199,7 +199,7 @@ export class AuthService {
     return this.issue(row.user)
   }
 
-  async logout(userId: number, refreshToken: string, tx?: Prisma.TransactionClient): Promise<void> {
+  async logout(userId: string, refreshToken: string, tx?: Prisma.TransactionClient): Promise<void> {
     const database = tx ?? this.prisma
     await database.refreshToken.updateMany({
       where: { tokenHash: hashToken(refreshToken), userId, revokedAt: null },
@@ -207,7 +207,7 @@ export class AuthService {
     })
   }
 
-  revokeAll(userId: number) {
+  revokeAll(userId: string) {
     return this.prisma.refreshToken.updateMany({
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },

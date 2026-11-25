@@ -9,7 +9,8 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, MISSING_ID } from '../../test/helpers'
+import { pairOf } from './pair'
 
 describe('Pertemanan (integrasi)', () => {
   let app: INestApplication
@@ -46,8 +47,7 @@ describe('Pertemanan (integrasi)', () => {
       expect(all[0]).toMatchObject({
         requesterId: from.id,
         addresseeId: to.id,
-        pairLowId: Math.min(a.id, b.id),
-        pairHighId: Math.max(a.id, b.id),
+        ...pairOf(a.id, b.id),
         status: 'PENDING',
         respondedAt: null,
       })
@@ -66,7 +66,7 @@ describe('Pertemanan (integrasi)', () => {
       const banned = await h.mkUser('banned', { status: 'BANNED' })
       const gone = await h.mkUser('gone', { deletedAt: new Date() })
       const bodies = []
-      for (const id of [999999, banned.id, gone.id]) {
+      for (const id of [MISSING_ID, banned.id, gone.id]) {
         const res = await h.as(a).post('/friends/requests').send({ userId: id })
         expect(res.status).toBe(404)
         bodies.push(res.body)
@@ -144,11 +144,15 @@ describe('Pertemanan (integrasi)', () => {
       expect((await h.as(a).post('/friends/requests').send({})).status).toBe(400)
       expect((await h.as(a).post('/friends/requests').send({ userId: 0 })).status).toBe(400)
       expect(
-        (await h.as(a).post('/friends/requests').send({ userId: 2, status: 'ACCEPTED' })).status,
+        (await h.as(a).post('/friends/requests').send({ userId: MISSING_ID, status: 'ACCEPTED' }))
+          .status,
       ).toBe(400)
       expect(
-        (await request(app.getHttpServer()).post('/api/friends/requests').send({ userId: 2 }))
-          .status,
+        (
+          await request(app.getHttpServer())
+            .post('/api/friends/requests')
+            .send({ userId: MISSING_ID })
+        ).status,
       ).toBe(401)
     })
   })
@@ -162,10 +166,10 @@ describe('Pertemanan (integrasi)', () => {
       expect(res.status).toBe(200)
       expect(res.body).toEqual({ userId: a.id, status: 'ACCEPTED' })
       expect(await rows()).toHaveLength(1)
-      expect((await h.as(a).get('/friends')).body.items.map((u: { id: number }) => u.id)).toEqual([
+      expect((await h.as(a).get('/friends')).body.items.map((u: { id: string }) => u.id)).toEqual([
         b.id,
       ])
-      expect((await h.as(b).get('/friends')).body.items.map((u: { id: number }) => u.id)).toEqual([
+      expect((await h.as(b).get('/friends')).body.items.map((u: { id: string }) => u.id)).toEqual([
         a.id,
       ])
     })
@@ -200,7 +204,7 @@ describe('Pertemanan (integrasi)', () => {
       await h.as(a).post('/friends/requests').send({ userId: b.id })
       await h.as(b).post(`/friends/requests/${a.id}/accept`)
       expect((await h.as(b).get(`/posts/${post.id}`)).status).toBe(200)
-      expect((await h.as(b).get('/feed')).body.items.map((p: { id: number }) => p.id)).toEqual([
+      expect((await h.as(b).get('/feed')).body.items.map((p: { id: string }) => p.id)).toEqual([
         post.id,
       ])
     })
@@ -287,7 +291,7 @@ describe('Pertemanan (integrasi)', () => {
       await h.befriend(banned, me, 'PENDING') // pengirim BANNED: disembunyikan
 
       const p1 = (await h.as(me).get('/friends/requests?limit=3')).body
-      expect(p1.items.map((r: { user: { id: number } }) => r.user.id)).toEqual([
+      expect(p1.items.map((r: { user: { id: string } }) => r.user.id)).toEqual([
         senders[3]!.id,
         senders[2]!.id,
         senders[1]!.id,
@@ -295,7 +299,7 @@ describe('Pertemanan (integrasi)', () => {
       expect(p1.items[0].createdAt).toEqual(expect.any(String))
       expect(p1.items[0].user.email).toBeUndefined()
       const p2 = (await h.as(me).get(`/friends/requests?limit=3&cursor=${p1.nextCursor}`)).body
-      expect(p2.items.map((r: { user: { id: number } }) => r.user.id)).toEqual([senders[0]!.id])
+      expect(p2.items.map((r: { user: { id: string } }) => r.user.id)).toEqual([senders[0]!.id])
       expect(p2.nextCursor).toBeNull()
     })
 
@@ -314,11 +318,11 @@ describe('Pertemanan (integrasi)', () => {
 
       const p1 = (await h.as(me).get('/friends?limit=2')).body
       expect(p1.total).toBe(5)
-      expect(p1.items.map((u: { id: number }) => u.id)).toEqual([friends[4]!.id, friends[3]!.id])
+      expect(p1.items.map((u: { id: string }) => u.id)).toEqual([friends[4]!.id, friends[3]!.id])
       const p2 = (await h.as(me).get(`/friends?limit=2&cursor=${p1.nextCursor}`)).body
-      expect(p2.items.map((u: { id: number }) => u.id)).toEqual([friends[2]!.id, friends[1]!.id])
+      expect(p2.items.map((u: { id: string }) => u.id)).toEqual([friends[2]!.id, friends[1]!.id])
       const p3 = (await h.as(me).get(`/friends?limit=2&cursor=${p2.nextCursor}`)).body
-      expect(p3.items.map((u: { id: number }) => u.id)).toEqual([friends[0]!.id])
+      expect(p3.items.map((u: { id: string }) => u.id)).toEqual([friends[0]!.id])
       expect(p3.nextCursor).toBeNull()
       expect(p1.items[0].passwordHash).toBeUndefined()
     })
@@ -333,7 +337,7 @@ describe('Pertemanan (integrasi)', () => {
       await h.befriend(me, sitiX)
       const names = async (q: string) =>
         (await h.as(me).get(`/friends?q=${encodeURIComponent(q)}`)).body.items.map(
-          (u: { id: number }) => u.id,
+          (u: { id: string }) => u.id,
         )
       expect(await names('BUDI')).toEqual([budi.id])
       expect(await names('siti_a')).toEqual([siti.id]) // '_' dicocokkan apa adanya, bukan satu karakter bebas

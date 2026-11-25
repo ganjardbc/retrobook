@@ -15,7 +15,7 @@ Model data terdiri dari 28 tabel dalam MySQL (dikelola Prisma) yang mendukung se
 | Konvensi            | Aturan                                                                                                         |
 |---------------------|----------------------------------------------------------------------------------------------------------------|
 | Penamaan            | Tabel snake_case jamak (users, posts) lewat @@map Prisma; model Prisma singular (User, Post); kolom snake_case |
-| Primary key         | id INT auto-increment; tabel penghubung memakai primary key gabungan                                           |
+| Primary key         | id CHAR(36) berisi UUID v4 (dibuat Prisma lewat `@default(uuid())`); tabel penghubung memakai primary key gabungan |
 | Waktu               | DATETIME dalam UTC; created_at pada hampir semua tabel; tampilan diubah ke zona waktu pengguna di frontend     |
 | Soft delete         | Kolom deleted_at (NULL berarti aktif) pada users, posts, comments, messages, albums, notes                     |
 | Penyembunyian admin | Kolom hidden (BOOL) pada posts dan comments, terpisah dari deleted_at                                          |
@@ -64,7 +64,7 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 
 | Kolom         | Tipe                            | Constraint               | Keterangan                                             |
 |---------------|---------------------------------|--------------------------|--------------------------------------------------------|
-| id            | INT                             | PK, auto-increment       |                                                        |
+| id            | CHAR(36)                             | PK, UUID v4 dari aplikasi       |                                                        |
 | email         | VARCHAR(191)                    | UNIQUE, NOT NULL         | Huruf kecil                                            |
 | username      | VARCHAR(30)                     | UNIQUE, NOT NULL         | 3 sampai 30 karakter: huruf, angka, titik, garis bawah |
 | display_name  | VARCHAR(80)                     | NOT NULL                 | Nama yang tampil                                       |
@@ -88,8 +88,8 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 
 | Kolom      | Tipe        | Constraint            | Keterangan                         |
 |------------|-------------|-----------------------|------------------------------------|
-| id         | INT         | PK                    |                                    |
-| user_id    | INT         | FK users.id, NOT NULL |                                    |
+| id         | CHAR(36)         | PK                    |                                    |
+| user_id    | CHAR(36)         | FK users.id, NOT NULL |                                    |
 | token_hash | VARCHAR(64) | UNIQUE, NOT NULL      | Hash token, bukan token asli       |
 | expires_at | DATETIME    | NOT NULL              |                                    |
 | revoked_at | DATETIME    | null                  | Diisi saat logout atau user di-ban |
@@ -99,11 +99,11 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 
 | Kolom          | Tipe                           | Constraint                | Keterangan                                                                 |
 |----------------|--------------------------------|---------------------------|----------------------------------------------------------------------------|
-| id             | INT                            | PK                        |                                                                            |
-| author_id      | INT                            | FK users.id, NOT NULL     | Penulis                                                                    |
-| wall_owner_id  | INT                            | FK users.id, null         | Terisi bila menulis di dinding teman                                       |
-| shared_from_id | INT                            | FK posts.id, null         | Terisi bila post adalah share                                              |
-| group_id       | INT                            | FK groups.id, null        | Post grup; SET NULL saat grup dihapus                                      |
+| id             | CHAR(36)                            | PK                        |                                                                            |
+| author_id      | CHAR(36)                            | FK users.id, NOT NULL     | Penulis                                                                    |
+| wall_owner_id  | CHAR(36)                            | FK users.id, null         | Terisi bila menulis di dinding teman                                       |
+| shared_from_id | CHAR(36)                            | FK posts.id, null         | Terisi bila post adalah share                                              |
+| group_id       | CHAR(36)                            | FK groups.id, null        | Post grup; SET NULL saat grup dihapus                                      |
 | content        | TEXT                           | NOT NULL, default kosong  | Boleh kosong bila ada image_url; maksimal 5.000 karakter divalidasi di API |
 | image_url      | VARCHAR(255)                   | null                      | Satu foto per post                                                         |
 | feeling        | VARCHAR(40)                    | null                      | Contoh: feeling happy                                                      |
@@ -118,9 +118,9 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 
 | Kolom      | Tipe         | Constraint              | Keterangan                                |
 |------------|--------------|-------------------------|-------------------------------------------|
-| id         | INT          | PK                      |                                           |
-| post_id    | INT          | FK posts.id, NOT NULL   |                                           |
-| author_id  | INT          | FK users.id, NOT NULL   |                                           |
+| id         | CHAR(36)          | PK                      |                                           |
+| post_id    | CHAR(36)          | FK posts.id, NOT NULL   |                                           |
+| author_id  | CHAR(36)          | FK users.id, NOT NULL   |                                           |
 | content    | TEXT         | NOT NULL                | Maksimal 2.000 karakter divalidasi di API |
 | image_url  | VARCHAR(255) | null                    | Fase 3                                    |
 | flagged    | BOOL         | NOT NULL, default false | Memuat kata terlarang (BR-08)             |
@@ -132,10 +132,10 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 
 | Kolom      | Tipe     | Constraint                                                                                                    | Keterangan                                |
 |------------|----------|---------------------------------------------------------------------------------------------------------------|-------------------------------------------|
-| id         | INT      | PK                                                                                                            |                                           |
-| user_id    | INT      | FK users.id, NOT NULL                                                                                         |                                           |
-| post_id    | INT      | FK posts.id, null                                                                                             |                                           |
-| comment_id | INT      | FK comments.id, null                                                                                          |                                           |
+| id         | CHAR(36)      | PK                                                                                                            |                                           |
+| user_id    | CHAR(36)      | FK users.id, NOT NULL                                                                                         |                                           |
+| post_id    | CHAR(36)      | FK posts.id, null                                                                                             |                                           |
+| comment_id | CHAR(36)      | FK comments.id, null                                                                                          |                                           |
 | created_at | DATETIME | NOT NULL                                                                                                      |                                           |
 | (tabel)    |          | UNIQUE (user_id, post_id), UNIQUE (user_id, comment_id), CHECK tepat satu dari post_id atau comment_id terisi | Mencegah like ganda dan like tanpa target |
 
@@ -143,8 +143,8 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 
 | Kolom      | Tipe     | Constraint                        | Keterangan                     |
 |------------|----------|-----------------------------------|--------------------------------|
-| user_id    | INT      | PK, FK users.id RESTRICT          | Pemilik simpanan               |
-| post_id    | INT      | PK, FK posts.id CASCADE           | Post yang disimpan             |
+| user_id    | CHAR(36)      | PK, FK users.id RESTRICT          | Pemilik simpanan               |
+| post_id    | CHAR(36)      | PK, FK posts.id CASCADE           | Post yang disimpan             |
 | created_at | DATETIME | NOT NULL                          | Waktu disimpan                 |
 | (tabel)    |          | INDEX (user_id, created_at)       | Daftar simpanan per user       |
 
@@ -153,18 +153,18 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 | Tabel         | Kolom                                                        | Constraint                                                     | Keterangan                                                 |
 |---------------|--------------------------------------------------------------|----------------------------------------------------------------|------------------------------------------------------------|
 | post_tags     | post_id, user_id                                             | PK gabungan; FK posts.id dan users.id                          | Teman yang di-tag pada post                                |
-| hashtags      | id INT PK; tag VARCHAR(50); hidden BOOL; created_at DATETIME | UNIQUE (tag), huruf kecil                                      | hidden dipakai admin menyembunyikan dari trending (ADM-17) |
+| hashtags      | id CHAR(36) PK; tag VARCHAR(50); hidden BOOL; created_at DATETIME | UNIQUE (tag), huruf kecil                                      | hidden dipakai admin menyembunyikan dari trending (ADM-17) |
 | post_hashtags | post_id, hashtag_id, created_at                              | PK gabungan (post_id, hashtag_id); FK posts.id dan hashtags.id | created_at untuk hitung trending 24 jam                    |
 
 ### friendships
 
 | Kolom        | Tipe                    | Constraint                                                                            | Keterangan                                     |
 |--------------|-------------------------|---------------------------------------------------------------------------------------|------------------------------------------------|
-| id           | INT                     | PK                                                                                    |                                                |
-| requester_id | INT                     | FK users.id, NOT NULL                                                                 | Pengirim permintaan                            |
-| addressee_id | INT                     | FK users.id, NOT NULL                                                                 | Penerima                                       |
-| pair_low_id  | INT                     | NOT NULL                                                                              | Nilai terkecil dari kedua id, dihitung service |
-| pair_high_id | INT                     | NOT NULL                                                                              | Nilai terbesar dari kedua id, dihitung service |
+| id           | CHAR(36)                     | PK                                                                                    |                                                |
+| requester_id | CHAR(36)                     | FK users.id, NOT NULL                                                                 | Pengirim permintaan                            |
+| addressee_id | CHAR(36)                     | FK users.id, NOT NULL                                                                 | Penerima                                       |
+| pair_low_id  | CHAR(36)                     | NOT NULL                                                                              | Nilai terkecil dari kedua id, dihitung service |
+| pair_high_id | CHAR(36)                     | NOT NULL                                                                              | Nilai terbesar dari kedua id, dihitung service |
 | status       | ENUM(PENDING, ACCEPTED) | NOT NULL, default PENDING                                                             | Tolak atau batal menghapus baris               |
 | created_at   | DATETIME                | NOT NULL                                                                              |                                                |
 | responded_at | DATETIME                | null                                                                                  |                                                |
@@ -174,9 +174,9 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 
 | Kolom        | Tipe     | Constraint                        | Keterangan                             |
 |--------------|----------|-----------------------------------|----------------------------------------|
-| id           | INT      | PK                                |                                        |
-| from_user_id | INT      | FK users.id, NOT NULL             |                                        |
-| to_user_id   | INT      | FK users.id, NOT NULL             |                                        |
+| id           | CHAR(36)      | PK                                |                                        |
+| from_user_id | CHAR(36)      | FK users.id, NOT NULL             |                                        |
+| to_user_id   | CHAR(36)      | FK users.id, NOT NULL             |                                        |
 | seen_at      | DATETIME | null                              | Kosong berarti poke masih aktif        |
 | created_at   | DATETIME | NOT NULL                          | Diperbarui saat poke ulang             |
 | (tabel)      |          | UNIQUE (from_user_id, to_user_id) | Poke ulang memperbarui baris yang sama |
@@ -185,9 +185,9 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 
 | Kolom       | Tipe     | Constraint            | Keterangan    |
 |-------------|----------|-----------------------|---------------|
-| id          | INT      | PK                    |               |
-| sender_id   | INT      | FK users.id, NOT NULL |               |
-| receiver_id | INT      | FK users.id, NOT NULL |               |
+| id          | CHAR(36)      | PK                    |               |
+| sender_id   | CHAR(36)      | FK users.id, NOT NULL |               |
+| receiver_id | CHAR(36)      | FK users.id, NOT NULL |               |
 | content     | TEXT     | NOT NULL              |               |
 | read_at     | DATETIME | null                  | Tanda terbaca |
 | created_at  | DATETIME | NOT NULL              |               |
@@ -199,8 +199,8 @@ Status percakapan per pengguna; baris dibuat saat Clear chat atau Hapus sesi. Ti
 
 | Kolom      | Tipe     | Constraint            | Keterangan                                                                 |
 |------------|----------|-----------------------|----------------------------------------------------------------------------|
-| user_id    | INT      | PK, FK users.id       | Pemilik status                                                             |
-| peer_id    | INT      | PK, FK users.id       | Lawan bicara                                                               |
+| user_id    | CHAR(36)      | PK, FK users.id       | Pemilik status                                                             |
+| peer_id    | CHAR(36)      | PK, FK users.id       | Lawan bicara                                                               |
 | cleared_at | DATETIME | NOT NULL              | Pesan dengan `created_at` <= nilai ini tidak tampil bagi `user_id`          |
 | hidden_at  | DATETIME | null                  | Hapus sesi: disembunyikan dari daftar Messages sampai ada pesan sesudahnya |
 
@@ -208,13 +208,13 @@ Status percakapan per pengguna; baris dibuat saat Clear chat atau Hapus sesi. Ti
 
 | Kolom           | Tipe                                                                                   | Constraint                | Keterangan                      |
 |-----------------|----------------------------------------------------------------------------------------|---------------------------|---------------------------------|
-| id              | INT                                                                                    | PK                        |                                 |
-| user_id         | INT                                                                                    | FK users.id, NOT NULL     | Penerima                        |
-| actor_id        | INT                                                                                    | FK users.id, null         | Pelaku; kosong untuk pengumuman |
+| id              | CHAR(36)                                                                                    | PK                        |                                 |
+| user_id         | CHAR(36)                                                                                    | FK users.id, NOT NULL     | Penerima                        |
+| actor_id        | CHAR(36)                                                                                    | FK users.id, null         | Pelaku; kosong untuk pengumuman |
 | type            | ENUM(LIKE, COMMENT, FRIEND_REQUEST, FRIEND_ACCEPT, POKE, TAG, WALL_POST, ANNOUNCEMENT) | NOT NULL                  |                                 |
-| post_id         | INT                                                                                    | FK posts.id, null         |                                 |
-| comment_id      | INT                                                                                    | FK comments.id, null      |                                 |
-| announcement_id | INT                                                                                    | FK announcements.id, null | Untuk type ANNOUNCEMENT         |
+| post_id         | CHAR(36)                                                                                    | FK posts.id, null         |                                 |
+| comment_id      | CHAR(36)                                                                                    | FK comments.id, null      |                                 |
+| announcement_id | CHAR(36)                                                                                    | FK announcements.id, null | Untuk type ANNOUNCEMENT         |
 | read_at         | DATETIME                                                                               | null                      |                                 |
 | created_at      | DATETIME                                                                               | NOT NULL                  |                                 |
 
@@ -222,9 +222,9 @@ Status percakapan per pengguna; baris dibuat saat Clear chat atau Hapus sesi. Ti
 
 | Kolom      | Tipe     | Constraint                      | Keterangan    |
 |------------|----------|---------------------------------|---------------|
-| id         | INT      | PK                              |               |
-| blocker_id | INT      | FK users.id, NOT NULL           | Pemblokir     |
-| blocked_id | INT      | FK users.id, NOT NULL           | Yang diblokir |
+| id         | CHAR(36)      | PK                              |               |
+| blocker_id | CHAR(36)      | FK users.id, NOT NULL           | Pemblokir     |
+| blocked_id | CHAR(36)      | FK users.id, NOT NULL           | Yang diblokir |
 | created_at | DATETIME | NOT NULL                        |               |
 | (tabel)    |          | UNIQUE (blocker_id, blocked_id) |               |
 
@@ -232,14 +232,14 @@ Status percakapan per pengguna; baris dibuat saat Clear chat atau Hapus sesi. Ti
 
 | Kolom       | Tipe                                         | Constraint                                   | Keterangan                                  |
 |-------------|----------------------------------------------|----------------------------------------------|---------------------------------------------|
-| id          | INT                                          | PK                                           |                                             |
-| reporter_id | INT                                          | FK users.id, NOT NULL                        |                                             |
+| id          | CHAR(36)                                          | PK                                           |                                             |
+| reporter_id | CHAR(36)                                          | FK users.id, NOT NULL                        |                                             |
 | target_type | ENUM(POST, COMMENT, USER)                    | NOT NULL                                     |                                             |
-| target_id   | INT                                          | NOT NULL                                     | Polimorfik, tanpa FK; divalidasi di service |
+| target_id   | CHAR(36)                                          | NOT NULL                                     | Polimorfik, tanpa FK; divalidasi di service |
 | reason      | ENUM(SPAM, HARASSMENT, INAPPROPRIATE, OTHER) | NOT NULL                                     |                                             |
 | note        | TEXT                                         | null                                         | Catatan pelapor                             |
 | status      | ENUM(PENDING, REVIEWED, DISMISSED)           | NOT NULL, default PENDING                    |                                             |
-| handled_by  | INT                                          | FK users.id, null                            | Admin penangan                              |
+| handled_by  | CHAR(36)                                          | FK users.id, null                            | Admin penangan                              |
 | handled_at  | DATETIME                                     | null                                         |                                             |
 | created_at  | DATETIME                                     | NOT NULL                                     |                                             |
 | (tabel)     |                                              | UNIQUE (reporter_id, target_type, target_id) | Satu laporan per pelapor per target         |
@@ -248,11 +248,11 @@ Status percakapan per pengguna; baris dibuat saat Clear chat atau Hapus sesi. Ti
 
 | Kolom       | Tipe        | Constraint            | Keterangan                                            |
 |-------------|-------------|-----------------------|-------------------------------------------------------|
-| id          | INT         | PK                    |                                                       |
-| admin_id    | INT         | FK users.id, NOT NULL |                                                       |
+| id          | CHAR(36)         | PK                    |                                                       |
+| admin_id    | CHAR(36)         | FK users.id, NOT NULL |                                                       |
 | action      | VARCHAR(60) | NOT NULL              | Contoh: USER_SUSPEND, POST_HIDE, REPORT_DISMISS       |
 | target_type | VARCHAR(30) | null                  |                                                       |
-| target_id   | INT         | null                  |                                                       |
+| target_id   | CHAR(36)         | null                  |                                                       |
 | detail      | JSON        | null                  | Nilai sebelum dan sesudah, alasan                     |
 | ip          | VARCHAR(45) | null                  |                                                       |
 | created_at  | DATETIME    | NOT NULL              | Hanya tambah; tanpa endpoint ubah atau hapus (ADM-14) |
@@ -261,44 +261,44 @@ Status percakapan per pengguna; baris dibuat saat Clear chat atau Hapus sesi. Ti
 
 | Tabel         | Kolom                                                                                   | Constraint                                                    | Keterangan                                      |
 |---------------|-----------------------------------------------------------------------------------------|---------------------------------------------------------------|-------------------------------------------------|
-| settings      | key VARCHAR(60); value JSON; updated_by INT; updated_at DATETIME                        | PK (key); FK users.id (updated_by, null)                      | Kunci awal: maintenance_mode, registration_open |
-| announcements | id INT; title VARCHAR(120); body TEXT; created_by INT; active BOOL; created_at DATETIME | PK (id); FK users.id (created_by)                             | Memicu notifikasi ANNOUNCEMENT per user         |
-| blocked_words | id INT; word VARCHAR(60); created_by INT; created_at DATETIME                           | PK (id); UNIQUE (word), huruf kecil; FK users.id (created_by) | Konten yang memuatnya ditandai (BR-08)          |
+| settings      | key VARCHAR(60); value JSON; updated_by CHAR(36); updated_at DATETIME                        | PK (key); FK users.id (updated_by, null)                      | Kunci awal: maintenance_mode, registration_open |
+| announcements | id CHAR(36); title VARCHAR(120); body TEXT; created_by CHAR(36); active BOOL; created_at DATETIME | PK (id); FK users.id (created_by)                             | Memicu notifikasi ANNOUNCEMENT per user         |
+| blocked_words | id CHAR(36); word VARCHAR(60); created_by CHAR(36); created_at DATETIME                           | PK (id); UNIQUE (word), huruf kecil; FK users.id (created_by) | Konten yang memuatnya ditandai (BR-08)          |
 
 ### bot_profiles dan sponsored
 
 | Tabel        | Kolom                                                                                                                                                                        | Constraint                                                            | Keterangan                           |
 |--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|--------------------------------------|
-| bot_profiles | user_id INT; persona TEXT; active BOOL; post_frequency VARCHAR(30); last_post_at DATETIME                                                                                    | PK dan FK users.id (user_id), satu ke satu                            | Hanya untuk users dengan is_bot true |
-| sponsored    | id INT; title VARCHAR(120); body TEXT; image_url VARCHAR(255); link_url VARCHAR(255); active BOOL; starts_at DATETIME; ends_at DATETIME; created_by INT; created_at DATETIME | PK (id); FK users.id (created_by); starts_at dan ends_at boleh kosong | Promosi internal di kolom kanan      |
+| bot_profiles | user_id CHAR(36); persona TEXT; active BOOL; post_frequency VARCHAR(30); last_post_at DATETIME                                                                                    | PK dan FK users.id (user_id), satu ke satu                            | Hanya untuk users dengan is_bot true |
+| sponsored    | id CHAR(36); title VARCHAR(120); body TEXT; image_url VARCHAR(255); link_url VARCHAR(255); active BOOL; starts_at DATETIME; ends_at DATETIME; created_by CHAR(36); created_at DATETIME | PK (id); FK users.id (created_by); starts_at dan ends_at boleh kosong | Promosi internal di kolom kanan      |
 
 ### albums dan photos (Fase 3)
 
 | Tabel  | Kolom                                                                                                                    | Constraint                                                                     | Keterangan                                            |
 |--------|--------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|-------------------------------------------------------|
-| albums | id INT; owner_id INT; name VARCHAR(80); privacy ENUM(PUBLIC, FRIENDS, ONLY_ME); created_at DATETIME; deleted_at DATETIME | PK (id); FK users.id (owner_id)                                                |                                                       |
-| photos | id INT; album_id INT; owner_id INT; url VARCHAR(255); caption VARCHAR(255); created_at DATETIME                          | PK (id); FK albums.id (album_id); FK users.id (owner_id); caption boleh kosong | Tab Photos juga menampilkan foto dari posts.image_url |
+| albums | id CHAR(36); owner_id CHAR(36); name VARCHAR(80); privacy ENUM(PUBLIC, FRIENDS, ONLY_ME); created_at DATETIME; deleted_at DATETIME | PK (id); FK users.id (owner_id)                                                |                                                       |
+| photos | id CHAR(36); album_id CHAR(36); owner_id CHAR(36); url VARCHAR(255); caption VARCHAR(255); created_at DATETIME                          | PK (id); FK albums.id (album_id); FK users.id (owner_id); caption boleh kosong | Tab Photos juga menampilkan foto dari posts.image_url |
 
 ### groups dan group_members (Fase 3)
 
 | Tabel         | Kolom                                                                                                         | Constraint                                                  | Keterangan                                                  |
 |---------------|---------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------|-------------------------------------------------------------|
-| groups        | id INT; name VARCHAR(80); description TEXT; privacy ENUM(PUBLIC, CLOSED); created_by INT; created_at DATETIME | PK (id); FK users.id (created_by); description boleh kosong | Nama tabel jamak; model Prisma Group dengan @@map("groups") |
-| group_members | group_id INT; user_id INT; role ENUM(MEMBER, ADMIN); joined_at DATETIME                                       | PK gabungan (group_id, user_id); FK groups.id dan users.id  |                                                             |
+| groups        | id CHAR(36); name VARCHAR(80); description TEXT; privacy ENUM(PUBLIC, CLOSED); created_by CHAR(36); created_at DATETIME | PK (id); FK users.id (created_by); description boleh kosong | Nama tabel jamak; model Prisma Group dengan @@map("groups") |
+| group_members | group_id CHAR(36); user_id CHAR(36); role ENUM(MEMBER, ADMIN); joined_at DATETIME                                       | PK gabungan (group_id, user_id); FK groups.id dan users.id  |                                                             |
 
 ### events dan event_rsvps (Fase 3)
 
 | Tabel       | Kolom                                                                                                                        | Constraint                                                               | Keterangan                |
 |-------------|------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|---------------------------|
-| events      | id INT; title VARCHAR(120); description TEXT; location VARCHAR(120); starts_at DATETIME; created_by INT; created_at DATETIME | PK (id); FK users.id (created_by); description dan location boleh kosong | Sumber kartu Events today |
-| event_rsvps | event_id INT; user_id INT; status ENUM(GOING, MAYBE, DECLINED); updated_at DATETIME                                          | PK gabungan (event_id, user_id); FK events.id dan users.id               |                           |
+| events      | id CHAR(36); title VARCHAR(120); description TEXT; location VARCHAR(120); starts_at DATETIME; created_by CHAR(36); created_at DATETIME | PK (id); FK users.id (created_by); description dan location boleh kosong | Sumber kartu Events today |
+| event_rsvps | event_id CHAR(36); user_id CHAR(36); status ENUM(GOING, MAYBE, DECLINED); updated_at DATETIME                                          | PK gabungan (event_id, user_id); FK events.id dan users.id               |                           |
 
 ### notes dan life_events (Fase 3)
 
 | Tabel       | Kolom                                                                                                                                                                   | Constraint                       | Keterangan                            |
 |-------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------|---------------------------------------|
-| notes       | id INT; author_id INT; title VARCHAR(120); body TEXT; privacy ENUM(PUBLIC, FRIENDS, ONLY_ME); created_at DATETIME; deleted_at DATETIME                                  | PK (id); FK users.id (author_id) |                                       |
-| life_events | id INT; user_id INT; kind ENUM(MOVED, STARTED_JOB, GRADUATED, OTHER); title VARCHAR(120); happened_on DATE; privacy ENUM(PUBLIC, FRIENDS, ONLY_ME); created_at DATETIME | PK (id); FK users.id (user_id)   | Tampil di timeline sesuai happened_on |
+| notes       | id CHAR(36); author_id CHAR(36); title VARCHAR(120); body TEXT; privacy ENUM(PUBLIC, FRIENDS, ONLY_ME); created_at DATETIME; deleted_at DATETIME                                  | PK (id); FK users.id (author_id) |                                       |
+| life_events | id CHAR(36); user_id CHAR(36); kind ENUM(MOVED, STARTED_JOB, GRADUATED, OTHER); title VARCHAR(120); happened_on DATE; privacy ENUM(PUBLIC, FRIENDS, ONLY_ME); created_at DATETIME | PK (id); FK users.id (user_id)   | Tampil di timeline sesuai happened_on |
 
 Catatan: Activity Log (ACT-01) tidak punya tabel sendiri; daftarnya dibentuk dari posts, comments, dan likes milik user.
 
@@ -381,6 +381,8 @@ Index dipilih dari pola baca yang paling sering: feed, timeline, chat, notifikas
 | photos         | INDEX (album_id, created_at)                                             | Foto dalam album terbaru dulu                 |
 | blocked_words  | UNIQUE (word)                                                            | Tanpa kata ganda                              |
 
+Catatan UUID: semua PK dan FK ke tabel ber-UUID bertipe CHAR(36) huruf kecil. Pasangan teman (`pair_low_id`, `pair_high_id`) diurutkan dengan perbandingan string (`<`), bukan Math.min/max. `username` pengguna terhapus diganti `deleted-` + 20 heksa pertama UUID (batas 30 karakter).
+
 Aturan urutan dan pagination: daftar yang diurut waktu memakai `ORDER BY created_at DESC, id DESC`, dan kursor menunjuk id baris terakhir halaman sebelumnya (posisinya dicari lewat pasangan `created_at, id`). Urutan tidak boleh bergantung pada nilai `id` saja: id tidak dijamin menaik menurut waktu (mis. UUID). Penulisan bantu ada di `apps/api/src/common/keyset.ts`.
 
 ## 7. Aturan integritas
@@ -405,7 +407,7 @@ Aturan berikut menjaga konsistensi data yang tidak bisa dijamin oleh FK saja; se
 | Likes: CHECK satu target          | MySQL menolak CHECK pada kolom yang memakai FK CASCADE (error 3823), jadi CHECK `likes` tidak dipasang; service wajib mengisi tepat satu dari post_id atau comment_id dan ada tes | INT-01 |
 | Default TEXT                       | MySQL tidak mengizinkan DEFAULT pada TEXT lewat Prisma tanpa noise migrasi; `posts.content` tidak punya default, service mengisi string kosong bila hanya ada foto | POST-02 |
 | Waktu                              | Semua DATETIME disimpan UTC; konversi di frontend                                                                                            |                            |
-| Kapasitas ID                       | INT cukup untuk skala proyek ini; dapat dinaikkan ke BIGINT lewat migrasi bila perlu                                                         |                            |
+| Kapasitas ID                       | UUID v4 (CHAR(36)): tanpa batas kapasitas dan tidak bisa ditebak; ongkosnya indeks lebih besar dan urutan tidak menurut waktu (lihat aturan pagination) |                            |
 
 ## 8. Seed dan migrasi
 

@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -37,7 +37,7 @@ export class AdminModerationController {
   @Patch('posts/:id')
   setPostHidden(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SetModerationHiddenDto,
     @Req() request: Request,
   ) {
@@ -47,7 +47,7 @@ export class AdminModerationController {
   @Delete('posts/:id')
   deletePost(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() request: Request,
   ) {
     return this.moderation.deletePost(admin.id, id, request.ip)
@@ -70,7 +70,7 @@ export class AdminModerationController {
   @Patch('comments/:id')
   setCommentHidden(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SetModerationHiddenDto,
     @Req() request: Request,
   ) {
@@ -80,7 +80,7 @@ export class AdminModerationController {
   @Delete('comments/:id')
   deleteComment(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() request: Request,
   ) {
     return this.moderation.deleteComment(admin.id, id, request.ip)

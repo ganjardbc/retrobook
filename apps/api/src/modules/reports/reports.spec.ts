@@ -10,7 +10,7 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, MISSING_ID } from '../../test/helpers'
 
 describe('Laporan konten (integrasi)', () => {
   let app: INestApplication
@@ -37,7 +37,7 @@ describe('Laporan konten (integrasi)', () => {
     h.prisma.post.create({
       data: { authorId: author.id, content: 'isi', privacy: 'PUBLIC', ...extra },
     })
-  const mkComment = (postId: number, author: User, extra: object = {}) =>
+  const mkComment = (postId: string, author: User, extra: object = {}) =>
     h.prisma.comment.create({ data: { postId, authorId: author.id, content: 'kom', ...extra } })
 
   it('tanpa token: 401', async () => {
@@ -60,7 +60,7 @@ describe('Laporan konten (integrasi)', () => {
       })
       expect(a.status).toBe(201)
       expect(a.body).toEqual({
-        id: expect.any(Number),
+        id: expect.any(String),
         targetType: 'POST',
         targetId: post.id,
         reason: 'SPAM',
@@ -73,7 +73,9 @@ describe('Laporan konten (integrasi)', () => {
       expect(
         (await send(me, { targetType: 'USER', targetId: other.id, reason: 'OTHER' })).status,
       ).toBe(201)
-      const rows = await h.prisma.report.findMany({ orderBy: { id: 'asc' } })
+      const rows = await h.prisma.report.findMany({
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      })
       expect(rows.map((r) => [r.targetType, r.status, r.reporterId, r.note])).toEqual([
         ['POST', 'PENDING', me.id, 'iklan judi'],
         ['COMMENT', 'PENDING', me.id, null],
@@ -136,7 +138,7 @@ describe('Laporan konten (integrasi)', () => {
   })
 
   describe('target yang tidak terlihat: 404 yang sama dengan target tidak ada, tidak ada baris (R-03)', () => {
-    const cases: [string, (ctx: { me: User; other: User }) => Promise<[string, number]>][] = [
+    const cases: [string, (ctx: { me: User; other: User }) => Promise<[string, string]>][] = [
       [
         'post ONLY_ME milik orang lain',
         async ({ other }) => ['POST', (await mkPost(other, { privacy: 'ONLY_ME' })).id],
@@ -208,14 +210,14 @@ describe('Laporan konten (integrasi)', () => {
           return ['USER', other.id]
         },
       ],
-      ['id yang tidak ada', async () => ['POST', 999999]],
+      ['id yang tidak ada', async () => ['POST', MISSING_ID]],
     ]
     it.each(cases)('%s', async (_name, setup) => {
       const [me, other] = await Promise.all([h.mkUser('me'), h.mkUser('other')])
       const [targetType, targetId] = await setup({ me, other })
       const res = await send(me, { targetType, targetId, reason: 'SPAM' })
       expect(res.status).toBe(404)
-      const missing = await send(me, { targetType, targetId: 999998, reason: 'SPAM' })
+      const missing = await send(me, { targetType, targetId: MISSING_ID, reason: 'SPAM' })
       expect(res.body).toEqual(missing.body)
       expect(await count()).toBe(0)
     })

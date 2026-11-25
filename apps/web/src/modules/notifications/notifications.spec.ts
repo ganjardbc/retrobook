@@ -29,11 +29,11 @@ vi.mock('@/modules/notifications/services/api', () => ({
 const api = vi.mocked(notificationsApi)
 const push = (n: AppNotification) => handlers.get('notification:new')?.forEach((h) => h(n))
 
-const mkN = (id: number, over: Partial<AppNotification> = {}): AppNotification => ({
+const mkN = (id: string, over: Partial<AppNotification> = {}): AppNotification => ({
   id,
   type: 'LIKE',
-  actor: { id: 9, username: 'sari', displayName: 'Sari', avatarUrl: null, isBot: false },
-  postId: 1,
+  actor: { id: '9', username: 'sari', displayName: 'Sari', avatarUrl: null, isBot: false },
+  postId: '1',
   commentId: null,
   text: 'Sari likes your post',
   readAt: null,
@@ -47,7 +47,7 @@ beforeEach(() => {
   managerHandlers.clear()
   vi.resetAllMocks()
   api.unreadCount.mockResolvedValue({ count: 2 })
-  api.list.mockResolvedValue({ items: [mkN(2), mkN(1, { readAt: 'x' })], nextCursor: null })
+  api.list.mockResolvedValue({ items: [mkN('2'), mkN('1', { readAt: 'x' })], nextCursor: null })
   api.markRead.mockResolvedValue({ count: 0 })
 })
 
@@ -74,18 +74,18 @@ describe('notifications store', () => {
     const s = useNotificationsStore()
     s.start()
     await flushPromises()
-    push(mkN(5))
+    push(mkN('5'))
     expect(s.unread).toBe(3)
-    expect(s.items[0]!.id).toBe(5)
-    expect(s.lastReceived?.id).toBe(5)
+    expect(s.items[0]!.id).toBe('5')
+    expect(s.lastReceived?.id).toBe('5')
   })
 
   it('event ganda dengan id sama diabaikan', async () => {
     const s = useNotificationsStore()
     s.start()
     await flushPromises()
-    push(mkN(5))
-    push(mkN(5))
+    push(mkN('5'))
+    push(mkN('5'))
     expect(s.items).toHaveLength(1)
     expect(s.unread).toBe(3)
   })
@@ -94,10 +94,10 @@ describe('notifications store', () => {
     const s = useNotificationsStore()
     s.start(() => true)
     await flushPromises()
-    push(mkN(5))
+    push(mkN('5'))
     expect(s.unread).toBe(2)
-    expect(api.markRead).toHaveBeenCalledWith([5])
-    expect(s.fresh.has(5)).toBe(true)
+    expect(api.markRead).toHaveBeenCalledWith(['5'])
+    expect(s.fresh.has('5')).toBe(true)
   })
 
   it('open: memuat daftar, menyorot yang belum dibaca, menandai semua terbaca', async () => {
@@ -105,8 +105,8 @@ describe('notifications store', () => {
     s.start()
     await flushPromises()
     await s.open()
-    expect(s.items.map((n) => n.id)).toEqual([2, 1])
-    expect([...s.fresh]).toEqual([2])
+    expect(s.items.map((n) => n.id)).toEqual(['2', '1'])
+    expect([...s.fresh]).toEqual(['2'])
     expect(api.markRead).toHaveBeenCalledWith()
     expect(s.unread).toBe(0)
   })
@@ -181,7 +181,7 @@ describe('NotificationsJewel', () => {
   it('event realtime menaikkan badge tanpa membuka dropdown', async () => {
     const w = mount_()
     await flushPromises()
-    push(mkN(9))
+    push(mkN('9'))
     await flushPromises()
     expect(w.find('.jewel__badge').text()).toBe('3')
     w.unmount()

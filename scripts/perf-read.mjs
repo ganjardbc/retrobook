@@ -81,8 +81,9 @@ async function seed() {
       data: {
         requesterId: users[a].id,
         addresseeId: users[b].id,
-        pairLowId: users[Math.min(a, b)].id,
-        pairHighId: users[Math.max(a, b)].id,
+        // Id berupa UUID: pasangan (low, high) diurutkan menurut nilai id, bukan indeks (CHECK pair_low < pair_high).
+        pairLowId: users[a].id < users[b].id ? users[a].id : users[b].id,
+        pairHighId: users[a].id < users[b].id ? users[b].id : users[a].id,
         status: 'ACCEPTED',
       },
     })

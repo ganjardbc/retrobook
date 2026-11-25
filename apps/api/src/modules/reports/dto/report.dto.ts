@@ -1,16 +1,14 @@
 import { ReportReason, ReportTargetType } from '@prisma/client'
-import { Transform, Type } from 'class-transformer'
-import { IsEnum, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator'
+import { Transform } from 'class-transformer'
+import { IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator'
 
 /** POST /reports (INT-04). Field lain ditolak oleh whitelist. */
 export class CreateReportDto {
   @IsEnum(ReportTargetType, { message: 'targetType harus POST, COMMENT, atau USER' })
   targetType!: ReportTargetType
 
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  targetId!: number
+  @IsUUID('4')
+  targetId!: string
 
   @IsEnum(ReportReason, { message: 'reason harus SPAM, HARASSMENT, INAPPROPRIATE, atau OTHER' })
   reason!: ReportReason

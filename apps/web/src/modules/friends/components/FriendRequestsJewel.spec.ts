@@ -14,7 +14,7 @@ vi.mock('@/modules/friends/services/api', () => ({
 }))
 const api = vi.mocked(friendsApi)
 
-const req = (id: number): FriendRequest => ({
+const req = (id: string): FriendRequest => ({
   user: { id, username: `u${id}`, displayName: `User ${id}`, avatarUrl: null, isBot: false },
   createdAt: new Date().toISOString(),
 })
@@ -22,9 +22,9 @@ const req = (id: number): FriendRequest => ({
 beforeEach(() => {
   setActivePinia(createPinia())
   vi.resetAllMocks()
-  useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
-  api.requests.mockResolvedValue({ items: [req(2), req(3)], nextCursor: null })
-  api.accept.mockResolvedValue({ userId: 2, status: 'ACCEPTED' })
+  useAuthStore().user = { id: '1', username: 'me', displayName: 'Me' }
+  api.requests.mockResolvedValue({ items: [req('2'), req('3')], nextCursor: null })
+  api.accept.mockResolvedValue({ userId: '2', status: 'ACCEPTED' })
   api.reject.mockResolvedValue(undefined)
 })
 
@@ -50,7 +50,7 @@ describe('FriendRequestsJewel', () => {
   })
 
   it('halaman pertama penuh (ada cursor): badge bertanda "+"', async () => {
-    api.requests.mockResolvedValue({ items: [req(2), req(3)], nextCursor: 3 })
+    api.requests.mockResolvedValue({ items: [req('2'), req('3')], nextCursor: '3' })
     const w = mount_()
     await flushPromises()
     expect(w.find('.jewel__badge').text()).toBe('2+')
@@ -63,7 +63,7 @@ describe('FriendRequestsJewel', () => {
     await w.find('button').trigger('click')
     await w.findAll('.item button')[0]!.trigger('click')
     await flushPromises()
-    expect(api.accept).toHaveBeenCalledWith(2)
+    expect(api.accept).toHaveBeenCalledWith('2')
     expect(w.find('.jewel__badge').text()).toBe('1')
     w.unmount()
   })
@@ -82,10 +82,10 @@ describe('FriendRequestsJewel', () => {
     const w = mount_()
     await flushPromises()
     api.requests.mockClear()
-    api.requests.mockResolvedValue({ items: [req(2), req(3), req(4)], nextCursor: null })
+    api.requests.mockResolvedValue({ items: [req('2'), req('3'), req('4')], nextCursor: null })
     const n = (type: AppNotification['type']) =>
       ({
-        id: 1,
+        id: '1',
         type,
         actor: null,
         postId: null,

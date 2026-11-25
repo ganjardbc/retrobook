@@ -12,9 +12,9 @@ Dokumen ini adalah kontrak antara `apps/api` (NestJS) dan dua frontend (`apps/we
 | Format | JSON, UTF-8; upload memakai `multipart/form-data` |
 | Auth | Header `Authorization: Bearer <accessToken>`; access token umur pendek (usulan 15 menit), refresh token usulan 30 hari |
 | Waktu | ISO 8601 UTC, contoh `2026-11-24T08:30:00.000Z`; konversi zona waktu di frontend |
-| ID | Integer (sesuai ERD); dikirim sebagai number |
+| ID | UUID v4 (string 36 karakter, sesuai ERD); dikirim sebagai string. Parameter path yang bukan UUID: 400 `VALIDATION_FAILED`; UUID valid yang tidak ada atau tidak terlihat: 404 yang sama. Id tidak berurutan menurut waktu: jangan mengurutkan atau membandingkan id di klien |
 | Penamaan field | `camelCase` di API, `snake_case` di database (Prisma memetakan) |
-| Pagination | Cursor: `?limit=10&cursor=<id>`; respons `{ items, nextCursor }`, `nextCursor` null bila habis. Default limit 10, maksimum 50 |
+| Pagination | Cursor: `?limit=10&cursor=<id>` (id baris terakhir halaman sebelumnya, UUID); respons `{ items, nextCursor }`, `nextCursor` null bila habis. Default limit 10, maksimum 50 |
 | Sort | Terbaru di atas (`createdAt desc, id desc`) kecuali disebut lain |
 | Soft delete | Data dengan `deleted_at` atau `hidden` tidak pernah muncul di respons user (BR-06, BR-07) |
 | Privasi | Diperiksa di server pada setiap query (BR-02 sampai BR-04, BR-11) |

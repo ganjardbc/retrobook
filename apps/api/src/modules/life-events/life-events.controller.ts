@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post } from '@nestjs/common'
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
 import { CreateLifeEventDto } from './dto/life-event.dto'
 import { LifeEventsService } from './life-events.service'
@@ -14,7 +14,7 @@ export class LifeEventsController {
   }
   @Delete(':id') @HttpCode(204) async remove(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
   ) {
     await this.events.remove(user.id, id)
   }

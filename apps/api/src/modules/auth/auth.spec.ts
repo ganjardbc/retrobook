@@ -44,7 +44,7 @@ describe('Auth (integrasi)', () => {
       const res = await post('/auth/register').send(body)
       expect(res.status).toBe(201)
       expect(res.body.user).toEqual({
-        id: expect.any(Number),
+        id: expect.any(String),
         username: 'budi_01',
         displayName: 'Budi',
         avatarUrl: null,

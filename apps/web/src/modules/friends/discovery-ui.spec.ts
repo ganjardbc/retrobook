@@ -12,14 +12,14 @@ vi.mock('@/modules/friends/services/api', () => ({
 }))
 const api = vi.mocked(friendsApi)
 
-const user = (id: number, name: string): UserSummary => ({
+const user = (id: string, name: string): UserSummary => ({
   id,
   username: name.toLowerCase(),
   displayName: name,
   avatarUrl: null,
   isBot: false,
 })
-const sug = (id: number, name: string, mutualFriends: number): FriendSuggestion => ({
+const sug = (id: string, name: string, mutualFriends: number): FriendSuggestion => ({
   user: user(id, name),
   mutualFriends,
 })
@@ -31,9 +31,9 @@ const router = () =>
 
 beforeEach(() => {
   vi.resetAllMocks()
-  api.suggestions.mockResolvedValue({ items: [sug(2, 'Bob', 3), sug(3, 'Carol', 1)] })
-  api.send.mockResolvedValue({ userId: 2, status: 'PENDING' })
-  api.birthdays.mockResolvedValue({ items: [user(2, 'Bob')] })
+  api.suggestions.mockResolvedValue({ items: [sug('2', 'Bob', 3), sug('3', 'Carol', 1)] })
+  api.send.mockResolvedValue({ userId: '2', status: 'PENDING' })
+  api.birthdays.mockResolvedValue({ items: [user('2', 'Bob')] })
 })
 
 describe('PeopleYouMayKnow', () => {
@@ -67,7 +67,7 @@ describe('PeopleYouMayKnow', () => {
     expect(add.text()).toBe('Add Friend')
     await add.trigger('click')
     await flushPromises()
-    expect(api.send).toHaveBeenCalledWith(2)
+    expect(api.send).toHaveBeenCalledWith('2')
     expect(w.findAll('li')[0]!.text()).toContain('Request Sent')
     expect(
       w

@@ -34,7 +34,7 @@ describe('Grup (integrasi)', () => {
     const post = await h.as(admin).post(`/groups/${group.id}/posts`).send({ content: 'halo grup' })
     expect(post.status).toBe(201)
     const seen = await h.as(member).get(`/groups/${group.id}/posts`)
-    expect(seen.body.items.map((p: { id: number }) => p.id)).toEqual([post.body.id])
+    expect(seen.body.items.map((p: { id: string }) => p.id)).toEqual([post.body.id])
     expect((await h.as(outsider).get(`/groups/${group.id}/posts`)).status).toBe(404)
     expect(
       (await h.as(outsider).post(`/groups/${group.id}/posts`).send({ content: 'x' })).status,

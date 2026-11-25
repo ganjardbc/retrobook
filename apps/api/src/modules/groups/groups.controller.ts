@@ -4,7 +4,7 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -32,14 +32,14 @@ export class GroupsController {
   }
 
   @Get(':id')
-  get(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  get(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.groups.get(user.id, id)
   }
 
   @Patch(':id')
   update(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateGroupDto,
   ) {
     return this.groups.update(user.id, id, dto)
@@ -50,26 +50,26 @@ export class GroupsController {
   @UseInterceptors(ImageFileInterceptor())
   photo(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file?: Express.Multer.File,
   ) {
     return this.groups.setPhoto(user.id, id, file)
   }
 
   @Post(':id/join')
-  join(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  join(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.groups.join(user.id, id)
   }
 
   @Post(':id/leave')
-  leave(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  leave(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.groups.leave(user.id, id)
   }
 
   @Get(':id/posts')
   posts(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Query() q: CursorQueryDto,
   ) {
     return this.groups.posts(user.id, id, q.limit, q.cursor)
@@ -78,7 +78,7 @@ export class GroupsController {
   @Post(':id/posts')
   createPost(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: CreateGroupPostDto,
   ) {
     return this.groups.createPost(user.id, id, dto)

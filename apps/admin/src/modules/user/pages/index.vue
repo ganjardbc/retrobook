@@ -94,8 +94,7 @@ function user(row: Record<string, unknown>) {
             String(row.displayName || row.username)
               .slice(0, 1)
               .toUpperCase()
-          }}</span
-          ><span
+          }}</span><span
             ><strong>{{ row.displayName }}</strong
             ><small>@{{ row.username }} · {{ row.email }}</small></span
           ><i v-if="user(row).isBot" class="bot-tag">BOT</i>

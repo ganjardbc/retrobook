@@ -27,7 +27,7 @@ export class AdminHashtagsService {
     return { items, nextCursor: rows.length > query.limit ? items.at(-1)!.id : null }
   }
 
-  setHidden(adminId: number, id: number, hidden: boolean, ip?: string) {
+  setHidden(adminId: string, id: string, hidden: boolean, ip?: string) {
     return this.audit.execute(
       {
         adminId,

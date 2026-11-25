@@ -5,7 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   UploadedFiles,
   UseInterceptors,
@@ -31,13 +31,13 @@ export class AlbumsController {
   }
 
   @Get(':id')
-  get(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  get(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.albums.get(user.id, id)
   }
 
   @Delete(':id')
   @HttpCode(204)
-  async remove(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  async remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     await this.albums.remove(user.id, id)
   }
 
@@ -45,8 +45,8 @@ export class AlbumsController {
   @HttpCode(204)
   async removePhoto(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
-    @Param('photoId', ParseIntPipe) photoId: number,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('photoId', ParseUUIDPipe) photoId: string,
   ) {
     await this.albums.removePhoto(user.id, id, photoId)
   }
@@ -57,7 +57,7 @@ export class AlbumsController {
   )
   addPhotos(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     return this.albums.addPhotos(user.id, id, files)

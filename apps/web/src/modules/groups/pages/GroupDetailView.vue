@@ -21,7 +21,7 @@ const message = (cause: unknown, fallback: string) =>
   cause instanceof ApiRequestError ? cause.messages.join(' ') : fallback
 
 async function load() {
-  const id = Number(route.params.id)
+  const id = String(route.params.id)
   try {
     group.value = await groupsApi.get(id)
     if (group.value.isMember) posts.value = (await groupsApi.posts(id)).items
@@ -31,7 +31,7 @@ async function load() {
 }
 async function join() {
   try {
-    group.value = await groupsApi.join(Number(route.params.id))
+    group.value = await groupsApi.join(String(route.params.id))
     posts.value = (await groupsApi.posts(group.value.id)).items
   } catch (cause) {
     error.value = message(cause, t('groups.joinError'))

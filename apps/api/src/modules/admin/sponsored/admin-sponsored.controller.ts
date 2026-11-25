@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   Req,
@@ -37,7 +37,7 @@ export class AdminSponsoredController {
   @Patch(':id')
   update(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateSponsoredDto,
     @Req() request: Request,
   ) {
@@ -47,7 +47,7 @@ export class AdminSponsoredController {
   @Delete(':id')
   remove(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() request: Request,
   ) {
     return this.sponsored.remove(admin.id, id, request.ip)

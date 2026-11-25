@@ -7,23 +7,23 @@ import { VisibilityService } from '../visibility/visibility.service'
 import { NEWEST_FIRST } from '../../common/keyset'
 
 export type NotificationDto = {
-  id: number
+  id: string
   type: NotifType
   actor: UserSummary | null
-  postId: number | null
-  commentId: number | null
-  announcementId: number | null
+  postId: string | null
+  commentId: string | null
+  announcementId: string | null
   text: string
   readAt: string | null
   createdAt: string
 }
 
 export type NotifyInput = {
-  userId: number
-  actorId: number | null
+  userId: string
+  actorId: string | null
   type: NotifType
-  postId?: number
-  commentId?: number
+  postId?: string
+  commentId?: string
 }
 
 const select = {
@@ -96,7 +96,7 @@ export class NotificationsService {
   }
 
   /** Kirim `notification:new` ke semua koneksi penerima. */
-  push(userId: number, dto: NotificationDto | null) {
+  push(userId: string, dto: NotificationDto | null) {
     if (dto) this.realtime.emitToUser(userId, 'notification:new', dto)
   }
 
@@ -110,7 +110,7 @@ export class NotificationsService {
   }
 
   /** ADM-13: kirim `notification:new` untuk semua notifikasi satu pengumuman (setelah commit). Gagal kirim tidak melempar. */
-  async pushAnnouncement(announcementId: number): Promise<void> {
+  async pushAnnouncement(announcementId: string): Promise<void> {
     try {
       const rows = await this.prisma.notification.findMany({
         where: { announcementId },
@@ -122,7 +122,7 @@ export class NotificationsService {
     }
   }
 
-  async list(viewerId: number, limit: number, cursor?: number): Promise<Paged<NotificationDto>> {
+  async list(viewerId: string, limit: number, cursor?: string): Promise<Paged<NotificationDto>> {
     const rows = await this.prisma.notification.findMany({
       where: this.visibleTo(viewerId),
       orderBy: NEWEST_FIRST,
@@ -137,7 +137,7 @@ export class NotificationsService {
     }
   }
 
-  async unreadCount(viewerId: number): Promise<{ count: number }> {
+  async unreadCount(viewerId: string): Promise<{ count: number }> {
     const count = await this.prisma.notification.count({
       where: { ...this.visibleTo(viewerId), readAt: null },
     })
@@ -145,7 +145,7 @@ export class NotificationsService {
   }
 
   /** Tanpa `ids`: semua. Hanya milik sendiri; id orang lain diabaikan. Mengembalikan sisa belum dibaca. */
-  async markRead(viewerId: number, ids?: number[]): Promise<{ count: number }> {
+  async markRead(viewerId: string, ids?: string[]): Promise<{ count: number }> {
     await this.prisma.notification.updateMany({
       where: { userId: viewerId, readAt: null, ...(ids ? { id: { in: ids } } : {}) },
       data: { readAt: new Date() },
@@ -157,7 +157,7 @@ export class NotificationsService {
    * Notifikasi milik viewer yang masih boleh dilihat: aktor, post, dan komentar terkait harus lolos
    * aturan visibilitas saat dibaca (dihapus, disembunyikan, privasi berubah, atau diblokir = hilang).
    */
-  private visibleTo(viewerId: number): Prisma.NotificationWhereInput {
+  private visibleTo(viewerId: string): Prisma.NotificationWhereInput {
     return {
       userId: viewerId,
       AND: [

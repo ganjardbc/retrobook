@@ -44,3 +44,15 @@ export function testHelpers(app: INestApplication) {
     })
   return { prisma, mkUser, tokenOf, as, befriend }
 }
+
+/** UUID v4 yang valid tetapi tidak dimiliki baris mana pun: untuk tes "tidak ada" (404). */
+export const MISSING_ID = '00000000-0000-4000-8000-000000000000'
+
+/**
+ * Waktu menaik satu detik per panggilan, untuk tes yang membuat baris berurutan: dengan id acak (UUID),
+ * baris yang dibuat dalam milidetik yang sama tidak lagi terurut menurut waktu sisip.
+ */
+export const seqTime = (startMs = Date.now() - 3_600_000) => {
+  let t = startMs
+  return () => new Date((t += 1000))
+}

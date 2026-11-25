@@ -87,8 +87,11 @@ onMounted(() => {
       :class="{ 'stat-card--loading': dashboard.loading && !stats }"
     >
       <div class="stat-card__top">
-        <span class="stat-label">{{ card.label }}</span
-        ><span class="stat-icon" :class="`stat-icon--${card.tone}`">{{ card.icon }}</span>
+        <span class="stat-label">{{ card.label }}</span><span
+          class="stat-icon"
+          :class="`stat-icon--${card.tone}`"
+          >{{ card.icon }}</span
+        >
       </div>
       <strong class="stat-value">{{ !stats ? '—' : number(card.value) }}</strong>
       <span class="stat-note">{{ card.note }}</span>

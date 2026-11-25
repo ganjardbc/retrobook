@@ -14,11 +14,11 @@ export const adminModerationApi = {
     if (query.cursor) params.set('cursor', String(query.cursor))
     return adminHttp.get<ModerationPage>(`${path(query.resource)}?${params}`)
   },
-  setHidden: (resource: ModerationResource, id: number, hidden: boolean) =>
-    adminHttp.patch<{ id: number; hidden: boolean }>(`${path(resource)}/${id}`, { hidden }),
-  remove: (resource: ModerationResource, id: number) =>
-    adminHttp.delete<{ id: number; deletedAt: string }>(`${path(resource)}/${id}`),
-  bulk: (resource: ModerationResource, ids: number[], action: ModerationAction, reason?: string) =>
+  setHidden: (resource: ModerationResource, id: string, hidden: boolean) =>
+    adminHttp.patch<{ id: string; hidden: boolean }>(`${path(resource)}/${id}`, { hidden }),
+  remove: (resource: ModerationResource, id: string) =>
+    adminHttp.delete<{ id: string; deletedAt: string }>(`${path(resource)}/${id}`),
+  bulk: (resource: ModerationResource, ids: string[], action: ModerationAction, reason?: string) =>
     adminHttp.post<{ affected: number; action: ModerationAction }>(`${path(resource)}/bulk`, {
       ids,
       action,

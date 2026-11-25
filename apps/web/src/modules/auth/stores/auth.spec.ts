@@ -4,7 +4,7 @@ import { session } from '@/helpers/session'
 import { useAuthStore } from '@/modules/auth/stores'
 
 const sessionBody = {
-  user: { id: 1, username: 'budi', displayName: 'Budi' },
+  user: { id: '1', username: 'budi', displayName: 'Budi' },
   accessToken: 'a1',
   refreshToken: 'r1',
 }

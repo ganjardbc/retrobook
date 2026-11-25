@@ -57,7 +57,7 @@ describe('Pencarian orang (integrasi)', () => {
     expect(res.status).toBe(200)
     expect(names(res)).toEqual(['Budi Santoso', 'Ibu BUDIarti', 'Sari'])
     expect(res.body.items[0]).toEqual({
-      id: expect.any(Number),
+      id: expect.any(String),
       username: 'budis',
       displayName: 'Budi Santoso',
       avatarUrl: null,

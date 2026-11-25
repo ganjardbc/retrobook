@@ -1,5 +1,8 @@
 import { Type } from 'class-transformer'
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  ArrayUnique,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -7,13 +10,11 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
   MinLength,
-  ArrayMaxSize,
-  ArrayMinSize,
-  ArrayUnique,
 } from 'class-validator'
 
 export enum AdminModerationFilter {
@@ -42,10 +43,8 @@ export class AdminModerationQuery {
   to?: string
 
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  cursor?: number
+  @IsUUID('4')
+  cursor?: string
 
   @IsOptional()
   @Type(() => Number)
@@ -71,10 +70,8 @@ export class BulkModerationDto {
   @ArrayMinSize(1)
   @ArrayUnique()
   @ArrayMaxSize(100)
-  @Type(() => Number)
-  @IsInt({ each: true })
-  @Min(1, { each: true })
-  ids!: number[]
+  @IsUUID('4', { each: true })
+  ids!: string[]
 
   @IsEnum(AdminModerationBulkAction)
   action!: AdminModerationBulkAction

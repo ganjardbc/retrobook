@@ -1,7 +1,7 @@
 import { adminHttp } from '@/plugins/admin-http'
 
 export type Sponsored = {
-  id: number
+  id: string
   title: string
   body: string
   imageUrl: string | null
@@ -20,7 +20,7 @@ export type SponsoredInput = {
 export const adminSponsoredApi = {
   list: () => adminHttp.get<{ items: Sponsored[] }>('/admin/sponsored'),
   create: (body: SponsoredInput) => adminHttp.post<Sponsored>('/admin/sponsored', body),
-  update: (id: number, body: Partial<SponsoredInput> & { active?: boolean }) =>
+  update: (id: string, body: Partial<SponsoredInput> & { active?: boolean }) =>
     adminHttp.patch<Sponsored>(`/admin/sponsored/${id}`, body),
-  remove: (id: number) => adminHttp.delete<{ id: number }>(`/admin/sponsored/${id}`),
+  remove: (id: string) => adminHttp.delete<{ id: string }>(`/admin/sponsored/${id}`),
 }

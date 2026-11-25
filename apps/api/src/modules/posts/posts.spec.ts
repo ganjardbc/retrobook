@@ -17,6 +17,8 @@ import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { PrismaService } from '../../prisma/prisma.service'
 import { resetDb } from '../../test/db'
+import { MISSING_ID, seqTime } from '../../test/helpers'
+import { pairOf } from '../friends/pair'
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0])
 
@@ -60,8 +62,7 @@ describe('Posts dan visibilitas (integrasi)', () => {
       data: {
         requesterId: a.id,
         addresseeId: b.id,
-        pairLowId: Math.min(a.id, b.id),
-        pairHighId: Math.max(a.id, b.id),
+        ...pairOf(a.id, b.id),
         status,
       },
     })
@@ -208,7 +209,7 @@ describe('Posts dan visibilitas (integrasi)', () => {
       const users: Record<Who, User> = { alice, friend, friendIncoming, pending, stranger }
       return { row, users }
     }
-    const seen = async (u: User, id: number) => (await api(u).get(`/posts/${id}`)).status === 200
+    const seen = async (u: User, id: string) => (await api(u).get(`/posts/${id}`)).status === 200
 
     const cases: [
       string,
@@ -284,7 +285,7 @@ describe('Posts dan visibilitas (integrasi)', () => {
     it('404 identik untuk "tidak ada" dan "tidak boleh lihat" (tidak membocorkan keberadaan)', async () => {
       const { row, users } = await setup({ privacy: 'ONLY_ME' })
       const hidden = await api(users.stranger).get(`/posts/${row.id}`)
-      const missing = await api(users.stranger).get('/posts/999999')
+      const missing = await api(users.stranger).get(`/posts/${MISSING_ID}`)
       expect(hidden.status).toBe(404)
       expect(hidden.body).toEqual(missing.body)
     })
@@ -313,11 +314,12 @@ describe('Posts dan visibilitas (integrasi)', () => {
       const bob = await mkUser('bob')
       const carol = await mkUser('carol')
       await befriend(alice, bob)
+      const at = seqTime()
       const mine = await prisma.post.create({
-        data: { authorId: alice.id, content: 'mine', privacy: 'ONLY_ME' },
+        data: { authorId: alice.id, content: 'mine', privacy: 'ONLY_ME', createdAt: at() },
       })
       const bobs = await prisma.post.create({
-        data: { authorId: bob.id, content: 'bobs', privacy: 'FRIENDS' },
+        data: { authorId: bob.id, content: 'bobs', privacy: 'FRIENDS', createdAt: at() },
       })
       await prisma.post.create({
         data: { authorId: bob.id, content: 'bob-only-me', privacy: 'ONLY_ME' },
@@ -327,15 +329,16 @@ describe('Posts dan visibilitas (integrasi)', () => {
       })
       const res = await api(alice).get('/feed')
       expect(res.status).toBe(200)
-      expect(res.body.items.map((p: { id: number }) => p.id)).toEqual([bobs.id, mine.id])
+      expect(res.body.items.map((p: { id: string }) => p.id)).toEqual([bobs.id, mine.id])
       expect(res.body.nextCursor).toBeNull()
     })
 
     it('pagination kursor: 10 per halaman, urut, tanpa duplikat, stabil saat ada post baru', async () => {
       const alice = await mkUser('alice')
+      const at = seqTime()
       for (let i = 1; i <= 25; i++) {
         await prisma.post.create({
-          data: { authorId: alice.id, content: `p${i}`, privacy: 'PUBLIC' },
+          data: { authorId: alice.id, content: `p${i}`, privacy: 'PUBLIC', createdAt: at() },
         })
       }
       const p1 = (await api(alice).get('/feed')).body
@@ -384,7 +387,7 @@ describe('Posts dan visibilitas (integrasi)', () => {
         data: { authorId: bob.id, content: 'ok', privacy: 'FRIENDS' },
       })
       const res = await api(alice).get('/feed')
-      expect(res.body.items.map((p: { id: number }) => p.id)).toEqual([ok.id])
+      expect(res.body.items.map((p: { id: string }) => p.id)).toEqual([ok.id])
     })
 
     it('hitungan like dan komentar, likedByMe, dan pratinjau penyuka', async () => {

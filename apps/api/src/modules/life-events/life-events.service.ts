@@ -11,14 +11,14 @@ export class LifeEventsService {
     private readonly visibility: VisibilityService,
   ) {}
 
-  listMine(userId: number) {
+  listMine(userId: string) {
     return this.prisma.lifeEvent.findMany({
       where: { userId },
       orderBy: [{ happenedOn: 'desc' }, { id: 'desc' }],
     })
   }
 
-  async listProfile(viewerId: number, username: string) {
+  async listProfile(viewerId: string, username: string) {
     const owner = await this.prisma.user.findFirst({
       where: { username, ...this.visibility.userWhere(viewerId) },
       select: { id: true },
@@ -40,7 +40,7 @@ export class LifeEventsService {
     })
   }
 
-  async create(userId: number, dto: CreateLifeEventDto) {
+  async create(userId: string, dto: CreateLifeEventDto) {
     const title = dto.title.trim()
     const date = new Date(`${dto.happenedOn}T00:00:00.000Z`)
     if (
@@ -56,7 +56,7 @@ export class LifeEventsService {
     })
   }
 
-  async remove(userId: number, id: number) {
+  async remove(userId: string, id: string) {
     const event = await this.prisma.lifeEvent.findFirst({
       where: { id, userId },
       select: { id: true },

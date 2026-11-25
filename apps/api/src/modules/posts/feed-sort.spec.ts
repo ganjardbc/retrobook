@@ -28,7 +28,7 @@ describe('Sort feed (integrasi)', () => {
     await app.close()
   })
 
-  const ids = (res: { body: { items: { id: number }[] } }) => res.body.items.map((p) => p.id)
+  const ids = (res: { body: { items: { id: string }[] } }) => res.body.items.map((p) => p.id)
   /** Buat post milik `author` dengan `likes` penyuka (pengguna baru). Dibuat berurutan, jadi id naik = lebih baru. */
   const mkPost = async (author: User, likes: number, privacy: 'FRIENDS' | 'PUBLIC' = 'FRIENDS') => {
     const post = await h.prisma.post.create({
@@ -54,12 +54,12 @@ describe('Sort feed (integrasi)', () => {
 
   it('top: pagination kursor menelusuri seluruh urutan tanpa duplikat atau lompatan', async () => {
     const me = await h.mkUser('me')
-    const made: number[] = []
+    const made: string[] = []
     for (const likes of [2, 0, 3, 1, 1, 0, 2]) made.push(await mkPost(me, likes))
     const full = ids(await h.as(me).get('/feed?sort=top&limit=50'))
     expect(full).toHaveLength(7)
-    const walked: number[] = []
-    let cursor: number | null = null
+    const walked: string[] = []
+    let cursor: string | null = null
     for (let guard = 0; guard < 10; guard++) {
       const res = await h.as(me).get(`/feed?sort=top&limit=3${cursor ? `&cursor=${cursor}` : ''}`)
       walked.push(...ids(res))

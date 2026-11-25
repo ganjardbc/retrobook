@@ -5,7 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   Query,
 } from '@nestjs/common'
@@ -30,7 +30,7 @@ export class BlocksController {
 
   @Delete(':userId')
   @HttpCode(204)
-  async unblock(@CurrentUser() user: AuthUser, @Param('userId', ParseIntPipe) userId: number) {
+  async unblock(@CurrentUser() user: AuthUser, @Param('userId', ParseUUIDPipe) userId: string) {
     await this.blocks.unblock(user.id, userId)
   }
 }

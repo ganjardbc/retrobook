@@ -14,9 +14,9 @@ type UserStoreContext = {
   detailError: string
   total: number
   limit: number
-  cursorStack: (number | null)[]
+  cursorStack: (string | null)[]
   pageIndex: number
-  nextCursor: number | null
+  nextCursor: string | null
   fetchVersion: number
   fetchUsers: () => Promise<void>
   resetPagination: () => void
@@ -55,7 +55,7 @@ export const actions = {
       if (requestVersion === this.fetchVersion) this.loading = false
     }
   },
-  async fetchDetail(this: UserStoreContext, id: number) {
+  async fetchDetail(this: UserStoreContext, id: string) {
     this.detailLoading = true
     this.detailError = ''
     this.currentUser = null

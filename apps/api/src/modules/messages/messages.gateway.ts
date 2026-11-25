@@ -8,6 +8,7 @@ import type { ChatMessage } from '@retrobook/shared'
 import type { Socket } from 'socket.io'
 import { AppException } from '../../common/app-exception'
 import { MESSAGE_PER_USER, RateLimiter } from '../../common/rate-limit'
+import { isId } from '../../common/uuid'
 import { MAX_MESSAGE_LENGTH } from './dto/messages.dto'
 import { MessagesService } from './messages.service'
 
@@ -35,8 +36,7 @@ export class MessagesGateway {
     return this.ack(async () => {
       // Bucket yang sama dengan REST (BR-10): socket bukan jalan pintas melewati batas.
       this.limiter.check(MESSAGE_PER_USER, socket.data.userId)
-      if (!Number.isInteger(b.toUserId) || (b.toUserId as number) < 1)
-        throw bad('toUserId tidak valid')
+      if (!isId(b.toUserId)) throw bad('toUserId tidak valid')
       if (typeof b.content !== 'string' || b.content.length > MAX_MESSAGE_LENGTH * 2)
         throw bad('Pesan tidak valid')
       if (
@@ -47,7 +47,7 @@ export class MessagesGateway {
       }
       const { message } = await this.messages.send(
         socket.data.userId,
-        b.toUserId as number,
+        b.toUserId,
         b.content,
         b.clientId as string | undefined,
       )
@@ -62,9 +62,8 @@ export class MessagesGateway {
   ): Promise<Ack<{ updated: number }>> {
     const fromUserId = (body as { fromUserId?: unknown } | null)?.fromUserId
     return this.ack(async () => {
-      if (!Number.isInteger(fromUserId) || (fromUserId as number) < 1)
-        throw bad('fromUserId tidak valid')
-      return this.messages.markRead(socket.data.userId, fromUserId as number)
+      if (!isId(fromUserId)) throw bad('fromUserId tidak valid')
+      return this.messages.markRead(socket.data.userId, fromUserId)
     })
   }
 
@@ -72,9 +71,9 @@ export class MessagesGateway {
   @SubscribeMessage('typing')
   async typing(@ConnectedSocket() socket: Socket, @MessageBody() body: unknown): Promise<void> {
     const b = (body ?? {}) as { toUserId?: unknown; isTyping?: unknown }
-    if (!Number.isInteger(b.toUserId) || (b.toUserId as number) < 1) return
+    if (!isId(b.toUserId)) return
     if (typeof b.isTyping !== 'boolean') return
-    await this.messages.typing(socket.data.userId, b.toUserId as number, b.isTyping)
+    await this.messages.typing(socket.data.userId, b.toUserId, b.isTyping)
   }
 
   private async ack<T extends object>(fn: () => Promise<T>): Promise<Ack<T>> {

@@ -14,12 +14,12 @@ import ReportDialog from '@/modules/posts/components/ReportDialog.vue'
 import { postsApi } from '@/modules/posts/services/api'
 import { imageProblem } from '@/helpers/image'
 
-const props = defineProps<{ postId: number; postAuthorId: number; commentCount: number }>()
+const props = defineProps<{ postId: string; postAuthorId: string; commentCount: number }>()
 const emit = defineEmits<{ 'count-change': [delta: number] }>()
 
 const auth = useAuthStore()
 const comments = ref<Comment[]>([])
-const nextCursor = ref<number | null>(null)
+const nextCursor = ref<string | null>(null)
 const expanded = ref(false)
 const loading = ref(false)
 const sending = ref(false)
@@ -34,7 +34,7 @@ const viewLabel = computed(() =>
     ? t('comments.view.one')
     : t('comments.view.many', { n: props.commentCount }),
 )
-const reportingId = ref<number | null>(null)
+const reportingId = ref<string | null>(null)
 const canReport = (c: Comment) => auth.user?.id !== c.author.id
 const canDelete = (c: Comment) =>
   auth.user?.id === c.author.id || auth.user?.id === props.postAuthorId

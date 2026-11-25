@@ -2,8 +2,8 @@ import { request } from '@/plugins/http'
 
 export type LifeEventKind = 'MOVED' | 'STARTED_JOB' | 'GRADUATED' | 'OTHER'
 export type LifeEvent = {
-  id: number
-  userId: number
+  id: string
+  userId: string
   kind: LifeEventKind
   title: string
   happenedOn: string
@@ -16,5 +16,5 @@ export const lifeEventsApi = {
     request<{ items: LifeEvent[] }>(`/users/${encodeURIComponent(username)}/life-events`),
   create: (input: Pick<LifeEvent, 'kind' | 'title' | 'happenedOn' | 'privacy'>) =>
     request<LifeEvent>('/life-events', { method: 'POST', body: input }),
-  remove: (id: number) => request<void>(`/life-events/${id}`, { method: 'DELETE' }),
+  remove: (id: string) => request<void>(`/life-events/${id}`, { method: 'DELETE' }),
 }

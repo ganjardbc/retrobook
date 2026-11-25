@@ -104,7 +104,7 @@ enum ReportReason { SPAM HARASSMENT INAPPROPRIATE OTHER }
 enum ReportStatus { PENDING REVIEWED DISMISSED }
 
 model User {
-  id           Int        @id @default(autoincrement())
+  id           String        @id @default(uuid()) @db.Char(36)
   email        String     @unique
   username     String     @unique
   displayName  String
@@ -128,22 +128,22 @@ model User {
 }
 
 model RefreshToken {
-  id        Int      @id @default(autoincrement())
-  userId    Int
+  id        String      @id @default(uuid()) @db.Char(36)
+  userId    String
   tokenHash String   @unique
   expiresAt DateTime
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Post {
-  id          Int       @id @default(autoincrement())
-  authorId    Int
-  wallOwnerId Int?      // terisi jika menulis di dinding teman
+  id          String       @id @default(uuid()) @db.Char(36)
+  authorId    String
+  wallOwnerId String?      // terisi jika menulis di dinding teman
   content     String    @db.Text
   imageUrl    String?
   feeling     String?   // contoh: "feeling happy"
   privacy     Privacy   @default(FRIENDS)
-  sharedFromId Int?     // untuk fitur share
+  sharedFromId String?     // untuk fitur share
   hidden      Boolean   @default(false) // disembunyikan oleh admin
   createdAt   DateTime  @default(now())
   deletedAt   DateTime?
@@ -156,15 +156,15 @@ model Post {
 }
 
 model PostTag {
-  postId Int
-  userId Int
+  postId String
+  userId String
   @@id([postId, userId])
 }
 
 model Comment {
-  id        Int       @id @default(autoincrement())
-  postId    Int
-  authorId  Int
+  id        String       @id @default(uuid()) @db.Char(36)
+  postId    String
+  authorId  String
   content   String    @db.Text
   hidden    Boolean   @default(false)
   createdAt DateTime  @default(now())
@@ -175,10 +175,10 @@ model Comment {
 }
 
 model Like {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  postId    Int?
-  commentId Int?
+  id        String      @id @default(uuid()) @db.Char(36)
+  userId    String
+  postId    String?
+  commentId String?
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
   post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -188,26 +188,26 @@ model Like {
 }
 
 model Friendship {
-  id          Int          @id @default(autoincrement())
-  requesterId Int
-  addresseeId Int
+  id          String          @id @default(uuid()) @db.Char(36)
+  requesterId String
+  addresseeId String
   status      FriendStatus @default(PENDING)
   createdAt   DateTime     @default(now())
   @@unique([requesterId, addresseeId])
 }
 
 model Poke {
-  id        Int      @id @default(autoincrement())
-  fromId    Int
-  toId      Int
+  id        String      @id @default(uuid()) @db.Char(36)
+  fromId    String
+  toId      String
   seenAt    DateTime?
   createdAt DateTime @default(now())
 }
 
 model Message {
-  id         Int       @id @default(autoincrement())
-  senderId   Int
-  receiverId Int
+  id         String       @id @default(uuid()) @db.Char(36)
+  senderId   String
+  receiverId String
   content    String    @db.Text
   readAt     DateTime?
   createdAt  DateTime  @default(now())
@@ -215,35 +215,35 @@ model Message {
 }
 
 model Notification {
-  id        Int       @id @default(autoincrement())
-  userId    Int       // penerima
-  actorId   Int?
+  id        String       @id @default(uuid()) @db.Char(36)
+  userId    String       // penerima
+  actorId   String?
   type      NotifType
-  postId    Int?
+  postId    String?
   readAt    DateTime?
   createdAt DateTime  @default(now())
   @@index([userId, readAt])
 }
 
 model Report {
-  id         Int          @id @default(autoincrement())
-  reporterId Int
+  id         String          @id @default(uuid()) @db.Char(36)
+  reporterId String
   targetType ReportTarget
-  targetId   Int
+  targetId   String
   reason     ReportReason
   note       String?      @db.Text
   status     ReportStatus @default(PENDING)
-  handledBy  Int?
+  handledBy  String?
   handledAt  DateTime?
   createdAt  DateTime     @default(now())
 }
 
 model AuditLog {
-  id        Int      @id @default(autoincrement())
-  adminId   Int
+  id        String      @id @default(uuid()) @db.Char(36)
+  adminId   String
   action    String   // contoh: USER_SUSPEND, POST_HIDE
   targetType String?
-  targetId  Int?
+  targetId  String?
   detail    Json?
   createdAt DateTime @default(now())
 }
@@ -254,15 +254,15 @@ model Setting {
 }
 
 model Announcement {
-  id        Int      @id @default(autoincrement())
+  id        String      @id @default(uuid()) @db.Char(36)
   title     String
   body      String   @db.Text
-  createdBy Int
+  createdBy String
   createdAt DateTime @default(now())
 }
 
 model BlockedWord {
-  id   Int    @id @default(autoincrement())
+  id   String    @id @default(uuid()) @db.Char(36)
   word String @unique
 }
 

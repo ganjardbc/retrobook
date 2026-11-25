@@ -38,7 +38,7 @@ describe('GET /posts/:id/related (integrasi)', () => {
 
     const res = await h.as(b).get(`/posts/${main.id}/related`)
     expect(res.status).toBe(200)
-    const ids = res.body.map((p: { id: number }) => p.id)
+    const ids = res.body.map((p: { id: string }) => p.id)
     expect(ids).toContain(other.id)
     expect(ids).toContain(bPost.id)
     expect(ids).not.toContain(main.id)

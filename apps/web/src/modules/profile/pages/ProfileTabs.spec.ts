@@ -14,7 +14,7 @@ import ProfileTimeline from '@/modules/profile/pages/ProfileTimeline.vue'
 import ProfileView from '@/modules/profile/pages/ProfileView.vue'
 
 const profile = (over: Partial<Profile> = {}): Profile => ({
-  id: 7,
+  id: '7',
   username: 'siti',
   displayName: 'Siti Aminah',
   avatarUrl: null,
@@ -31,14 +31,14 @@ const profile = (over: Partial<Profile> = {}): Profile => ({
   createdAt: '2026-01-01T00:00:00.000Z',
   ...over,
 })
-const user = (id: number): UserSummary => ({
+const user = (id: string): UserSummary => ({
   id,
   username: `u${id}`,
   displayName: `Teman ${id}`,
   avatarUrl: null,
   isBot: false,
 })
-const photo = (postId: number) => ({
+const photo = (postId: string) => ({
   postId,
   url: `/uploads/${String(postId).repeat(32).slice(0, 32)}.png`,
   createdAt: '2026-11-24T00:00:00.000Z',
@@ -69,17 +69,17 @@ async function mountAt(path: string) {
 describe('tab Friends dan Photos profil', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
+    useAuthStore().user = { id: '1', username: 'me', displayName: 'Me' }
     vi.restoreAllMocks()
     vi.spyOn(usersApi, 'profile').mockResolvedValue(profile())
     vi.spyOn(usersApi, 'timeline').mockResolvedValue({ items: [], nextCursor: null })
     vi.spyOn(usersApi, 'friends').mockResolvedValue({
-      items: [1, 2, 3, 4, 5, 6, 7, 8].map(user),
+      items: ['1', '2', '3', '4', '5', '6', '7', '8'].map(user),
       nextCursor: null,
       total: 8,
     })
     vi.spyOn(usersApi, 'photos').mockResolvedValue({
-      items: [1, 2, 3].map(photo),
+      items: ['1', '2', '3'].map(photo),
       nextCursor: null,
       total: 3,
     })
@@ -118,15 +118,15 @@ describe('tab Friends dan Photos profil', () => {
   it('tab Friends: Load more memuat halaman berikutnya', async () => {
     const friends = vi
       .spyOn(usersApi, 'friends')
-      .mockResolvedValueOnce({ items: [1, 2].map(user), nextCursor: 2, total: 3 })
-      .mockResolvedValueOnce({ items: [3].map(user), nextCursor: null, total: 3 })
+      .mockResolvedValueOnce({ items: ['1', '2'].map(user), nextCursor: '2', total: 3 })
+      .mockResolvedValueOnce({ items: ['3'].map(user), nextCursor: null, total: 3 })
     const { w } = await mountAt('/siti/friends')
     await w
       .findAll('button')
       .find((b) => b.text() === 'Load more')!
       .trigger('click')
     await flushPromises()
-    expect(friends.mock.calls[1]![1]).toBe(2)
+    expect(friends.mock.calls[1]![1]).toBe('2')
     expect(w.findAll('.friends__list .row')).toHaveLength(3)
     expect(w.findAll('button').some((b) => b.text() === 'Load more')).toBe(false)
   })
@@ -144,7 +144,7 @@ describe('tab Friends dan Photos profil', () => {
     expect(links[0]!.find('img').attributes('alt')).toBe('Photo from Siti Aminah')
     await links[0]!.trigger('click')
     const dialog = document.body.querySelector('[role="dialog"]')
-    expect(dialog?.querySelector('img')?.getAttribute('src')).toBe(photo(1).url)
+    expect(dialog?.querySelector('img')?.getAttribute('src')).toBe(photo('1').url)
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     await w.vm.$nextTick()
     expect(document.body.querySelector('[role="dialog"]')).toBeNull()
@@ -154,7 +154,7 @@ describe('tab Friends dan Photos profil', () => {
     vi.spyOn(usersApi, 'photos').mockResolvedValueOnce({ items: [], nextCursor: null, total: 0 })
     expect((await mountAt('/siti/photos')).w.text()).toContain('No photos to show.')
     setActivePinia(createPinia())
-    useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
+    useAuthStore().user = { id: '1', username: 'me', displayName: 'Me' }
     vi.spyOn(usersApi, 'photos').mockRejectedValueOnce(new Error('x'))
     const failed = await mountAt('/siti/photos')
     expect(failed.w.text()).toContain('Try again')
@@ -165,7 +165,7 @@ describe('tab Friends dan Photos profil', () => {
     const store = useProfileStore()
     expect(store.photos.items).toHaveLength(3)
     vi.spyOn(usersApi, 'profile').mockResolvedValueOnce(
-      profile({ id: 8, username: 'budi', displayName: 'Budi' }),
+      profile({ id: '8', username: 'budi', displayName: 'Budi' }),
     )
     vi.spyOn(usersApi, 'photos').mockResolvedValueOnce({ items: [], nextCursor: null, total: 0 })
     vi.spyOn(usersApi, 'friends').mockResolvedValueOnce({ items: [], nextCursor: null, total: 0 })

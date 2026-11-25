@@ -9,7 +9,7 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, seqTime } from '../../test/helpers'
 
 describe('Profil dan timeline (integrasi)', () => {
   let app: INestApplication
@@ -181,8 +181,11 @@ describe('Profil dan timeline (integrasi)', () => {
       const friend = await h.mkUser('friend')
       const stranger = await h.mkUser('stranger')
       await h.befriend(owner, friend)
+      const at = seqTime()
       const mk = (content: string, extra: object = {}) =>
-        h.prisma.post.create({ data: { authorId: owner.id, content, privacy: 'PUBLIC', ...extra } })
+        h.prisma.post.create({
+          data: { authorId: owner.id, content, privacy: 'PUBLIC', createdAt: at(), ...extra },
+        })
       await mk('publik')
       await mk('teman', { privacy: 'FRIENDS' })
       await mk('pribadi', { privacy: 'ONLY_ME' })
@@ -222,9 +225,10 @@ describe('Profil dan timeline (integrasi)', () => {
 
     it('berhalaman dengan kursor: 10 per halaman, tanpa duplikat', async () => {
       const owner = await h.mkUser('owner')
+      const at = seqTime()
       for (let i = 1; i <= 23; i++) {
         await h.prisma.post.create({
-          data: { authorId: owner.id, content: `p${i}`, privacy: 'PUBLIC' },
+          data: { authorId: owner.id, content: `p${i}`, privacy: 'PUBLIC', createdAt: at() },
         })
       }
       const p1 = (await h.as(owner).get(`/users/${owner.username}/posts`)).body
@@ -277,7 +281,7 @@ describe('Profil dan timeline (integrasi)', () => {
 
       const p1 = (await h.as(viewer).get(`/users/${owner.username}/friends?limit=3`)).body
       expect(p1.total).toBe(4)
-      expect(p1.items.map((u: { id: number }) => u.id)).toEqual([
+      expect(p1.items.map((u: { id: string }) => u.id)).toEqual([
         friends[3]!.id,
         friends[2]!.id,
         friends[1]!.id,
@@ -285,12 +289,12 @@ describe('Profil dan timeline (integrasi)', () => {
       const p2 = (
         await h.as(viewer).get(`/users/${owner.username}/friends?limit=3&cursor=${p1.nextCursor}`)
       ).body
-      expect(p2.items.map((u: { id: number }) => u.id)).toEqual([friends[0]!.id])
+      expect(p2.items.map((u: { id: string }) => u.id)).toEqual([friends[0]!.id])
       expect(p2.nextCursor).toBeNull()
-      expect(p1.items.map((u: { id: number }) => u.id)).not.toContain(mine.id)
+      expect(p1.items.map((u: { id: string }) => u.id)).not.toContain(mine.id)
       expect(p1.items[0].email).toBeUndefined()
       const q = (await h.as(viewer).get(`/users/${owner.username}/friends?q=budi`)).body
-      expect(q.items.map((u: { id: number }) => u.id)).toEqual([friends[3]!.id])
+      expect(q.items.map((u: { id: string }) => u.id)).toEqual([friends[3]!.id])
     })
 
     it('profil tidak ada, BANNED, atau terhapus: 404; tanpa login: 401', async () => {
@@ -311,9 +315,17 @@ describe('Profil dan timeline (integrasi)', () => {
       const friend = await h.mkUser('friend')
       const stranger = await h.mkUser('stranger')
       await h.befriend(owner, friend)
+      const at = seqTime()
       const mk = (c: string, extra: object = {}) =>
         h.prisma.post.create({
-          data: { authorId: owner.id, content: 'x', imageUrl: url(c), privacy: 'PUBLIC', ...extra },
+          data: {
+            authorId: owner.id,
+            content: 'x',
+            imageUrl: url(c),
+            privacy: 'PUBLIC',
+            createdAt: at(),
+            ...extra,
+          },
         })
       await mk('a')
       await mk('b', { privacy: 'FRIENDS' })
@@ -344,7 +356,7 @@ describe('Profil dan timeline (integrasi)', () => {
       const { owner } = await seed()
       const p1 = (await h.as(owner).get(`/users/${owner.username}/photos?limit=2`)).body
       expect(p1.items[0]).toEqual({
-        postId: expect.any(Number),
+        postId: expect.any(String),
         url: url('d'),
         createdAt: expect.any(String),
       })

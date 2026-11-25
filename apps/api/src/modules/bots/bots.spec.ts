@@ -9,8 +9,9 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, MISSING_ID } from '../../test/helpers'
 import { BotsService } from './bots.service'
+import { pairOf } from '../friends/pair'
 
 describe('Bot AI (integrasi)', () => {
   let app: INestApplication
@@ -44,7 +45,7 @@ describe('Bot AI (integrasi)', () => {
         ...extra,
       })
     expect(res.status).toBe(201)
-    return res.body.userId as number
+    return res.body.userId as string
   }
 
   it('admin saja: non-admin 403; membuat bot (isBot), validasi, duplikat 409, ubah, tercatat di audit', async () => {
@@ -70,11 +71,14 @@ describe('Bot AI (integrasi)', () => {
     ).toBe(409)
     const upd = await h.as(admin).patch(`/admin/bots/${id}`).send({ active: false, postsPerDay: 4 })
     expect([upd.body.active, upd.body.postsPerDay]).toEqual([false, 4])
-    expect((await h.as(admin).patch('/admin/bots/999999').send({ active: true })).status).toBe(404)
-    expect((await h.prisma.auditLog.findMany()).map((a) => a.action)).toEqual([
-      'BOT_CREATE',
-      'BOT_UPDATE',
-    ])
+    expect(
+      (await h.as(admin).patch(`/admin/bots/${MISSING_ID}`).send({ active: true })).status,
+    ).toBe(404)
+    expect(
+      (await h.prisma.auditLog.findMany({ orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] })).map(
+        (a) => a.action,
+      ),
+    ).toEqual(['BOT_CREATE', 'BOT_UPDATE'])
   })
 
   it('BR-09: bot tidak bisa login dan tidak dihitung sebagai user di statistik', async () => {
@@ -94,8 +98,7 @@ describe('Bot AI (integrasi)', () => {
       data: {
         requesterId: user.id,
         addresseeId: botId,
-        pairLowId: Math.min(user.id, botId),
-        pairHighId: Math.max(user.id, botId),
+        ...pairOf(user.id, botId),
         status: 'PENDING',
       },
     })
@@ -119,7 +122,7 @@ describe('Bot AI (integrasi)', () => {
     expect((await bots.tick(hours(15))).replies).toBe(1)
     const replies = await h.prisma.comment.findMany({ where: { postId: post.id, authorId: botId } })
     expect(replies).toHaveLength(1)
-    expect(replies[0]!.id).toBeGreaterThan(comment.id)
+    expect(replies[0]!.id).not.toBe(comment.id)
     expect((await bots.tick(hours(16))).replies).toBe(0) // tidak membalas ulang
     expect(
       await h.prisma.notification.count({

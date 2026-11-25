@@ -15,7 +15,7 @@ const list = store.timeline
 const isSelf = computed(() => store.profile?.relationship === 'SELF')
 const isFriend = computed(() => store.profile?.relationship === 'FRIENDS')
 
-async function onDelete(id: number) {
+async function onDelete(id: string) {
   try {
     await postsApi.remove(id)
     list.remove(id)

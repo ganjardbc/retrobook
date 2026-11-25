@@ -5,7 +5,7 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 import Avatar from '@/components/Avatar.vue'
 import { friendsApi } from '@/modules/friends/services/api'
 
-const props = defineProps<{ query: string; exclude: number[] }>()
+const props = defineProps<{ query: string; exclude: string[] }>()
 const emit = defineEmits<{ pick: [user: UserSummary]; close: [] }>()
 
 const users = ref<UserSummary[]>([])

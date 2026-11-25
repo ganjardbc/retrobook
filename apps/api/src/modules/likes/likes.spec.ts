@@ -9,7 +9,7 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, MISSING_ID } from '../../test/helpers'
 
 describe('Like post (integrasi)', () => {
   let app: INestApplication
@@ -80,7 +80,7 @@ describe('Like post (integrasi)', () => {
     const { alice, post } = await mkPost('FRIENDS')
     const stranger = await h.mkUser('stranger')
     const hidden = await h.as(stranger).put(`/posts/${post.id}/like`)
-    const missing = await h.as(stranger).put('/posts/999999/like')
+    const missing = await h.as(stranger).put(`/posts/${MISSING_ID}/like`)
     expect(hidden.status).toBe(404)
     expect(hidden.body).toEqual(missing.body)
     expect(await h.prisma.like.count()).toBe(0)
@@ -127,7 +127,7 @@ describe('Like post (integrasi)', () => {
     )
     const detail = await h.as(alice).get(`/posts/${post.id}`)
     expect(detail.body.likeCount).toBe(2)
-    expect(detail.body.likedPreview.map((u: { id: number }) => u.id)).not.toContain(banned.id)
+    expect(detail.body.likedPreview.map((u: { id: string }) => u.id)).not.toContain(banned.id)
   })
 
   it('daftar penyuka: terbaru dulu, kursor, tanpa data sensitif', async () => {
@@ -139,15 +139,15 @@ describe('Like post (integrasi)', () => {
       await h.prisma.like.create({ data: { userId: u.id, postId: post.id } })
     }
     const p1 = (await h.as(alice).get(`/posts/${post.id}/likes?limit=2`)).body
-    expect(p1.items.map((u: { id: number }) => u.id)).toEqual([users[4]!.id, users[3]!.id])
+    expect(p1.items.map((u: { id: string }) => u.id)).toEqual([users[4]!.id, users[3]!.id])
     expect(p1.items[0].email).toBeUndefined()
     expect(p1.items[0].passwordHash).toBeUndefined()
     const p2 = (await h.as(alice).get(`/posts/${post.id}/likes?limit=2&cursor=${p1.nextCursor}`))
       .body
-    expect(p2.items.map((u: { id: number }) => u.id)).toEqual([users[2]!.id, users[1]!.id])
+    expect(p2.items.map((u: { id: string }) => u.id)).toEqual([users[2]!.id, users[1]!.id])
     const p3 = (await h.as(alice).get(`/posts/${post.id}/likes?limit=2&cursor=${p2.nextCursor}`))
       .body
-    expect(p3.items.map((u: { id: number }) => u.id)).toEqual([users[0]!.id])
+    expect(p3.items.map((u: { id: string }) => u.id)).toEqual([users[0]!.id])
     expect(p3.nextCursor).toBeNull()
   })
 
@@ -159,7 +159,7 @@ describe('Like post (integrasi)', () => {
     await h.as(carol).put(`/posts/${post.id}/like`)
     const asBob = (await h.as(bob).get(`/posts/${post.id}`)).body
     expect(asBob).toMatchObject({ likeCount: 2, likedByMe: true })
-    expect(asBob.likedPreview.map((u: { id: number }) => u.id)).toEqual([carol.id, bob.id])
+    expect(asBob.likedPreview.map((u: { id: string }) => u.id)).toEqual([carol.id, bob.id])
     const asAlice = (await h.as(alice).get(`/posts/${post.id}`)).body
     expect(asAlice.likedByMe).toBe(false)
     await h.as(bob).del(`/posts/${post.id}/like`)

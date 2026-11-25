@@ -14,7 +14,7 @@ export class AlbumsService {
     private readonly visibility: VisibilityService,
   ) {}
 
-  async list(ownerId: number) {
+  async list(ownerId: string) {
     return this.prisma.album.findMany({
       where: { ownerId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
@@ -25,7 +25,7 @@ export class AlbumsService {
     })
   }
 
-  async listForProfile(viewerId: number, username: string) {
+  async listForProfile(viewerId: string, username: string) {
     const owner = await this.prisma.user.findFirst({
       where: { username, ...this.visibility.userWhere(viewerId) },
       select: { id: true },
@@ -41,13 +41,13 @@ export class AlbumsService {
     })
   }
 
-  async create(ownerId: number, dto: CreateAlbumDto) {
+  async create(ownerId: string, dto: CreateAlbumDto) {
     const name = dto.name.trim()
     if (!name) throw new AppException(400, 'VALIDATION_FAILED', 'Nama album wajib diisi')
     return this.prisma.album.create({ data: { ownerId, name, privacy: dto.privacy ?? 'FRIENDS' } })
   }
 
-  async get(viewerId: number, albumId: number) {
+  async get(viewerId: string, albumId: string) {
     const album = await this.prisma.album.findFirst({
       where: { AND: [{ id: albumId }, this.visibility.albumWhere(viewerId)] },
       include: { photos: { orderBy: NEWEST_FIRST } },
@@ -56,7 +56,7 @@ export class AlbumsService {
     return album
   }
 
-  async addPhotos(ownerId: number, albumId: number, files: Express.Multer.File[]) {
+  async addPhotos(ownerId: string, albumId: string, files: Express.Multer.File[]) {
     const album = await this.prisma.album.findFirst({
       where: { id: albumId, ownerId, deletedAt: null },
     })
@@ -75,7 +75,7 @@ export class AlbumsService {
   }
 
   /** Soft delete (BR-06): album hilang dari semua query baca; berkas gambar dibiarkan (belum ada pembersihan). */
-  async remove(ownerId: number, albumId: number) {
+  async remove(ownerId: string, albumId: string) {
     const { count } = await this.prisma.album.updateMany({
       where: { id: albumId, ownerId, deletedAt: null },
       data: { deletedAt: new Date() },
@@ -83,7 +83,7 @@ export class AlbumsService {
     if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Album tidak ditemukan')
   }
 
-  async removePhoto(ownerId: number, albumId: number, photoId: number) {
+  async removePhoto(ownerId: string, albumId: string, photoId: string) {
     const { count } = await this.prisma.photo.deleteMany({
       where: { id: photoId, albumId, ownerId, album: { deletedAt: null } },
     })

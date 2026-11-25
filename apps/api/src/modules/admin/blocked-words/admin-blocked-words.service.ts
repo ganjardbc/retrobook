@@ -20,7 +20,7 @@ export class AdminBlockedWordsService {
   }
 
   /** ADM-11: simpan kata (huruf kecil, unik) dan tandai konten lama yang memuatnya, satu transaksi dengan audit. */
-  async create(adminId: number, word: string, ip?: string) {
+  async create(adminId: string, word: string, ip?: string) {
     try {
       return await this.audit.execute(
         { adminId, action: 'BLOCKED_WORD_ADD', targetType: 'BLOCKED_WORD', detail: { word }, ip },
@@ -46,7 +46,7 @@ export class AdminBlockedWordsService {
   }
 
   // Tanda `flagged` pada konten lama tidak dicabut: bisa berasal dari kata lain; admin menilainya di antrean moderasi.
-  remove(adminId: number, id: number, ip?: string) {
+  remove(adminId: string, id: string, ip?: string) {
     return this.audit.execute(
       { adminId, action: 'BLOCKED_WORD_REMOVE', targetType: 'BLOCKED_WORD', targetId: id, ip },
       async (tx) => {

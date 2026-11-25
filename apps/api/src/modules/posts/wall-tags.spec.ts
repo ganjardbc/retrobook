@@ -9,7 +9,7 @@ import type { User } from '@prisma/client'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, MISSING_ID } from '../../test/helpers'
 
 describe('Wall post dan tag (integrasi)', () => {
   let app: INestApplication
@@ -143,9 +143,9 @@ describe('Wall post dan tag (integrasi)', () => {
       expect(get.status).toBe(canSee ? 200 : 404)
       const inBobTimeline =
         (await h.as(viewer).get(`/users/${w.bob.username}/posts`)).body.items ?? []
-      expect(inBobTimeline.some((p: { id: number }) => p.id === post.id)).toBe(canSee)
+      expect(inBobTimeline.some((p: { id: string }) => p.id === post.id)).toBe(canSee)
       const feed = (await h.as(viewer).get('/feed')).body.items
-      expect(feed.some((p: { id: number }) => p.id === post.id)).toBe(canSee)
+      expect(feed.some((p: { id: string }) => p.id === post.id)).toBe(canSee)
     })
 
     it('teman keduanya yang memblokir penulis tidak melihatnya; unfriend carol-bob menyembunyikannya', async () => {
@@ -172,7 +172,7 @@ describe('Wall post dan tag (integrasi)', () => {
       const post = (await wall(w.alice, w.bob)).body
       for (const owner of [w.alice, w.bob]) {
         const items = (await h.as(w.carol).get(`/users/${owner.username}/posts`)).body.items
-        expect(items.map((p: { id: number }) => p.id)).toContain(post.id)
+        expect(items.map((p: { id: string }) => p.id)).toContain(post.id)
       }
     })
 
@@ -204,7 +204,7 @@ describe('Wall post dan tag (integrasi)', () => {
         .post('/posts')
         .send({ content: 'x', taggedUserIds: [w.bob.id, w.carol.id] })
       expect(res.status).toBe(201)
-      expect(res.body.tags.map((t: { id: number }) => t.id).sort()).toEqual(
+      expect(res.body.tags.map((t: { id: string }) => t.id).sort()).toEqual(
         [w.bob.id, w.carol.id].sort(),
       )
       expect(await types(w.bob)).toEqual(['TAG'])
@@ -219,7 +219,7 @@ describe('Wall post dan tag (integrasi)', () => {
     it.each([
       ['bukan teman', (w: Awaited<ReturnType<typeof world>>) => [w.stranger.id]],
       ['diri sendiri', (w: Awaited<ReturnType<typeof world>>) => [w.alice.id]],
-      ['id tidak ada', () => [999999]],
+      ['id tidak ada', () => [MISSING_ID]],
       ['sebagian bukan teman', (w: Awaited<ReturnType<typeof world>>) => [w.bob.id, w.stranger.id]],
     ])('tag %s: 422, tanpa post dan notifikasi', async (_n, ids) => {
       const w = await world()
@@ -272,7 +272,7 @@ describe('Wall post dan tag (integrasi)', () => {
       await h.prisma.user.update({ where: { id: w.bob.id }, data: { status: 'BANNED' } })
       await h.prisma.block.create({ data: { blockerId: w.dave.id, blockedId: w.carol.id } })
       const forAlice = (await h.as(w.alice).get(`/posts/${id}`)).body.tags.map(
-        (t: { id: number }) => t.id,
+        (t: { id: string }) => t.id,
       )
       expect(forAlice).toEqual([w.carol.id])
       const forDave = (await h.as(w.dave).get(`/posts/${id}`)).body.tags

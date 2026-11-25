@@ -61,8 +61,7 @@ onMounted(load)
     <p v-if="!words.length" class="reports-empty">Belum ada kata terlarang.</p>
     <ul class="words-list">
       <li v-for="w in words" :key="w.id">
-        <span>{{ w.word }}</span
-        ><button
+        <span>{{ w.word }}</span><button
           class="row-action row-action--delete"
           :aria-label="`Hapus ${w.word}`"
           @click="remove(w)"

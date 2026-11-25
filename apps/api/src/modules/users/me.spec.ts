@@ -14,7 +14,7 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { MISSING_ID, testHelpers } from '../../test/helpers'
 import { MAX_IMAGE_BYTES } from '../uploads/image-type'
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0])
@@ -151,7 +151,7 @@ describe('Edit profil dan foto (integrasi)', () => {
         { coverUrl: 'https://evil' },
         { isBot: true },
         { passwordHash: 'x' },
-        { id: 1 },
+        { id: MISSING_ID },
       ]) {
         const res = await h.as(me).patch('/me').send(body)
         expect({ body, status: res.status }).toEqual({ body, status: 400 })
@@ -257,7 +257,7 @@ describe('Edit profil dan foto (integrasi)', () => {
       password: 'password123',
     })
     expect(res.body.user).toEqual({
-      id: expect.any(Number),
+      id: expect.any(String),
       username: 'sesi_user',
       displayName: 'Sesi',
       avatarUrl: null,

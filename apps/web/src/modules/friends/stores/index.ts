@@ -6,25 +6,25 @@ import { friendsApi } from '@/modules/friends/services/api'
 export const useFriendsStore = defineStore('friends', () => {
   // Permintaan masuk
   const requests = ref<FriendRequest[]>([])
-  const requestsCursor = ref<number | null>(null)
+  const requestsCursor = ref<string | null>(null)
   const requestsDone = ref(false)
   const requestsLoading = ref(false)
   const requestsFailed = ref(false)
 
   // Daftar teman
   const friends = ref<UserSummary[]>([])
-  const friendsCursor = ref<number | null>(null)
+  const friendsCursor = ref<string | null>(null)
   const friendsDone = ref(false)
   const friendsLoading = ref(false)
   const friendsFailed = ref(false)
   const total = ref(0)
   const query = ref('')
 
-  const ownerId = ref<number | null>(null)
+  const ownerId = ref<string | null>(null)
   // Penghitung generasi: respons yang datang setelah reset atau pencarian baru dibuang.
   let generation = 0
 
-  function reset(newOwnerId: number | null = null) {
+  function reset(newOwnerId: string | null = null) {
     generation++
     requests.value = []
     requestsCursor.value = null
@@ -102,7 +102,7 @@ export const useFriendsStore = defineStore('friends', () => {
   }
 
   /** Terima: permintaan pindah ke daftar teman (di paling atas) tanpa muat ulang. */
-  async function accept(userId: number): Promise<boolean> {
+  async function accept(userId: string): Promise<boolean> {
     const req = requests.value.find((r) => r.user.id === userId)
     if (!req) return false
     try {
@@ -116,7 +116,7 @@ export const useFriendsStore = defineStore('friends', () => {
     return true
   }
 
-  async function reject(userId: number): Promise<boolean> {
+  async function reject(userId: string): Promise<boolean> {
     try {
       await friendsApi.reject(userId)
     } catch {
@@ -126,7 +126,7 @@ export const useFriendsStore = defineStore('friends', () => {
     return true
   }
 
-  async function unfriend(userId: number): Promise<boolean> {
+  async function unfriend(userId: string): Promise<boolean> {
     try {
       await friendsApi.unfriend(userId)
     } catch {

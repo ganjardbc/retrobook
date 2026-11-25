@@ -29,9 +29,9 @@ import { PRIVACY_ICONS } from '@/helpers/privacy'
 
 const props = defineProps<{ post: Post }>()
 const emit = defineEmits<{
-  delete: [id: number]
-  'toggle-like': [id: number]
-  'comment-count': [id: number, delta: number]
+  delete: [id: string]
+  'toggle-like': [id: string]
+  'comment-count': [id: string, delta: number]
   shared: [post: Post]
   updated: [post: Post]
 }>()

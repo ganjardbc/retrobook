@@ -5,7 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   Query,
   Res,
@@ -45,7 +45,7 @@ export class MessagesController {
   @Get(':userId')
   history(
     @CurrentUser() user: AuthUser,
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('userId', ParseUUIDPipe) userId: string,
     @Query() q: CursorQueryDto,
   ) {
     return this.messages.history(user.id, userId, q.limit, q.cursor)
@@ -56,7 +56,7 @@ export class MessagesController {
   @RateLimit(MESSAGE_PER_USER)
   async send(
     @CurrentUser() user: AuthUser,
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param('userId', ParseUUIDPipe) userId: string,
     @Body() dto: SendMessageDto,
     @Res({ passthrough: true }) res: Response,
   ) {
@@ -73,20 +73,20 @@ export class MessagesController {
   /** Clear chat: sembunyikan riwayat dari saya saja. */
   @Delete(':userId/history')
   @HttpCode(204)
-  async clear(@CurrentUser() user: AuthUser, @Param('userId', ParseIntPipe) userId: number) {
+  async clear(@CurrentUser() user: AuthUser, @Param('userId', ParseUUIDPipe) userId: string) {
     await this.messages.clear(user.id, userId)
   }
 
   /** Hapus sesi chat: seperti clear, dan hilang dari daftar Messages saya. */
   @Delete(':userId')
   @HttpCode(204)
-  async remove(@CurrentUser() user: AuthUser, @Param('userId', ParseIntPipe) userId: number) {
+  async remove(@CurrentUser() user: AuthUser, @Param('userId', ParseUUIDPipe) userId: string) {
     await this.messages.remove(user.id, userId)
   }
 
   @Post(':userId/read')
   @HttpCode(200)
-  read(@CurrentUser() user: AuthUser, @Param('userId', ParseIntPipe) userId: number) {
+  read(@CurrentUser() user: AuthUser, @Param('userId', ParseUUIDPipe) userId: string) {
     return this.messages.markRead(user.id, userId)
   }
 }

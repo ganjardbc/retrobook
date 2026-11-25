@@ -1,16 +1,16 @@
 import { ref, type Ref } from 'vue'
 
-type Page<T> = { items: T[]; nextCursor: number | null; total?: number }
+type Page<T> = { items: T[]; nextCursor: string | null; total?: number }
 
 /**
  * Daftar berhalaman (kursor) generik untuk tab profil (teman, foto). Aman dipanggil berulang;
  * respons yang datang setelah reset (ganti profil) dibuang lewat penghitung generasi.
  */
 export function usePaged<T>(
-  fetchPage: (cursor: number | null) => Promise<Page<T>>,
+  fetchPage: (cursor: string | null) => Promise<Page<T>>,
   keyOf: (item: T) => string | number,
 ) {
-  const nextCursor = ref<number | null>(null)
+  const nextCursor = ref<string | null>(null)
   const done = ref(false)
   const loading = ref(false)
   const failed = ref(false)

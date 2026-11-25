@@ -16,10 +16,10 @@ const router = () =>
     routes: [{ path: '/:p(.*)*', component: { template: '<p/>' } }],
   })
 
-const author = { id: 2, username: 'siti', displayName: 'Siti', avatarUrl: null, isBot: false }
+const author = { id: '2', username: 'siti', displayName: 'Siti', avatarUrl: null, isBot: false }
 const mkPost = (over: Partial<Post> = {}): Post => ({
-  id: 1,
-  author: { id: 1, username: 'budi', displayName: 'Budi', avatarUrl: null, isBot: false },
+  id: '1',
+  author: { id: '1', username: 'budi', displayName: 'Budi', avatarUrl: null, isBot: false },
   wallOwner: null,
   sharedFrom: null,
   content: 'halo',
@@ -44,31 +44,31 @@ describe('SharePanel', () => {
   })
 
   it('kirim: memanggil API dengan teks dan privasi terpilih lalu memancarkan post baru', async () => {
-    const created = mkPost({ id: 9 })
+    const created = mkPost({ id: '9' })
     const spy = vi.spyOn(postsApi, 'share').mockResolvedValue(created)
-    const w = mount(SharePanel, { props: { postId: 5 } })
+    const w = mount(SharePanel, { props: { postId: '5' } })
     expect((w.find('select').element as HTMLSelectElement).value).toBe('FRIENDS') // default
     await w.find('textarea').setValue('Setuju')
     await w.find('select').setValue('PUBLIC')
     await w.find('form').trigger('submit')
     await flushPromises()
-    expect(spy).toHaveBeenCalledWith(5, { content: 'Setuju', privacy: 'PUBLIC' })
+    expect(spy).toHaveBeenCalledWith('5', { content: 'Setuju', privacy: 'PUBLIC' })
     expect(w.emitted('shared')).toEqual([[created]])
   })
 
   it('boleh tanpa teks', async () => {
     const spy = vi.spyOn(postsApi, 'share').mockResolvedValue(mkPost())
-    const w = mount(SharePanel, { props: { postId: 5 } })
+    const w = mount(SharePanel, { props: { postId: '5' } })
     await w.find('form').trigger('submit')
     await flushPromises()
-    expect(spy).toHaveBeenCalledWith(5, { content: '', privacy: 'FRIENDS' })
+    expect(spy).toHaveBeenCalledWith('5', { content: '', privacy: 'FRIENDS' })
   })
 
   it('galat server ditampilkan, tidak memancarkan apa pun; kirim ganda diabaikan saat menunggu', async () => {
     const spy = vi
       .spyOn(postsApi, 'share')
       .mockRejectedValue(new ApiRequestError(404, 'NOT_FOUND', ['Post tidak ditemukan']))
-    const w = mount(SharePanel, { props: { postId: 5 } })
+    const w = mount(SharePanel, { props: { postId: '5' } })
     await Promise.all([w.find('form').trigger('submit'), w.find('form').trigger('submit')])
     await flushPromises()
     expect(spy).toHaveBeenCalledTimes(1)
@@ -77,7 +77,7 @@ describe('SharePanel', () => {
   })
 
   it('Cancel memancarkan cancel', async () => {
-    const w = mount(SharePanel, { props: { postId: 5 } })
+    const w = mount(SharePanel, { props: { postId: '5' } })
     await w
       .findAll('button')
       .find((b) => b.text() === 'Cancel')!
@@ -92,7 +92,7 @@ describe('SharedPostCard', () => {
     const w = mount(SharedPostCard, {
       props: {
         original: {
-          id: 3,
+          id: '3',
           author,
           content: evil,
           imageUrl: '/uploads/a.png',
@@ -120,14 +120,14 @@ describe('SharedPostCard', () => {
 describe('PostCard: share', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useAuthStore().user = { id: 1, username: 'budi', displayName: 'Budi' }
+    useAuthStore().user = { id: '1', username: 'budi', displayName: 'Budi' }
     vi.restoreAllMocks()
   })
   const mountCard = (post: Post) =>
     mount(PostCard, { props: { post }, global: { plugins: [router()] } })
 
   it('aksi Share membuka dan menutup panel; Share berhasil memancarkan post baru dan menutup panel', async () => {
-    const created = mkPost({ id: 20 })
+    const created = mkPost({ id: '20' })
     vi.spyOn(postsApi, 'share').mockResolvedValue(created)
     const w = mountCard(mkPost())
     expect(w.find('.share').exists()).toBe(false)
@@ -148,7 +148,7 @@ describe('PostCard: share', () => {
       mkPost({
         content: 'komentarku',
         sharedFrom: {
-          id: 3,
+          id: '3',
           author,
           content: 'isi asal',
           imageUrl: null,

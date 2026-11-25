@@ -46,12 +46,12 @@ describe('Life Events (integrasi)', () => {
     expect(newer.status).toBe(201)
     expect(
       (await h.as(friend).get(`/users/${owner.username}/life-events`)).body.items.map(
-        (e: { id: number }) => e.id,
+        (e: { id: string }) => e.id,
       ),
     ).toEqual([newer.body.id, older.body.id])
     expect(
       (await h.as(stranger).get(`/users/${owner.username}/life-events`)).body.items.map(
-        (e: { id: number }) => e.id,
+        (e: { id: string }) => e.id,
       ),
     ).toEqual([newer.body.id])
     expect((await h.as(stranger).del(`/life-events/${older.body.id}`)).status).toBe(404)

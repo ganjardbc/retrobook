@@ -146,9 +146,9 @@ describe('Notifikasi (integrasi)', () => {
     it('terbaru di atas dengan cursor', async () => {
       const { author, f1, f2, f3 } = await seed()
       const p1 = (await h.as(author).get('/notifications?limit=2')).body
-      expect(p1.items.map((n: { actor: { id: number } }) => n.actor.id)).toEqual([f3.id, f2.id])
+      expect(p1.items.map((n: { actor: { id: string } }) => n.actor.id)).toEqual([f3.id, f2.id])
       const p2 = (await h.as(author).get(`/notifications?limit=2&cursor=${p1.nextCursor}`)).body
-      expect(p2.items.map((n: { actor: { id: number } }) => n.actor.id)).toEqual([f1.id])
+      expect(p2.items.map((n: { actor: { id: string } }) => n.actor.id)).toEqual([f1.id])
       expect(p2.nextCursor).toBeNull()
     })
 

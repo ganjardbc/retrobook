@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   Req,
   UseGuards,
@@ -40,7 +40,7 @@ export class AdminBlockedWordsController {
   @Delete(':id')
   remove(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() request: Request,
   ) {
     return this.words.remove(admin.id, id, request.ip)

@@ -29,9 +29,9 @@ export class JwtAuthGuard implements CanActivate {
       throw new AppException(401, 'UNAUTHORIZED', 'Silakan login terlebih dahulu')
     }
 
-    let sub: number
+    let sub: string
     try {
-      sub = (await this.jwt.verifyAsync<{ sub: number }>(token)).sub
+      sub = (await this.jwt.verifyAsync<{ sub: string }>(token)).sub
     } catch (e) {
       const expired = e instanceof Error && e.name === 'TokenExpiredError'
       throw new AppException(

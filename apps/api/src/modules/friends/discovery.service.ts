@@ -33,7 +33,7 @@ export class FriendDiscoveryService {
    * tidak boleh dilihat viewer tidak dihitung.
    * shortcut: agregasi di memori atas teman viewer; ganti dengan SQL bila graf pertemanan membesar.
    */
-  async suggestions(viewerId: number, limit: number): Promise<{ items: FriendSuggestion[] }> {
+  async suggestions(viewerId: string, limit: number): Promise<{ items: FriendSuggestion[] }> {
     const friendIds = await this.friendIds(viewerId)
     if (friendIds.length === 0) return { items: [] }
     const mine = new Set(friendIds)
@@ -45,7 +45,7 @@ export class FriendDiscoveryService {
       },
       select: { requesterId: true, addresseeId: true },
     })
-    const mutual = new Map<number, number>()
+    const mutual = new Map<string, number>()
     for (const { requesterId, addresseeId } of edges) {
       // Satu baris per pasangan: tiap teman viewer menyumbang paling banyak satu ke satu kandidat.
       for (const [friend, other] of [
@@ -95,7 +95,7 @@ export class FriendDiscoveryService {
    * Teman yang berulang tahun pada `date` (YYYY-MM-DD; bawaan hari ini UTC). Yang lahir 29 Februari dirayakan
    * 1 Maret pada tahun bukan kabisat.
    */
-  async birthdays(viewerId: number, date?: string): Promise<{ items: UserSummary[] }> {
+  async birthdays(viewerId: string, date?: string): Promise<{ items: UserSummary[] }> {
     const [y, m, d] = date
       ? (date.split('-').map(Number) as [number, number, number])
       : (() => {
@@ -130,7 +130,7 @@ export class FriendDiscoveryService {
     return { items }
   }
 
-  private async friendIds(viewerId: number): Promise<number[]> {
+  private async friendIds(viewerId: string): Promise<string[]> {
     const rows = await this.prisma.user.findMany({
       where: { AND: [this.visibility.userWhere(viewerId), this.visibility.friendOf(viewerId)] },
       select: { id: true },

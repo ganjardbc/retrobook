@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ChatFriend, ChatMessage, Conversation, UserSummary } from '@retrobook/shared'
+import { isUuid } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -30,10 +31,10 @@ const query = ref('')
 const route = useRoute()
 const router = useRouter()
 const selectedId = computed(() => {
-  const id = Number(route.query.with)
-  return Number.isInteger(id) && id > 0 ? id : null
+  const id = route.query.with
+  return isUuid(id) ? id : null
 })
-function select(id: number | null) {
+function select(id: string | null) {
   const { with: _old, ...rest } = route.query
   void router.replace({ query: id === null ? rest : { ...rest, with: String(id) } })
 }
@@ -50,7 +51,7 @@ const compact = ref(
 
 const contacts = computed<Contact[]>(() => {
   const friends = new Map(chat.friends.map((friend) => [friend.user.id, friend]))
-  const recentIds = new Set<number>()
+  const recentIds = new Set<string>()
   const recent = conversations.value.map((conversation) => {
     const friend = friends.get(conversation.user.id)
     recentIds.add(conversation.user.id)

@@ -3,7 +3,7 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Query,
   Req,
@@ -31,7 +31,7 @@ export class AdminHashtagsController {
   @Patch(':id')
   setHidden(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: SetHashtagHiddenDto,
     @Req() request: Request,
   ) {

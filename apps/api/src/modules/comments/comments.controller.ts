@@ -5,7 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   Query,
 } from '@nestjs/common'
@@ -21,7 +21,7 @@ export class CommentsController {
   @Get('posts/:id/comments')
   list(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Query() q: CursorQueryDto,
   ) {
     return this.comments.list(user.id, id, q.limit, q.cursor)
@@ -30,7 +30,7 @@ export class CommentsController {
   @Post('posts/:id/comments')
   create(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: CreateCommentDto,
   ) {
     return this.comments.create(user.id, id, dto)
@@ -38,7 +38,7 @@ export class CommentsController {
 
   @Delete('comments/:id')
   @HttpCode(204)
-  async remove(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  async remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     await this.comments.remove(user.id, id)
   }
 }

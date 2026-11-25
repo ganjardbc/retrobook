@@ -38,7 +38,7 @@ export class AdminBotsService {
   }
 
   /** ADM-15: buat akun bot (isBot, tanpa login: kata sandi acak yang tidak diketahui siapa pun) beserta profilnya. */
-  async create(adminId: number, dto: CreateBotDto, ip?: string) {
+  async create(adminId: string, dto: CreateBotDto, ip?: string) {
     if (RESERVED.has(dto.username.toLowerCase()))
       throw new AppException(409, 'USERNAME_TAKEN', 'Username sudah dipakai')
     const passwordHash = await argon2.hash(randomBytes(32).toString('hex'))
@@ -76,7 +76,7 @@ export class AdminBotsService {
     }
   }
 
-  update(adminId: number, userId: number, dto: UpdateBotDto, ip?: string) {
+  update(adminId: string, userId: string, dto: UpdateBotDto, ip?: string) {
     return this.audit.execute(
       {
         adminId,

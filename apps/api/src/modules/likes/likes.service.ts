@@ -18,7 +18,7 @@ export class LikesService {
   ) {}
 
   /** Like post (idempoten): mengulang tidak membuat baris kedua. */
-  async like(viewerId: number, postId: number): Promise<LikeState> {
+  async like(viewerId: string, postId: string): Promise<LikeState> {
     const post = await this.assertVisible(viewerId, postId)
     try {
       await this.prisma.like.create({ data: { userId: viewerId, postId } })
@@ -36,7 +36,7 @@ export class LikesService {
   }
 
   /** Unlike (idempoten). */
-  async unlike(viewerId: number, postId: number): Promise<LikeState> {
+  async unlike(viewerId: string, postId: string): Promise<LikeState> {
     await this.assertVisible(viewerId, postId)
     await this.prisma.like.deleteMany({ where: { userId: viewerId, postId } })
     return this.state(viewerId, postId)
@@ -44,10 +44,10 @@ export class LikesService {
 
   /** Daftar penyuka, terbaru dulu, dengan kursor id like. */
   async list(
-    viewerId: number,
-    postId: number,
+    viewerId: string,
+    postId: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
   ): Promise<Paged<UserSummary>> {
     await this.assertVisible(viewerId, postId)
     const rows = await this.prisma.like.findMany({
@@ -69,7 +69,7 @@ export class LikesService {
     }
   }
 
-  async likeComment(viewerId: number, commentId: number): Promise<LikeState> {
+  async likeComment(viewerId: string, commentId: string): Promise<LikeState> {
     await this.assertCommentVisible(viewerId, commentId)
     try {
       await this.prisma.like.create({ data: { userId: viewerId, commentId } })
@@ -80,13 +80,13 @@ export class LikesService {
     return this.commentState(viewerId, commentId)
   }
 
-  async unlikeComment(viewerId: number, commentId: number): Promise<LikeState> {
+  async unlikeComment(viewerId: string, commentId: string): Promise<LikeState> {
     await this.assertCommentVisible(viewerId, commentId)
     await this.prisma.like.deleteMany({ where: { userId: viewerId, commentId } })
     return this.commentState(viewerId, commentId)
   }
 
-  async listCommentLikes(viewerId: number, commentId: number, limit: number, cursor?: number) {
+  async listCommentLikes(viewerId: string, commentId: string, limit: number, cursor?: string) {
     await this.assertCommentVisible(viewerId, commentId)
     const rows = await this.prisma.like.findMany({
       where: { commentId, ...this.visibility.likerWhere(viewerId) },
@@ -108,7 +108,7 @@ export class LikesService {
   }
 
   /** 404 yang sama untuk post yang tidak ada dan yang tidak boleh dilihat. */
-  private async assertVisible(viewerId: number, postId: number) {
+  private async assertVisible(viewerId: string, postId: string) {
     const post = await this.prisma.post.findFirst({
       where: { AND: [{ id: postId }, this.visibility.postWhere(viewerId, true)] },
       select: { id: true, authorId: true },
@@ -117,7 +117,7 @@ export class LikesService {
     return post
   }
 
-  private async assertCommentVisible(viewerId: number, commentId: number) {
+  private async assertCommentVisible(viewerId: string, commentId: string) {
     const comment = await this.prisma.comment.findFirst({
       where: {
         AND: [{ id: commentId }, this.visibility.commentWhere(viewerId)],
@@ -128,7 +128,7 @@ export class LikesService {
     if (!comment) throw new AppException(404, 'NOT_FOUND', 'Komentar tidak ditemukan')
   }
 
-  private async commentState(viewerId: number, commentId: number): Promise<LikeState> {
+  private async commentState(viewerId: string, commentId: string): Promise<LikeState> {
     const where = { commentId, ...this.visibility.likerWhere(viewerId) }
     const [likeCount, mine] = await Promise.all([
       this.prisma.like.count({ where }),
@@ -137,7 +137,7 @@ export class LikesService {
     return { likeCount, likedByMe: mine > 0 }
   }
 
-  private async state(viewerId: number, postId: number): Promise<LikeState> {
+  private async state(viewerId: string, postId: string): Promise<LikeState> {
     const where = { postId, ...this.visibility.likerWhere(viewerId) }
     const [likeCount, mine] = await Promise.all([
       this.prisma.like.count({ where }),

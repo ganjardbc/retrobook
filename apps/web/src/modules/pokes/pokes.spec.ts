@@ -16,7 +16,7 @@ vi.mock('@/modules/pokes/services/api', () => ({
 }))
 const api = vi.mocked(pokesApi)
 
-const item = (id: number): PokeItem => ({
+const item = (id: string): PokeItem => ({
   user: { id, username: `u${id}`, displayName: `User ${id}`, avatarUrl: null, isBot: false },
   createdAt: new Date().toISOString(),
 })
@@ -24,9 +24,9 @@ const item = (id: number): PokeItem => ({
 beforeEach(() => {
   setActivePinia(createPinia())
   vi.resetAllMocks()
-  useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
-  api.list.mockResolvedValue({ items: [item(2), item(3)], nextCursor: null })
-  api.poke.mockResolvedValue({ userId: 2, createdAt: '' })
+  useAuthStore().user = { id: '1', username: 'me', displayName: 'Me' }
+  api.list.mockResolvedValue({ items: [item('2'), item('3')], nextCursor: null })
+  api.poke.mockResolvedValue({ userId: '2', createdAt: '' })
   api.dismiss.mockResolvedValue(undefined)
 })
 
@@ -40,7 +40,7 @@ describe('pokes store', () => {
   it('load: mengisi daftar, tanpa duplikat, menandai selesai', async () => {
     const s = usePokesStore()
     await s.load()
-    expect(s.items.map((p) => p.user.id)).toEqual([2, 3])
+    expect(s.items.map((p) => p.user.id)).toEqual(['2', '3'])
     expect(s.done).toBe(true)
   })
 
@@ -57,23 +57,23 @@ describe('pokes store', () => {
   it('pokeBack dan remove mengeluarkan item; gagal tidak mengubah daftar', async () => {
     const s = usePokesStore()
     await s.load()
-    expect(await s.pokeBack(2)).toBe(true)
-    expect(api.poke).toHaveBeenCalledWith(2)
-    expect(s.items.map((p) => p.user.id)).toEqual([3])
+    expect(await s.pokeBack('2')).toBe(true)
+    expect(api.poke).toHaveBeenCalledWith('2')
+    expect(s.items.map((p) => p.user.id)).toEqual(['3'])
 
     api.dismiss.mockRejectedValueOnce(new Error('x'))
-    expect(await s.remove(3)).toBe(false)
+    expect(await s.remove('3')).toBe(false)
     expect(s.items).toHaveLength(1)
-    expect(await s.remove(3)).toBe(true)
+    expect(await s.remove('3')).toBe(true)
     expect(s.items).toHaveLength(0)
   })
 
   it('refresh membuang hasil lama dan memuat dari awal', async () => {
     const s = usePokesStore()
     await s.load()
-    api.list.mockResolvedValue({ items: [item(9)], nextCursor: null })
+    api.list.mockResolvedValue({ items: [item('9')], nextCursor: null })
     await s.refresh()
-    expect(s.items.map((p) => p.user.id)).toEqual([9])
+    expect(s.items.map((p) => p.user.id)).toEqual(['9'])
   })
 })
 
@@ -97,7 +97,7 @@ describe('PokesView', () => {
     await flushPromises()
     await w.findAll('.poke__link')[0]!.trigger('click')
     await flushPromises()
-    expect(api.poke).toHaveBeenCalledWith(2)
+    expect(api.poke).toHaveBeenCalledWith('2')
     expect(w.findAll('li')).toHaveLength(1)
     w.unmount()
   })
@@ -127,7 +127,7 @@ describe('PokesView', () => {
     api.list.mockClear()
     const n = (type: 'POKE' | 'LIKE') =>
       ({
-        id: 1,
+        id: '1',
         type,
         actor: null,
         postId: null,
@@ -149,7 +149,7 @@ describe('PokesView', () => {
 describe('ProfileHeader: tombol Poke', () => {
   const profile = (relationship: Profile['relationship']): Profile =>
     ({
-      id: 7,
+      id: '7',
       username: 'siti',
       displayName: 'Siti',
       avatarUrl: null,
@@ -174,7 +174,7 @@ describe('ProfileHeader: tombol Poke', () => {
     const w = mountHeader('FRIENDS')
     await pokeBtn(w)!.trigger('click')
     await flushPromises()
-    expect(api.poke).toHaveBeenCalledWith(7)
+    expect(api.poke).toHaveBeenCalledWith('7')
     expect(pokeBtn(w)!.text()).toBe('Poked')
   })
 

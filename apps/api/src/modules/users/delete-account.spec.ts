@@ -57,7 +57,7 @@ describe('Account deletion (integrasi)', () => {
     await users.anonymizeExpiredAccounts()
     const anonymous = await prisma.user.findUniqueOrThrow({ where: { id: user.id } })
     expect(anonymous).toMatchObject({
-      username: `deleted-${user.id}`,
+      username: `deleted-${user.id.replaceAll('-', '').slice(0, 20)}`,
       email: `deleted-${user.id}@invalid.local`,
       displayName: 'Deleted account',
       bio: null,

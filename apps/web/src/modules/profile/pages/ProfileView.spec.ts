@@ -12,7 +12,7 @@ import ProfileTimeline from '@/modules/profile/pages/ProfileTimeline.vue'
 import ProfileView from '@/modules/profile/pages/ProfileView.vue'
 
 const profile = (over: Partial<Profile> = {}): Profile => ({
-  id: 7,
+  id: '7',
   username: 'siti',
   displayName: 'Siti Aminah',
   avatarUrl: null,
@@ -29,10 +29,16 @@ const profile = (over: Partial<Profile> = {}): Profile => ({
   createdAt: '2026-01-01T00:00:00.000Z',
   ...over,
 })
-const mkPost = (id: number, content: string): Post =>
+const mkPost = (id: string, content: string): Post =>
   ({
     id,
-    author: { id: 7, username: 'siti', displayName: 'Siti Aminah', avatarUrl: null, isBot: false },
+    author: {
+      id: '7',
+      username: 'siti',
+      displayName: 'Siti Aminah',
+      avatarUrl: null,
+      isBot: false,
+    },
     wallOwner: null,
     sharedFrom: null,
     content,
@@ -73,10 +79,10 @@ async function mountAt(path: string) {
 describe('ProfileView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
+    useAuthStore().user = { id: '1', username: 'me', displayName: 'Me' }
     vi.restoreAllMocks()
     vi.spyOn(usersApi, 'timeline').mockResolvedValue({
-      items: [mkPost(1, 'halo dunia')],
+      items: [mkPost('1', 'halo dunia')],
       nextCursor: null,
     })
   })
@@ -88,7 +94,7 @@ describe('ProfileView', () => {
     const years = w.find('nav.years')
     expect(years.exists()).toBe(true)
     vi.mocked(usersApi.timeline).mockResolvedValue({
-      items: [mkPost(7, 'dari 2014')],
+      items: [mkPost('7', 'dari 2014')],
       nextCursor: null,
     })
     await years.findAll('button')[2]!.trigger('click')
@@ -131,7 +137,7 @@ describe('ProfileView', () => {
     expect(other.w.find('.status').exists()).toBe(false)
 
     setActivePinia(createPinia())
-    useAuthStore().user = { id: 7, username: 'siti', displayName: 'Siti Aminah' }
+    useAuthStore().user = { id: '7', username: 'siti', displayName: 'Siti Aminah' }
     vi.spyOn(usersApi, 'profile').mockResolvedValueOnce(profile({ relationship: 'SELF' }))
     const own = await mountAt('/siti')
     expect(own.w.find('.status').exists()).toBe(true)
@@ -169,7 +175,7 @@ describe('ProfileView', () => {
     expect(friend.w.findAll('.status__privacy')).toHaveLength(1) // hanya perasaan
 
     setActivePinia(createPinia())
-    useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
+    useAuthStore().user = { id: '1', username: 'me', displayName: 'Me' }
     vi.spyOn(usersApi, 'profile').mockResolvedValueOnce(profile({ relationship: 'REQUEST_SENT' }))
     expect((await mountAt('/siti')).w.find('.status').exists()).toBe(false)
   })
@@ -220,7 +226,7 @@ describe('ProfileView', () => {
     expect(document.body.querySelector('[role="dialog"]')).toBeNull()
 
     setActivePinia(createPinia()) // store profil menyimpan username yang sama
-    useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }
+    useAuthStore().user = { id: '1', username: 'me', displayName: 'Me' }
     vi.spyOn(usersApi, 'profile').mockResolvedValue(profile({ relationship: 'SELF' }))
     const own = await mountAt('/siti')
     expect(own.w.findAll('.header__actions button').map((b) => b.text())).not.toContain('Report')
@@ -228,17 +234,17 @@ describe('ProfileView', () => {
 
   it('Add Friend: memanggil API dan tombol berubah menjadi Cancel Request', async () => {
     vi.spyOn(usersApi, 'profile').mockResolvedValue(profile())
-    const send = vi.spyOn(friendsApi, 'send').mockResolvedValue({ userId: 7, status: 'PENDING' })
+    const send = vi.spyOn(friendsApi, 'send').mockResolvedValue({ userId: '7', status: 'PENDING' })
     const { w } = await mountAt('/siti')
     await w.find('.header__actions button').trigger('click')
     await flushPromises()
-    expect(send).toHaveBeenCalledWith(7)
+    expect(send).toHaveBeenCalledWith('7')
     expect(w.find('.header__actions button').text()).toBe('Cancel Request')
   })
 
   it('Confirm menaikkan jumlah teman di tab; Unfriend meminta konfirmasi', async () => {
     vi.spyOn(usersApi, 'profile').mockResolvedValue(profile({ relationship: 'REQUEST_RECEIVED' }))
-    vi.spyOn(friendsApi, 'accept').mockResolvedValue({ userId: 7, status: 'ACCEPTED' })
+    vi.spyOn(friendsApi, 'accept').mockResolvedValue({ userId: '7', status: 'ACCEPTED' })
     const unfriend = vi.spyOn(friendsApi, 'unfriend').mockResolvedValue(undefined)
     const { w } = await mountAt('/siti')
     await w
@@ -253,7 +259,7 @@ describe('ProfileView', () => {
     confirm.mockReturnValueOnce(true)
     await w.find('.header__actions button').trigger('click')
     await flushPromises()
-    expect(unfriend).toHaveBeenCalledWith(7)
+    expect(unfriend).toHaveBeenCalledWith('7')
     expect(w.find('.header__actions button').text()).toBe('Add Friend')
   })
 

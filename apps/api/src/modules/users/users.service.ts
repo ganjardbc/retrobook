@@ -43,7 +43,7 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
     if (this.anonymizeTimer) clearInterval(this.anonymizeTimer)
   }
 
-  async deleteAccount(userId: number, password: string) {
+  async deleteAccount(userId: string, password: string) {
     const user = await this.prisma.user.findFirst({
       where: { id: userId, deletedAt: null },
       select: { passwordHash: true },
@@ -96,7 +96,8 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
         where: { id, deletedAt: { lte: cutoff }, NOT: { username: { startsWith: 'deleted-' } } },
         data: {
           email: `deleted-${id}@invalid.local`,
-          username: `deleted-${id}`,
+          // username maksimal 30 karakter: 'deleted-' + 20 heksa pertama UUID (80 bit, bentrok sangat tidak mungkin)
+          username: `deleted-${id.replaceAll('-', '').slice(0, 20)}`,
           displayName: 'Deleted account',
           passwordHash: await argon2.hash(randomBytes(32).toString('hex')),
           bio: null,
@@ -113,12 +114,12 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
     return accounts.length
   }
 
-  async getProfile(viewerId: number, username: string): Promise<Profile> {
+  async getProfile(viewerId: string, username: string): Promise<Profile> {
     return this.buildProfile(await this.findProfileUser(viewerId, username), viewerId)
   }
 
   /** PRF-02: ubah profil sendiri. Hanya kolom yang dikirim yang berubah. */
-  async updateMe(viewerId: number, dto: UpdateProfileDto): Promise<Profile> {
+  async updateMe(viewerId: string, dto: UpdateProfileDto): Promise<Profile> {
     const data: Prisma.UserUpdateInput = {}
     if (dto.displayName !== undefined) {
       const name = dto.displayName.trim()
@@ -134,14 +135,14 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
     return this.buildProfile(user, viewerId)
   }
 
-  async getPrivacy(userId: number) {
+  async getPrivacy(userId: string) {
     return this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
       select: { profileInfoPrivacy: true, friendsPrivacy: true, defaultPostPrivacy: true },
     })
   }
 
-  async updatePrivacy(userId: number, dto: UpdatePrivacyDto) {
+  async updatePrivacy(userId: string, dto: UpdatePrivacyDto) {
     return this.prisma.user.update({
       where: { id: userId },
       data: dto,
@@ -151,7 +152,7 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
 
   /** PRF-03: ganti foto profil atau cover. Berkas lama tetap tersimpan (hanya URL yang diganti). */
   async setPhoto(
-    viewerId: number,
+    viewerId: string,
     kind: 'avatar' | 'cover',
     file: { buffer: Buffer } | undefined,
   ): Promise<Profile> {
@@ -163,7 +164,7 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
     return this.buildProfile(user, viewerId)
   }
 
-  private async buildProfile(u: User, viewerId: number): Promise<Profile> {
+  private async buildProfile(u: User, viewerId: string): Promise<Profile> {
     const [friendCount, relationship] = await Promise.all([
       this.friends.count(u.id),
       this.friends.relationshipOf(viewerId, u.id),
@@ -193,10 +194,10 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
   }
 
   async timeline(
-    viewerId: number,
+    viewerId: string,
     username: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
     year?: number,
   ): Promise<Paged<Post>> {
     const u = await this.findProfileUser(viewerId, username)
@@ -204,17 +205,17 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** PRF-05: tahun yang punya post terlihat di timeline profil ini (untuk scroller tahun). */
-  async years(viewerId: number, username: string): Promise<{ items: number[] }> {
+  async years(viewerId: string, username: string): Promise<{ items: number[] }> {
     const u = await this.findProfileUser(viewerId, username)
     return { items: await this.posts.timelineYears(viewerId, u.id) }
   }
 
   /** Daftar teman pemilik profil (PRF-01 tab Friends). Terlihat oleh semua member sampai PRF-06 (Fase 3). */
   async friendsOf(
-    viewerId: number,
+    viewerId: string,
     username: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
     q?: string,
   ): Promise<FriendsPage> {
     const u = await this.findProfileUser(viewerId, username)
@@ -230,10 +231,10 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
    * timeline). Album dan foto profil menyusul bersama Fase 3.
    */
   async photos(
-    viewerId: number,
+    viewerId: string,
     username: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
   ): Promise<Paged<ProfilePhoto> & { total: number }> {
     const u = await this.findProfileUser(viewerId, username)
     const where = {
@@ -266,7 +267,7 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Username dicocokkan tanpa memperhatikan huruf besar (collation database). */
-  private async findProfileUser(viewerId: number, username: string) {
+  private async findProfileUser(viewerId: string, username: string) {
     const user = await this.prisma.user.findFirst({
       where: { username, ...this.visibility.userWhere(viewerId) },
     })

@@ -3,7 +3,7 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Query,
   Req,
@@ -31,7 +31,7 @@ export class AdminReportsController {
   @Patch(':id')
   decide(
     @CurrentUser() admin: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: DecideReportDto,
     @Req() request: Request,
   ) {

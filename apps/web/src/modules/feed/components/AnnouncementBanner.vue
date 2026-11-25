@@ -2,9 +2,9 @@
 import { onMounted, ref } from 'vue'
 import { request } from '@/plugins/http'
 
-type Announcement = { id: number; title: string; body: string }
+type Announcement = { id: string; title: string; body: string }
 const items = ref<Announcement[]>([])
-const dismissed = ref<number[]>([])
+const dismissed = ref<string[]>([])
 
 // Banner bersifat tambahan: gagal memuat tidak boleh mengganggu feed.
 onMounted(async () => {

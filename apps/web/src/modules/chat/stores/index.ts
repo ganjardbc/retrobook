@@ -5,11 +5,11 @@ import { useAuthStore } from '@/modules/auth/stores'
 import { chatApi } from '@/modules/chat/services/api'
 import { getSocket } from '@/plugins/realtime'
 
-/** Pesan di layar: `pending` sebelum ack server (id negatif), `failed` bila gagal dikirim. */
+/** Pesan di layar: `pending` sebelum ack server (id sementara `tmp-N`), `failed` bila gagal dikirim. */
 export type LocalMessage = ChatMessage & { pending?: boolean; failed?: boolean; clientId?: string }
 export type Thread = {
   messages: LocalMessage[]
-  nextCursor: number | null
+  nextCursor: string | null
   loading: boolean
   loaded: boolean
   failed: boolean
@@ -31,7 +31,7 @@ const byPresence = (a: ChatFriend, b: ChatFriend) =>
 
 /** Gabung dua daftar pesan: tanpa duplikat id, yang sudah punya id urut naik, yang pending di akhir. */
 function merge(a: LocalMessage[], b: LocalMessage[]): LocalMessage[] {
-  const seen = new Map<number, LocalMessage>()
+  const seen = new Map<string, LocalMessage>()
   for (const m of [...a, ...b]) if (!seen.has(m.id)) seen.set(m.id, m)
   const all = [...seen.values()]
   return [
@@ -52,18 +52,18 @@ export const useChatStore = defineStore('chat', () => {
   /** false: titik online menjadi abu (status tidak diketahui) sampai tersambung lagi. */
   const connected = ref(false)
   const windows = ref<ChatWindow[]>([])
-  const threads = reactive<Record<number, Thread>>({})
+  const threads = reactive<Record<string, Thread>>({})
   const totalUnread = computed(() => friends.value.reduce((n, f) => n + f.unreadCount, 0))
   /** userId -> sedang mengetik kepada saya (CHT-04). */
-  const typing = reactive<Record<number, boolean>>({})
-  const typingTimers = new Map<number, ReturnType<typeof setTimeout>>()
-  const outgoing = new Map<number, { last: number; idle: ReturnType<typeof setTimeout> }>()
+  const typing = reactive<Record<string, boolean>>({})
+  const typingTimers = new Map<string, ReturnType<typeof setTimeout>>()
+  const outgoing = new Map<string, { last: number; idle: ReturnType<typeof setTimeout> }>()
   let tempSeq = 0
 
-  const me = () => auth.user?.id ?? 0
-  const friendOf = (id: number) => friends.value.find((f) => f.user.id === id)
+  const me = () => auth.user?.id ?? ''
+  const friendOf = (id: string) => friends.value.find((f) => f.user.id === id)
 
-  function thread(userId: number): Thread {
+  function thread(userId: string): Thread {
     // `??=` mengembalikan objek mentah; baca ulang dari `threads` supaya yang dipakai adalah proxy reaktif.
     threads[userId] ??= {
       messages: [],
@@ -95,7 +95,7 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function loadLatest(userId: number) {
+  async function loadLatest(userId: string) {
     const t = thread(userId)
     if (t.loaded || t.loading) return
     t.loading = true
@@ -112,7 +112,7 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function loadOlder(userId: number) {
+  async function loadOlder(userId: string) {
     const t = thread(userId)
     if (t.loading || t.nextCursor === null) return
     t.loading = true
@@ -127,7 +127,7 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function markRead(userId: number) {
+  async function markRead(userId: string) {
     const f = friendOf(userId)
     if (f) f.unreadCount = 0
     try {
@@ -137,7 +137,7 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  function onTyping(p: { userId: number; isTyping: boolean }) {
+  function onTyping(p: { userId: string; isTyping: boolean }) {
     clearTimeout(typingTimers.get(p.userId))
     typing[p.userId] = p.isTyping
     if (p.isTyping) {
@@ -149,7 +149,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   /** Lawan membaca pesan saya sampai `upToCreatedAt`: tandai terbaca di jendela (indikator "Seen"). */
-  function onRead(p: { byUserId: number; upToMessageId: number; upToCreatedAt: string }) {
+  function onRead(p: { byUserId: string; upToMessageId: string; upToCreatedAt: string }) {
     const at = new Date().toISOString()
     for (const m of thread(p.byUserId).messages) {
       if (m.senderId === me() && !m.pending && m.createdAt <= p.upToCreatedAt && !m.readAt)
@@ -157,13 +157,13 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  function emitTyping(userId: number, isTyping: boolean) {
+  function emitTyping(userId: string, isTyping: boolean) {
     const socket = getSocket()
     if (socket.connected) socket.emit('typing', { toUserId: userId, isTyping })
   }
 
   /** Dipanggil tiap ketikan di kotak pesan; teks kosong berarti berhenti mengetik. */
-  function notifyTyping(userId: number, text: string) {
+  function notifyTyping(userId: string, text: string) {
     if (!text.trim()) return stopTyping(userId)
     const now = Date.now()
     const st = outgoing.get(userId)
@@ -176,7 +176,7 @@ export const useChatStore = defineStore('chat', () => {
     outgoing.set(userId, { last, idle: setTimeout(() => stopTyping(userId), TYPING_IDLE_MS) })
   }
 
-  function stopTyping(userId: number) {
+  function stopTyping(userId: string) {
     const st = outgoing.get(userId)
     if (!st) return
     clearTimeout(st.idle)
@@ -196,7 +196,7 @@ export const useChatStore = defineStore('chat', () => {
     if ((friendOf(user.id)?.unreadCount ?? 0) > 0) void markRead(user.id)
   }
 
-  function resetThread(userId: number) {
+  function resetThread(userId: string) {
     const t = thread(userId)
     t.messages = []
     t.nextCursor = null
@@ -207,13 +207,13 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   /** Clear chat: riwayat hilang dari layar saya saja. Galat dilempar ke pemanggil. */
-  async function clearHistory(userId: number) {
+  async function clearHistory(userId: string) {
     await chatApi.clear(userId)
     resetThread(userId)
   }
 
   /** Hapus sesi: riwayat hilang, teman disembunyikan dari daftar Messages, jendela melayang ditutup. */
-  async function removeSession(userId: number) {
+  async function removeSession(userId: string) {
     await chatApi.remove(userId)
     resetThread(userId)
     const f = friendOf(userId)
@@ -221,19 +221,19 @@ export const useChatStore = defineStore('chat', () => {
     closeWindow(userId)
   }
 
-  function closeWindow(userId: number) {
+  function closeWindow(userId: string) {
     stopTyping(userId)
     windows.value = windows.value.filter((w) => w.user.id !== userId)
   }
 
-  function toggleMinimize(userId: number) {
+  function toggleMinimize(userId: string) {
     const w = windows.value.find((x) => x.user.id === userId)
     if (!w) return
     w.minimized = !w.minimized
     if (!w.minimized && (friendOf(userId)?.unreadCount ?? 0) > 0) void markRead(userId)
   }
 
-  function replacePending(userId: number, tempId: number, real: ChatMessage) {
+  function replacePending(userId: string, tempId: string, real: ChatMessage) {
     const t = thread(userId)
     const without = t.messages.filter((m) => m.id !== tempId)
     // message:new bisa tiba lebih dulu dari ack: kalau begitu cukup buang yang pending.
@@ -241,7 +241,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   /** Kirim lewat socket dengan ack; jaringan atau timeout jatuh ke REST dengan clientId yang sama. */
-  async function deliver(userId: number, local: LocalMessage) {
+  async function deliver(userId: string, local: LocalMessage) {
     const clientId = local.clientId!
     try {
       const socket = getSocket()
@@ -261,7 +261,7 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  function fail(userId: number, tempId: number) {
+  function fail(userId: string, tempId: string) {
     const m = thread(userId).messages.find((x) => x.id === tempId)
     if (m) {
       m.pending = false
@@ -269,11 +269,11 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  function send(userId: number, text: string) {
+  function send(userId: string, text: string) {
     const content = text.trim()
     if (!content) return
     const local: LocalMessage = {
-      id: -++tempSeq,
+      id: `tmp-${++tempSeq}`,
       senderId: me(),
       receiverId: userId,
       content,
@@ -290,7 +290,7 @@ export const useChatStore = defineStore('chat', () => {
     return deliver(userId, local)
   }
 
-  function retry(userId: number, tempId: number) {
+  function retry(userId: string, tempId: string) {
     const m = thread(userId).messages.find((x) => x.id === tempId)
     if (!m?.failed) return
     m.failed = false
@@ -323,7 +323,7 @@ export const useChatStore = defineStore('chat', () => {
     else void loadFriends() // pengirim belum ada di daftar (teman baru)
   }
 
-  function onPresence(p: { userId: number; online: boolean; client?: 'WEB' | 'MOBILE' }) {
+  function onPresence(p: { userId: string; online: boolean; client?: 'WEB' | 'MOBILE' }) {
     const f = friendOf(p.userId)
     if (!f) return
     f.online = p.online
@@ -373,8 +373,8 @@ export const useChatStore = defineStore('chat', () => {
     stopListening = null
     friends.value = []
     windows.value = []
-    for (const k of Object.keys(threads)) delete threads[Number(k)]
-    for (const k of Object.keys(typing)) delete typing[Number(k)]
+    for (const k of Object.keys(threads)) delete threads[k]
+    for (const k of Object.keys(typing)) delete typing[k]
     typingTimers.forEach(clearTimeout)
     typingTimers.clear()
     outgoing.forEach((o) => clearTimeout(o.idle))

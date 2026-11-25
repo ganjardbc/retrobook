@@ -5,7 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
 } from '@nestjs/common'
@@ -22,19 +22,19 @@ export class NotesController {
   @Post() create(@CurrentUser() user: AuthUser, @Body() dto: CreateNoteDto) {
     return this.notes.create(user.id, dto)
   }
-  @Get(':id') get(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  @Get(':id') get(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.notes.get(user.id, id)
   }
   @Patch(':id') update(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateNoteDto,
   ) {
     return this.notes.update(user.id, id, dto)
   }
   @Delete(':id') @HttpCode(204) async remove(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
   ) {
     await this.notes.remove(user.id, id)
   }

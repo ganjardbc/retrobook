@@ -12,7 +12,7 @@ export class EventsService {
     private readonly visibility: VisibilityService,
   ) {}
 
-  private include(userId: number) {
+  private include(userId: string) {
     return {
       rsvps: { where: { userId }, select: { status: true } },
       _count: { select: { rsvps: { where: { status: 'GOING' as const } } } },
@@ -38,7 +38,7 @@ export class EventsService {
   }
 
   /** `from` dan `to` (ISO) membatasi rentang; tanpa keduanya, semua event mendatang. */
-  async list(userId: number, from?: string, to?: string) {
+  async list(userId: string, from?: string, to?: string) {
     const now = new Date()
     const lower = from && new Date(from) > now ? new Date(from) : now
     const events = await this.prisma.event.findMany({
@@ -53,7 +53,7 @@ export class EventsService {
     return { items: events.map((e) => this.view(e)) }
   }
 
-  async get(userId: number, eventId: number) {
+  async get(userId: string, eventId: string) {
     const event = await this.prisma.event.findFirst({
       where: { id: eventId, creator: this.visibility.userWhere(userId) },
       include: this.include(userId),
@@ -62,7 +62,7 @@ export class EventsService {
     return this.view(event)
   }
 
-  async create(userId: number, dto: CreateEventDto) {
+  async create(userId: string, dto: CreateEventDto) {
     if (!dto.title.trim())
       throw new AppException(400, 'VALIDATION_FAILED', 'Nama event wajib diisi')
     const startsAt = new Date(dto.startsAt)
@@ -87,7 +87,7 @@ export class EventsService {
     }
   }
 
-  async rsvp(userId: number, eventId: number, status: RsvpStatus) {
+  async rsvp(userId: string, eventId: string, status: RsvpStatus) {
     const event = await this.prisma.event.findFirst({
       where: {
         id: eventId,

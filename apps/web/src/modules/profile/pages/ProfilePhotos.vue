@@ -13,7 +13,7 @@ const store = useProfileStore()
 const list = store.photos
 const auth = useAuthStore()
 const albums = ref<Album[]>([])
-const viewing = ref<number | null>(null)
+const viewing = ref<number | null>(null) // indeks foto di lightbox
 const alt = () => t('profile.photos.alt', { name: store.profile?.displayName ?? '' })
 
 onMounted(() => void list.loadMore())

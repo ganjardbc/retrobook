@@ -34,10 +34,10 @@ export class CommentsService {
 
   /** Urut lama ke baru (INT-02), kursor = id komentar terakhir yang sudah diterima. */
   async list(
-    viewerId: number,
-    postId: number,
+    viewerId: string,
+    postId: string,
     limit: number,
-    cursor?: number,
+    cursor?: string,
   ): Promise<Paged<CommentDto>> {
     await this.assertPostVisible(viewerId, postId)
     const rows = await this.prisma.comment.findMany({
@@ -68,7 +68,7 @@ export class CommentsService {
     }
   }
 
-  async create(viewerId: number, postId: number, dto: CreateCommentDto): Promise<CommentDto> {
+  async create(viewerId: string, postId: string, dto: CreateCommentDto): Promise<CommentDto> {
     const post = await this.assertPostVisible(viewerId, postId)
     const content = dto.content ?? ''
     const imageUrl = dto.imageUrl ?? null
@@ -98,7 +98,7 @@ export class CommentsService {
   }
 
   /** Boleh dihapus oleh penulis komentar atau pemilik post (INT-02). Soft delete. */
-  async remove(viewerId: number, commentId: number): Promise<void> {
+  async remove(viewerId: string, commentId: string): Promise<void> {
     const comment = await this.prisma.comment.findFirst({
       where: { AND: [{ id: commentId }, this.visibility.commentWhere(viewerId)] },
       select: { id: true, postId: true, authorId: true, post: { select: { authorId: true } } },
@@ -112,7 +112,7 @@ export class CommentsService {
     await this.prisma.comment.update({ where: { id: commentId }, data: { deletedAt: new Date() } })
   }
 
-  private async assertPostVisible(viewerId: number, postId: number, message?: string) {
+  private async assertPostVisible(viewerId: string, postId: string, message?: string) {
     const post = await this.prisma.post.findFirst({
       where: { AND: [{ id: postId }, this.visibility.postWhere(viewerId, true)] },
       select: { id: true, authorId: true },

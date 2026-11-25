@@ -86,8 +86,12 @@ onMounted(load)
         </div>
         <div class="reports-actions">
           <button class="button button--quiet" @click="update(b, { active: !b.active })">
-            {{ b.active ? 'Nonaktifkan' : 'Aktifkan' }}</button
-          ><button class="button button--quiet" @click="editPersona(b)">Ubah persona</button>
+            {{ b.active ? 'Nonaktifkan' : 'Aktifkan' }}</button><button
+            class="button button--quiet"
+            @click="editPersona(b)"
+          >
+            Ubah persona
+          </button>
         </div>
       </li>
     </ul>

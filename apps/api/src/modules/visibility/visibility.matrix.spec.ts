@@ -11,7 +11,7 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, MISSING_ID } from '../../test/helpers'
 
 type ViewerKey = 'owner' | 'friendOut' | 'friendIn' | 'pendingOut' | 'pendingIn' | 'stranger'
 type PostState = {
@@ -181,7 +181,7 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
             problems.push(`${v} detail: isi tidak sesuai`)
         } else {
           // 404 harus identik dengan "post tidak ada" (tidak membocorkan keberadaan)
-          const missing = await api.get('/posts/999999')
+          const missing = await api.get(`/posts/${MISSING_ID}`)
           if (JSON.stringify(detail.body) !== JSON.stringify(missing.body))
             problems.push(`${v} detail: 404 berbeda dari post yang tidak ada`)
           if (JSON.stringify(detail.body).includes('rahasia'))
@@ -193,7 +193,7 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
         }
 
         // feed hanya berisi post sendiri dan teman, dan hanya yang terlihat
-        const inFeed = (feed.body.items ?? []).some((p: { id: number }) => p.id === post.id)
+        const inFeed = (feed.body.items ?? []).some((p: { id: string }) => p.id === post.id)
         const wantInFeed = see && (v === 'owner' || isFriend(v))
         if (feed.status !== 200) problems.push(`${v} feed: status ${feed.status}`)
         else if (inFeed !== wantInFeed)
@@ -203,7 +203,7 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
 
         // timeline profil: profil penulis BANNED/terhapus 404; selain itu hanya berisi post yang terlihat
         const authorGone = state.authorStatus === 'BANNED' || state.authorDeleted
-        const inTimeline = (timeline.body.items ?? []).some((p: { id: number }) => p.id === post.id)
+        const inTimeline = (timeline.body.items ?? []).some((p: { id: string }) => p.id === post.id)
         if (authorGone) {
           if (timeline.status !== 404)
             problems.push(
@@ -218,7 +218,7 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
 
         // tab Photos: aturan yang sama dengan timeline untuk post yang memiliki gambar
         const inPhotos = (photos.body.items ?? []).some(
-          (p: { postId: number }) => p.postId === post.id,
+          (p: { postId: string }) => p.postId === post.id,
         )
         if (authorGone) {
           if (photos.status !== 404)
@@ -233,7 +233,7 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
 
         // hashtag dan trending: hanya post PUBLIC yang terlihat dan tidak hidden (juga bagi penulisnya); profil penulis hilang tidak membuat 404
         const wantTagged = see && state.privacy === 'PUBLIC' && !state.hidden
-        const inTagged = (tagged.body.items ?? []).some((p: { id: number }) => p.id === post.id)
+        const inTagged = (tagged.body.items ?? []).some((p: { id: string }) => p.id === post.id)
         const inTrending = (trending.body.items ?? []).some(
           (i: { tag: string }) => i.tag === 'rahasia',
         )
@@ -333,7 +333,7 @@ describe('Matriks privasi: setiap endpoint pembaca (R-03)', () => {
         data: { status: 'ACCEPTED', respondedAt: new Date() },
       })
       expect((await h.as(p).get(`/posts/${post.id}`)).status).toBe(200)
-      expect((await h.as(p).get('/feed')).body.items.map((x: { id: number }) => x.id)).toEqual([
+      expect((await h.as(p).get('/feed')).body.items.map((x: { id: string }) => x.id)).toEqual([
         post.id,
       ])
       await h.prisma.friendship.deleteMany({ where: { requesterId: p.id } })

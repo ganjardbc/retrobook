@@ -12,7 +12,7 @@ import { Prisma } from '@prisma/client'
 @Injectable()
 export class VisibilityService {
   /** Akun yang boleh muncul bagi orang lain: tidak terhapus dan tidak BANNED (BR-05). */
-  userWhere(viewerId?: number): Prisma.UserWhereInput {
+  userWhere(viewerId?: string): Prisma.UserWhereInput {
     return {
       deletedAt: null,
       status: { not: 'BANNED' },
@@ -21,7 +21,7 @@ export class VisibilityService {
   }
 
   /** Pengguna dalam pasangan blokir tidak saling menemukan satu sama lain (BR-11). */
-  private blockedPair(viewerId: number): Prisma.UserWhereInput {
+  private blockedPair(viewerId: string): Prisma.UserWhereInput {
     return {
       OR: [
         { blocksMade: { some: { blockedId: viewerId } } },
@@ -30,12 +30,12 @@ export class VisibilityService {
     }
   }
 
-  private noBlock(viewerId: number): Prisma.PostWhereInput {
+  private noBlock(viewerId: string): Prisma.PostWhereInput {
     return { NOT: { author: this.blockedPair(viewerId) } }
   }
 
   /** Filter User: berteman (ACCEPTED, arah mana pun) dengan `viewerId`. */
-  friendOf(viewerId: number): Prisma.UserWhereInput {
+  friendOf(viewerId: string): Prisma.UserWhereInput {
     return {
       OR: [
         { friendshipsSent: { some: { addresseeId: viewerId, status: 'ACCEPTED' } } },
@@ -44,7 +44,7 @@ export class VisibilityService {
     }
   }
 
-  postWhere(viewerId: number, includeGroupPosts = false): Prisma.PostWhereInput {
+  postWhere(viewerId: string, includeGroupPosts = false): Prisma.PostWhereInput {
     return {
       deletedAt: null,
       author: this.userWhere(),
@@ -95,7 +95,7 @@ export class VisibilityService {
   }
 
   /** Album yang boleh dilihat: milik sendiri, PUBLIC, atau FRIENDS dari teman; pemilik tidak diblokir (ALB-01). */
-  albumWhere(viewerId: number): Prisma.AlbumWhereInput {
+  albumWhere(viewerId: string): Prisma.AlbumWhereInput {
     return {
       deletedAt: null,
       owner: this.userWhere(viewerId),
@@ -111,7 +111,7 @@ export class VisibilityService {
    * Komentar yang boleh dibaca (di atas syarat bahwa post induknya terlihat, lihat postWhere):
    * belum dihapus, penulisnya tidak BANNED/terhapus, dan tidak hidden kecuali milik viewer (BR-07).
    */
-  commentWhere(viewerId: number): Prisma.CommentWhereInput {
+  commentWhere(viewerId: string): Prisma.CommentWhereInput {
     return {
       deletedAt: null,
       author: this.userWhere(viewerId),
@@ -123,7 +123,7 @@ export class VisibilityService {
    * Like yang boleh dihitung dan ditampilkan: penyuka yang BANNED atau terhapus disembunyikan
    * seperti kontennya (BR-05).
    */
-  likerWhere(viewerId?: number): Prisma.LikeWhereInput {
+  likerWhere(viewerId?: string): Prisma.LikeWhereInput {
     return { user: this.userWhere(viewerId) }
   }
 
@@ -133,7 +133,7 @@ export class VisibilityService {
    * kandidat lewat indeks penulis/pemilik dinding; aturan privasi tetap dari `postWhere` (T-63: tanpa
    * daftar ini MySQL memindai seluruh tabel posts dengan subquery pertemanan per baris).
    */
-  feedWhere(viewerId: number, friendIds?: number[]): Prisma.PostWhereInput {
+  feedWhere(viewerId: string, friendIds?: string[]): Prisma.PostWhereInput {
     const circle = friendIds && [viewerId, ...friendIds]
     return {
       AND: [

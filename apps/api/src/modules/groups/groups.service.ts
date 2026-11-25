@@ -8,7 +8,7 @@ import { VisibilityService } from '../visibility/visibility.service'
 import { UploadsService } from '../uploads/uploads.service'
 import type { CreateGroupDto, UpdateGroupDto } from './dto/group.dto'
 
-const groupInclude = (userId: number) =>
+const groupInclude = (userId: string) =>
   ({
     _count: { select: { members: true } },
     members: { where: { userId }, select: { userId: true, role: true } },
@@ -23,7 +23,7 @@ export class GroupsService {
     private readonly uploads: UploadsService,
   ) {}
 
-  async list(userId: number): Promise<{ items: GroupSummary[]; suggested: GroupSummary[] }> {
+  async list(userId: string): Promise<{ items: GroupSummary[]; suggested: GroupSummary[] }> {
     const [joined, suggested] = await Promise.all([
       this.prisma.group.findMany({
         where: { members: { some: { userId } } },
@@ -45,7 +45,7 @@ export class GroupsService {
     return { items: joined.map(toSummary), suggested: suggested.map(toSummary) }
   }
 
-  async create(userId: number, dto: CreateGroupDto): Promise<GroupSummary> {
+  async create(userId: string, dto: CreateGroupDto): Promise<GroupSummary> {
     const name = dto.name.trim()
     if (!name) throw new AppException(400, 'VALIDATION_FAILED', 'Nama grup wajib diisi')
     const group = await this.prisma.$transaction(async (tx) => {
@@ -66,7 +66,7 @@ export class GroupsService {
     return toSummary(group)
   }
 
-  async get(userId: number, groupId: number): Promise<GroupSummary> {
+  async get(userId: string, groupId: string): Promise<GroupSummary> {
     const group = await this.prisma.group.findFirst({
       where: {
         id: groupId,
@@ -86,7 +86,7 @@ export class GroupsService {
   }
 
   /** Edit nama, deskripsi, privasi: hanya admin grup. Bukan admin: 404 seperti non-anggota. */
-  async update(userId: number, groupId: number, dto: UpdateGroupDto): Promise<GroupSummary> {
+  async update(userId: string, groupId: string, dto: UpdateGroupDto): Promise<GroupSummary> {
     await this.assertAdmin(userId, groupId)
     const name = dto.name?.trim()
     if (dto.name !== undefined && !name)
@@ -103,8 +103,8 @@ export class GroupsService {
   }
 
   async setPhoto(
-    userId: number,
-    groupId: number,
+    userId: string,
+    groupId: string,
     file: { buffer: Buffer } | undefined,
   ): Promise<GroupSummary> {
     await this.assertAdmin(userId, groupId)
@@ -113,7 +113,7 @@ export class GroupsService {
     return this.get(userId, groupId)
   }
 
-  async join(userId: number, groupId: number) {
+  async join(userId: string, groupId: string) {
     // Grup CLOSED tidak bisa dimasuki sendiri; 404 sama seperti non-anggota (tidak membocorkan keberadaan).
     const group = await this.prisma.group.findFirst({
       where: {
@@ -131,7 +131,7 @@ export class GroupsService {
     return this.get(userId, groupId)
   }
 
-  async leave(userId: number, groupId: number) {
+  async leave(userId: string, groupId: string) {
     const member = await this.prisma.groupMember.findUnique({
       where: { groupId_userId: { groupId, userId } },
     })
@@ -152,21 +152,21 @@ export class GroupsService {
     return { left: true }
   }
 
-  async posts(userId: number, groupId: number, limit: number, cursor?: number) {
+  async posts(userId: string, groupId: string, limit: number, cursor?: string) {
     await this.assertMember(userId, groupId)
     return this.postsService.groupTimeline(userId, groupId, limit, cursor)
   }
 
   async createPost(
-    userId: number,
-    groupId: number,
+    userId: string,
+    groupId: string,
     dto: { content: string; imageUrl?: string | null },
   ) {
     await this.assertMember(userId, groupId)
     return this.postsService.create(userId, { ...dto, privacy: 'FRIENDS', groupId })
   }
 
-  private async assertMember(userId: number, groupId: number) {
+  private async assertMember(userId: string, groupId: string) {
     const member = await this.prisma.groupMember.findUnique({
       where: { groupId_userId: { groupId, userId } },
       select: { groupId: true },
@@ -174,7 +174,7 @@ export class GroupsService {
     if (!member) throw this.notFound()
   }
 
-  private async assertAdmin(userId: number, groupId: number) {
+  private async assertAdmin(userId: string, groupId: string) {
     const member = await this.prisma.groupMember.findUnique({
       where: { groupId_userId: { groupId, userId } },
       select: { role: true },
@@ -190,15 +190,15 @@ export class GroupsService {
 }
 
 function toSummary(group: {
-  id: number
+  id: string
   name: string
   description: string
   privacy: 'PUBLIC' | 'CLOSED'
   avatarUrl: string | null
-  createdBy: number
+  createdBy: string
   createdAt: Date
   _count: { members: number }
-  members: { userId: number; role: 'ADMIN' | 'MEMBER' }[]
+  members: { userId: string; role: 'ADMIN' | 'MEMBER' }[]
 }): GroupSummary {
   return {
     id: group.id,

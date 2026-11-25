@@ -17,7 +17,7 @@ import { useNotificationsStore } from '../stores'
 const auth = useAuthStore()
 const store = useNotificationsStore()
 const items = ref<AppNotification[]>([])
-const nextCursor = ref<number | null>(null)
+const nextCursor = ref<string | null>(null)
 const loading = ref(true)
 const failed = ref(false)
 

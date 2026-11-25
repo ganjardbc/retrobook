@@ -15,14 +15,14 @@ const props = defineProps<{
   title: string
   empty: string
   icon: string
-  fetchPage: (cursor: number | null) => Promise<Paged<Post>>
+  fetchPage: (cursor: string | null) => Promise<Paged<Post>>
 }>()
 const list = usePostList((cursor) => props.fetchPage(cursor))
 const sentinel = ref<HTMLElement | null>(null)
 const likeFailed = ref(false)
 let observer: IntersectionObserver | undefined
 
-async function onDelete(id: number) {
+async function onDelete(id: string) {
   try {
     await postsApi.remove(id)
     list.remove(id)
@@ -30,7 +30,7 @@ async function onDelete(id: number) {
     /* gagal: kartu tetap ada */
   }
 }
-async function onLike(id: number) {
+async function onLike(id: string) {
   likeFailed.value = !(await list.toggleLike(id))
 }
 

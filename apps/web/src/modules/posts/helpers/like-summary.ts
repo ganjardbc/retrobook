@@ -8,7 +8,7 @@ export type SummaryPart = { text: string; username?: string }
  * "A, B, and 3 others like this." (INT-01). "You" didahulukan bila viewer ikut menyukai.
  * `likedPreview` dari server berisi dua penyuka terbaru; viewer disaring agar tidak tercatat dua kali.
  */
-export function likeSummaryParts(post: Post, meId: number | null): SummaryPart[] {
+export function likeSummaryParts(post: Post, meId: string | null): SummaryPart[] {
   if (post.likeCount <= 0) return []
 
   const others = post.likedPreview.filter((u) => u.id !== meId)
@@ -47,7 +47,7 @@ export function likeSummaryParts(post: Post, meId: number | null): SummaryPart[]
     })
 }
 
-export const likeSummaryText = (post: Post, meId: number | null) =>
+export const likeSummaryText = (post: Post, meId: string | null) =>
   likeSummaryParts(post, meId)
     .map((p) => p.text)
     .join('')

@@ -9,7 +9,7 @@ import request from 'supertest'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, MISSING_ID } from '../../test/helpers'
 
 describe('Sponsored dan kelola trending (integrasi)', () => {
   let app: INestApplication
@@ -64,10 +64,11 @@ describe('Sponsored dan kelola trending (integrasi)', () => {
     ).toBe(400)
     expect((await h.as(admin).del(`/admin/sponsored/${ok.body.id}`)).status).toBe(200)
     expect((await h.as(admin).del(`/admin/sponsored/${ok.body.id}`)).status).toBe(404)
-    expect((await h.prisma.auditLog.findMany()).map((a) => a.action)).toEqual([
-      'SPONSORED_CREATE',
-      'SPONSORED_DELETE',
-    ])
+    expect(
+      (await h.prisma.auditLog.findMany({ orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] })).map(
+        (a) => a.action,
+      ),
+    ).toEqual(['SPONSORED_CREATE', 'SPONSORED_DELETE'])
   })
 
   it('GET /sponsored: perlu login; hanya yang aktif dan dalam jadwal; terbaru dulu; null bila tidak ada', async () => {
@@ -116,12 +117,13 @@ describe('Sponsored dan kelola trending (integrasi)', () => {
     expect(await names()).toEqual(['umum'])
     await h.as(admin).patch(`/admin/hashtags/${id}`).send({ hidden: false })
     expect(await names()).toEqual(['rahasia', 'umum'])
-    expect((await h.as(admin).patch('/admin/hashtags/999999').send({ hidden: true })).status).toBe(
-      404,
-    )
-    expect((await h.prisma.auditLog.findMany()).map((a) => a.action)).toEqual([
-      'HASHTAG_HIDE',
-      'HASHTAG_SHOW',
-    ])
+    expect(
+      (await h.as(admin).patch(`/admin/hashtags/${MISSING_ID}`).send({ hidden: true })).status,
+    ).toBe(404)
+    expect(
+      (await h.prisma.auditLog.findMany({ orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] })).map(
+        (a) => a.action,
+      ),
+    ).toEqual(['HASHTAG_HIDE', 'HASHTAG_SHOW'])
   })
 })

@@ -13,7 +13,7 @@ vi.mock('@/modules/search/services/api', async (orig) => ({
 }))
 const api = vi.mocked(searchApi)
 
-const user = (id: number, name: string): UserSummary => ({
+const user = (id: string, name: string): UserSummary => ({
   id,
   username: name.toLowerCase(),
   displayName: name,
@@ -34,7 +34,7 @@ const makeRouter = () =>
 beforeEach(() => {
   setActivePinia(createPinia())
   vi.resetAllMocks()
-  api.people.mockResolvedValue({ items: [user(1, 'Budi'), user(2, 'Sari')], nextCursor: null })
+  api.people.mockResolvedValue({ items: [user('1', 'Budi'), user('2', 'Sari')], nextCursor: null })
 })
 
 describe('SearchBox', () => {
@@ -82,10 +82,10 @@ describe('SearchBox', () => {
     api.people.mockReturnValueOnce(new Promise((r) => (resolveFirst = r)) as never)
     await w.find('input').setValue('bu')
     await vi.advanceTimersByTimeAsync(300) // permintaan pertama terkirim, belum selesai
-    api.people.mockResolvedValueOnce({ items: [user(9, 'Bunga')], nextCursor: null })
+    api.people.mockResolvedValueOnce({ items: [user('9', 'Bunga')], nextCursor: null })
     await type(w, 'bun')
     expect(w.findAll('.search__name')[0]!.text()).toBe('Bunga')
-    resolveFirst({ items: [user(1, 'Budi')], nextCursor: null }) // datang terlambat
+    resolveFirst({ items: [user('1', 'Budi')], nextCursor: null }) // datang terlambat
     await flushPromises()
     expect(w.findAll('.search__name')[0]!.text()).toBe('Bunga')
     w.unmount()
@@ -212,19 +212,19 @@ describe('SearchView', () => {
 
   it('Load more memakai cursor; berhenti bila habis', async () => {
     api.people
-      .mockResolvedValueOnce({ items: [user(1, 'Budi')], nextCursor: 1 })
-      .mockResolvedValueOnce({ items: [user(2, 'Sari')], nextCursor: null })
+      .mockResolvedValueOnce({ items: [user('1', 'Budi')], nextCursor: '1' })
+      .mockResolvedValueOnce({ items: [user('2', 'Sari')], nextCursor: null })
     const { w } = await mountAt('/search?q=bu')
     await w.find('.card__more button').trigger('click')
     await flushPromises()
-    expect(api.people).toHaveBeenLastCalledWith('bu', 1, 10)
+    expect(api.people).toHaveBeenLastCalledWith('bu', '1', 10)
     expect(w.findAll('li')).toHaveLength(2)
     expect(w.find('.card__more').exists()).toBe(false)
   })
 
   it('kata kunci berganti: daftar dimuat ulang dari awal', async () => {
     const { w, router } = await mountAt('/search?q=bu')
-    api.people.mockResolvedValueOnce({ items: [user(3, 'Andi')], nextCursor: null })
+    api.people.mockResolvedValueOnce({ items: [user('3', 'Andi')], nextCursor: null })
     await router.push('/search?q=andi')
     await flushPromises()
     expect(api.people).toHaveBeenLastCalledWith('andi', null, 10)

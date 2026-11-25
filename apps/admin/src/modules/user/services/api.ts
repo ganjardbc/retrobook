@@ -14,7 +14,7 @@ export type UserListQuery = {
   q?: string
   status?: UserStatus | ''
   role?: UserRole | ''
-  cursor?: number | null
+  cursor?: string | null
   limit?: number
 }
 
@@ -28,17 +28,17 @@ export const adminUsersApi = {
     params.set('limit', String(query.limit ?? 20))
     return adminHttp.get<AdminUsersPage>(`/admin/users?${params}`)
   },
-  detail: (id: number) => adminHttp.get<AdminUserDetail>(`/admin/users/${id}`),
-  updateStatus: (id: number, status: UserStatus, reason: string) =>
+  detail: (id: string) => adminHttp.get<AdminUserDetail>(`/admin/users/${id}`),
+  updateStatus: (id: string, status: UserStatus, reason: string) =>
     adminHttp.patch<AdminUserMutation>(`/admin/users/${id}/status`, { status, reason }),
-  updateRole: (id: number, role: UserRole) =>
+  updateRole: (id: string, role: UserRole) =>
     adminHttp.patch<AdminUserMutation>(`/admin/users/${id}/role`, { role }),
-  resetPassword: (id: number) =>
+  resetPassword: (id: string) =>
     adminHttp.post<{ temporaryPassword: string; revokedSessions: number }>(
       `/admin/users/${id}/reset-password`,
     ),
-  remove: (id: number) =>
-    adminHttp.delete<{ id: number; deletedAt: string; revokedSessions: number }>(
+  remove: (id: string) =>
+    adminHttp.delete<{ id: string; deletedAt: string; revokedSessions: number }>(
       `/admin/users/${id}`,
     ),
 }

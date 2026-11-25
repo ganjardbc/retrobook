@@ -36,7 +36,7 @@ function onSearch() {
 async function run(action: Promise<boolean>) {
   actionError.value = !(await action)
 }
-function unfriend(id: number, name: string) {
+function unfriend(id: string, name: string) {
   if (window.confirm(t('friends.unfriend.confirm', { name }))) void run(store.unfriend(id))
 }
 </script>

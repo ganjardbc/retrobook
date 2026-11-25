@@ -10,6 +10,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -41,10 +42,8 @@ export class UpdatePostDto {
 /** POST /posts. Dinding dan tag hanya ditentukan saat membuat; edit tidak mengubahnya. */
 export class CreatePostDto extends UpdatePostDto {
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  groupId?: number
+  @IsUUID('4')
+  groupId?: string
   /** WAL-01: tulis di dinding teman (BR-04). */
   @IsOptional()
   @IsString()
@@ -56,10 +55,8 @@ export class CreatePostDto extends UpdatePostDto {
   @IsArray()
   @ArrayMaxSize(10, { message: 'Maksimal 10 teman yang di-tag' })
   @ArrayUnique()
-  @Type(() => Number)
-  @IsInt({ each: true })
-  @Min(1, { each: true })
-  taggedUserIds?: number[]
+  @IsUUID('4', { each: true })
+  taggedUserIds?: string[]
 }
 
 /** POST /posts/:id/share: komentar sendiri opsional; foto tidak ada karena isinya post asal. */
@@ -83,10 +80,8 @@ export class CursorQueryDto {
   limit: number = 10
 
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  cursor?: number
+  @IsUUID('4')
+  cursor?: string
 }
 
 /** GET /feed: `sort=recent` (bawaan) atau `sort=top` (Top Stories, urut jumlah like; POST-09). */

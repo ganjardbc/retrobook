@@ -20,7 +20,7 @@ export class BlocksService {
     private readonly visibility: VisibilityService,
   ) {}
 
-  async block(blockerId: number, blockedId: number): Promise<{ userId: number }> {
+  async block(blockerId: string, blockedId: string): Promise<{ userId: string }> {
     if (blockerId === blockedId) {
       throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'Tidak bisa memblokir diri sendiri')
     }
@@ -42,12 +42,12 @@ export class BlocksService {
     return { userId: blockedId }
   }
 
-  async unblock(blockerId: number, blockedId: number): Promise<void> {
+  async unblock(blockerId: string, blockedId: string): Promise<void> {
     const { count } = await this.prisma.block.deleteMany({ where: { blockerId, blockedId } })
     if (!count) throw new AppException(404, 'NOT_FOUND', 'Blokir tidak ditemukan')
   }
 
-  async list(blockerId: number, limit: number, cursor?: number): Promise<Paged<UserSummary>> {
+  async list(blockerId: string, limit: number, cursor?: string): Promise<Paged<UserSummary>> {
     const rows = await this.prisma.block.findMany({
       where: { blockerId, blocked: this.visibility.userWhere() },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],

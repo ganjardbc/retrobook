@@ -177,7 +177,7 @@ describe('Batas laju (integrasi)', () => {
       await h.befriend(a, b)
       return { a, b }
     }
-    const send = (from: Parameters<typeof h.as>[0], to: number) =>
+    const send = (from: Parameters<typeof h.as>[0], to: string) =>
       h.as(from).post(`/messages/${to}`).send({ content: 'x' })
 
     it('60 lewat, ke-61 429; user lain tidak terpengaruh; normal lagi setelah semenit', async () => {
@@ -235,7 +235,7 @@ describe('Batas laju (integrasi)', () => {
       const c = await h.mkUser('c')
       await h.befriend(a, b)
       await h.befriend(b, c)
-      const poke = (from: Parameters<typeof h.as>[0], to: number) =>
+      const poke = (from: Parameters<typeof h.as>[0], to: string) =>
         h.as(from).post('/pokes').send({ userId: to })
       for (let i = 0; i < 20; i++) expect((await poke(a, b.id)).status).toBe(200)
       const before = await h.prisma.notification.count()

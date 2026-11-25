@@ -31,7 +31,7 @@ describe('Hashtag dan trending (integrasi)', () => {
 
   const post = (u: User, content: string, privacy = 'PUBLIC') =>
     h.as(u).post('/posts').send({ content, privacy })
-  const tagsOf = async (postId: number) =>
+  const tagsOf = async (postId: string) =>
     (
       await h.prisma.postHashtag.findMany({
         where: { postId },
@@ -154,7 +154,7 @@ describe('Hashtag dan trending (integrasi)', () => {
       await post(me, 'c #retro', 'ONLY_ME')
       const res = await page(me, 'RETRO')
       expect(res.status).toBe(200)
-      expect(res.body.items.map((p: { id: number }) => p.id)).toEqual([pub.body.id])
+      expect(res.body.items.map((p: { id: string }) => p.id)).toEqual([pub.body.id])
       expect(res.body.nextCursor).toBeNull()
     })
 
@@ -172,17 +172,17 @@ describe('Hashtag dan trending (integrasi)', () => {
       await h.prisma.block.create({ data: { blockerId: c.id, blockedId: me.id } })
       const good = await post(ok, '#t')
       const res = await page(me, 't')
-      expect(res.body.items.map((p: { id: number }) => p.id)).toEqual([good.body.id])
+      expect(res.body.items.map((p: { id: string }) => p.id)).toEqual([good.body.id])
     })
 
     it('pagination cursor: terbaru dulu; tag tidak dikenal memberi daftar kosong', async () => {
       const me = await h.mkUser('me')
-      const ids: number[] = []
+      const ids: string[] = []
       for (let i = 0; i < 3; i++) ids.push((await post(me, `#p ${i}`)).body.id)
       const first = await page(me, 'p', '?limit=2')
-      expect(first.body.items.map((p: { id: number }) => p.id)).toEqual([ids[2], ids[1]])
+      expect(first.body.items.map((p: { id: string }) => p.id)).toEqual([ids[2], ids[1]])
       const second = await page(me, 'p', `?limit=2&cursor=${first.body.nextCursor}`)
-      expect(second.body.items.map((p: { id: number }) => p.id)).toEqual([ids[0]])
+      expect(second.body.items.map((p: { id: string }) => p.id)).toEqual([ids[0]])
       expect(second.body.nextCursor).toBeNull()
       const none = await page(me, 'tidakada')
       expect(none.body).toEqual({ items: [], nextCursor: null })

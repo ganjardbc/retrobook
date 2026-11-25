@@ -6,13 +6,13 @@ import { postsApi } from '@/modules/posts/services/api'
  * Daftar post berhalaman (kursor) beserta aksi pada kartunya. Dipakai feed dan timeline profil
  * supaya like optimistik, jumlah komentar, dan pencegahan muat ganda hanya ditulis sekali.
  */
-export function usePostList(fetchPage: (cursor: number | null) => Promise<Paged<Post>>) {
+export function usePostList(fetchPage: (cursor: string | null) => Promise<Paged<Post>>) {
   const items = ref<Post[]>([])
-  const nextCursor = ref<number | null>(null)
+  const nextCursor = ref<string | null>(null)
   const done = ref(false)
   const loading = ref(false)
   const failed = ref(false)
-  const liking = new Set<number>() // post yang sedang menunggu respons like
+  const liking = new Set<string>() // post yang sedang menunggu respons like
   // Penghitung generasi: respons yang datang setelah reset (akun/profil berganti) dibuang.
   let generation = 0
 
@@ -47,7 +47,7 @@ export function usePostList(fetchPage: (cursor: number | null) => Promise<Paged<
   }
 
   /** Like/unlike optimistik: tampilan berubah dulu, lalu dikoreksi dengan angka dari server atau dikembalikan bila gagal. */
-  async function toggleLike(id: number): Promise<boolean> {
+  async function toggleLike(id: string): Promise<boolean> {
     const post = items.value.find((p) => p.id === id)
     if (!post || liking.has(id)) return true
     liking.add(id)
@@ -70,7 +70,7 @@ export function usePostList(fetchPage: (cursor: number | null) => Promise<Paged<
   }
 
   /** Menyesuaikan jumlah komentar setelah komentar ditambah/dihapus dari daftar. */
-  function adjustComments(id: number, delta: number) {
+  function adjustComments(id: string, delta: number) {
     const post = items.value.find((p) => p.id === id)
     if (post) post.commentCount = Math.max(0, post.commentCount + delta)
   }
@@ -82,7 +82,7 @@ export function usePostList(fetchPage: (cursor: number | null) => Promise<Paged<
     const index = items.value.findIndex((item) => item.id === post.id)
     if (index !== -1) items.value[index] = post
   }
-  const remove = (id: number) => {
+  const remove = (id: string) => {
     items.value = items.value.filter((p) => p.id !== id)
   }
 

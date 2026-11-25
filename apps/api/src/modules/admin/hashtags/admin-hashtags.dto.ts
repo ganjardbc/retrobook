@@ -1,5 +1,14 @@
 import { Transform, Type } from 'class-transformer'
-import { IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator'
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator'
 
 export class AdminHashtagsQuery {
   @IsOptional()
@@ -10,7 +19,7 @@ export class AdminHashtagsQuery {
   @MaxLength(50)
   q?: string
 
-  @IsOptional() @Type(() => Number) @IsInt() @Min(1) cursor?: number
+  @IsOptional() @IsUUID('4') cursor?: string
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(100) limit = 30
 }
 

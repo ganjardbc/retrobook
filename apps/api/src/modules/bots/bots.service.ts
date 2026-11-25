@@ -55,7 +55,7 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
     return total
   }
 
-  private async acceptRequests(botId: number): Promise<number> {
+  private async acceptRequests(botId: string): Promise<number> {
     const pending = await this.prisma.friendship.findMany({
       where: { addresseeId: botId, status: 'PENDING' },
     })
@@ -76,7 +76,7 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
 
   private async postIfDue(
     bot: {
-      userId: number
+      userId: string
       persona: string
       postsPerDay: number
       lastPostAt: Date | null
@@ -99,7 +99,7 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async replyToComments(
-    bot: { userId: number; persona: string; lastTickAt: Date | null; createdAt: Date },
+    bot: { userId: string; persona: string; lastTickAt: Date | null; createdAt: Date },
     now: Date,
   ): Promise<number> {
     const since = bot.lastTickAt ?? bot.createdAt

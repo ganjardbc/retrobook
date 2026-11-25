@@ -14,9 +14,9 @@ type StoreContext = {
   to: string
   total: number
   limit: number
-  cursorStack: (number | null)[]
+  cursorStack: (string | null)[]
   pageIndex: number
-  nextCursor: number | null
+  nextCursor: string | null
   loading: boolean
   error: string
   fetchVersion: number
@@ -66,15 +66,15 @@ export const actions = {
       await this.fetch()
     }
   },
-  async setHidden(this: StoreContext, id: number, hidden: boolean) {
+  async setHidden(this: StoreContext, id: string, hidden: boolean) {
     await adminModerationApi.setHidden(this.resource, id, hidden)
     await this.fetch()
   },
-  async remove(this: StoreContext, id: number) {
+  async remove(this: StoreContext, id: string) {
     await adminModerationApi.remove(this.resource, id)
     await this.fetch()
   },
-  async bulk(this: StoreContext, ids: number[], action: ModerationAction, reason?: string) {
+  async bulk(this: StoreContext, ids: string[], action: ModerationAction, reason?: string) {
     await adminModerationApi.bulk(this.resource, ids, action, reason)
     await this.fetch()
   },

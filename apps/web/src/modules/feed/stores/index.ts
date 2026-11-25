@@ -9,9 +9,9 @@ export const useFeedStore = defineStore('feed', () => {
   const sort = ref<FeedSort>('recent')
   const list = usePostList((cursor) => postsApi.feed(cursor, undefined, sort.value))
   /** Pemilik data; feed dibersihkan bila akun berganti. */
-  const ownerId = ref<number | null>(null)
+  const ownerId = ref<string | null>(null)
 
-  function reset(newOwnerId: number | null = null) {
+  function reset(newOwnerId: string | null = null) {
     list.reset()
     sort.value = 'recent'
     ownerId.value = newOwnerId

@@ -12,7 +12,7 @@ import { PrismaService } from '../../prisma/prisma.service'
 import { VisibilityService } from '../visibility/visibility.service'
 
 export type ClientKind = 'WEB' | 'MOBILE'
-export const userRoom = (id: number) => `user:${id}`
+export const userRoom = (id: string) => `user:${id}`
 
 /**
  * Namespace `/realtime` (API spec 9). Token dicek saat connect dengan aturan yang sama seperti
@@ -35,7 +35,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       try {
         const token = socket.handshake.auth?.token
         if (typeof token !== 'string' || !token) throw new Error('no token')
-        const { sub } = await this.jwt.verifyAsync<{ sub: number }>(token)
+        const { sub } = await this.jwt.verifyAsync<{ sub: string }>(token)
         const user = await this.prisma.user.findUnique({
           where: { id: sub },
           select: { id: true, status: true, deletedAt: true },
@@ -53,7 +53,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
   }
 
   async handleConnection(socket: Socket) {
-    const userId: number = socket.data.userId
+    const userId: string = socket.data.userId
     await socket.join(userRoom(userId))
     if ((await this.connectionCount(userId)) === 1) {
       await this.broadcastPresence(userId, true, socket.data.client as ClientKind)
@@ -61,7 +61,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
   }
 
   async handleDisconnect(socket: Socket) {
-    const userId: number | undefined = socket.data.userId
+    const userId: string | undefined = socket.data.userId
     if (userId === undefined) return // gagal auth, tidak pernah terdaftar
     if ((await this.connectionCount(userId)) > 0) return
     try {
@@ -73,12 +73,12 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
   }
 
   /** Kirim event ke semua koneksi satu user (dipakai notifikasi, chat, poke). */
-  emitToUser(userId: number, event: string, payload: unknown) {
+  emitToUser(userId: string, event: string, payload: unknown) {
     this.server.to(userRoom(userId)).emit(event, payload)
   }
 
   /** Koneksi aktif dan labelnya (Web atau Mobile) untuk satu user. */
-  async clientsOf(userId: number): Promise<ClientKind[]> {
+  async clientsOf(userId: string): Promise<ClientKind[]> {
     const sockets = await this.server.in(userRoom(userId)).fetchSockets()
     return sockets.map((s) => s.data.client as ClientKind)
   }
@@ -87,11 +87,11 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
    * Teman yang sedang online beserta labelnya, dari semua koneksi namespace ini (satu instance, R-06).
    * Label MOBILE hanya bila semua koneksi user itu mobile; selain itu WEB.
    */
-  async onlineClients(userIds: number[]): Promise<Map<number, ClientKind>> {
+  async onlineClients(userIds: string[]): Promise<Map<string, ClientKind>> {
     const wanted = new Set(userIds)
-    const kinds = new Map<number, Set<ClientKind>>()
+    const kinds = new Map<string, Set<ClientKind>>()
     for (const s of await this.server.fetchSockets()) {
-      const id = s.data.userId as number | undefined
+      const id = s.data.userId as string | undefined
       if (id === undefined || !wanted.has(id)) continue
       kinds.set(id, (kinds.get(id) ?? new Set()).add(s.data.client as ClientKind))
     }
@@ -100,12 +100,12 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     )
   }
 
-  private async connectionCount(userId: number) {
+  private async connectionCount(userId: string) {
     return (await this.server.in(userRoom(userId)).fetchSockets()).length
   }
 
   /** Presence hanya untuk teman ACCEPTED yang tidak saling blokir (BR-11). */
-  private async broadcastPresence(userId: number, online: boolean, client?: ClientKind) {
+  private async broadcastPresence(userId: string, online: boolean, client?: ClientKind) {
     const friends = await this.prisma.user.findMany({
       where: { AND: [this.visibility.userWhere(userId), this.visibility.friendOf(userId)] },
       select: { id: true },

@@ -1,12 +1,19 @@
 import { Type } from 'class-transformer'
-import { IsDateString, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator'
+import {
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator'
 
 export class AdminAuditLogsQuery {
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  adminId?: number
+  @IsUUID('4')
+  adminId?: string
 
   @IsOptional()
   @IsString()
@@ -22,10 +29,8 @@ export class AdminAuditLogsQuery {
   to?: string
 
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  cursor?: number
+  @IsUUID('4')
+  cursor?: string
 
   @IsOptional()
   @Type(() => Number)

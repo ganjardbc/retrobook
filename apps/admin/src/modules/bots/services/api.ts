@@ -1,7 +1,7 @@
 import { adminHttp } from '@/plugins/admin-http'
 
 export type Bot = {
-  userId: number
+  userId: string
   persona: string
   postsPerDay: number
   active: boolean
@@ -12,6 +12,6 @@ export const adminBotsApi = {
   list: () => adminHttp.get<{ items: Bot[] }>('/admin/bots'),
   create: (body: { username: string; displayName: string; persona: string; postsPerDay: number }) =>
     adminHttp.post<Bot>('/admin/bots', body),
-  update: (id: number, body: Partial<Pick<Bot, 'active' | 'persona' | 'postsPerDay'>>) =>
+  update: (id: string, body: Partial<Pick<Bot, 'active' | 'persona' | 'postsPerDay'>>) =>
     adminHttp.patch<Bot>(`/admin/bots/${id}`, body),
 }

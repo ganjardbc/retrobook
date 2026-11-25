@@ -55,12 +55,16 @@ const pick = (list) => list[rand(list.length)]
 const daysAgo = (d, extraMinutes = 0) => new Date(Date.now() - d * 86_400_000 + extraMinutes * 60_000)
 
 async function reset() {
-  for (const model of [
-    'auditLog', 'report', 'notification', 'announcement', 'postHashtag', 'postTag', 'like', 'comment', 'post',
-    'hashtag', 'message', 'poke', 'block', 'friendship', 'refreshToken', 'blockedWord', 'setting', 'user',
-  ]) {
-    await prisma[model].deleteMany()
-  }
+  // Kosongkan SEMUA tabel (daftar tabel tidak ditulis tangan supaya tabel baru ikut). Hanya dev: seed menolak produksi.
+  const tables = await prisma.$queryRaw`
+    SELECT table_name AS name FROM information_schema.tables
+    WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE' AND table_name <> '_prisma_migrations'`
+  // Satu koneksi: SET FOREIGN_KEY_CHECKS berlaku per sesi.
+  await prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 0')
+    for (const { name } of tables) await tx.$executeRawUnsafe(`TRUNCATE TABLE \`${name}\``)
+    await tx.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1')
+  })
 }
 
 async function seed() {
@@ -93,7 +97,7 @@ async function seed() {
       // Pertemanan: pasangan tulisan tangan dulu, lalu acak sampai 120 (satu baris per pasangan, BR-01).
       const pairs = new Map()
       const addPair = (a, b, status) => {
-        const key = [ids.get(a), ids.get(b)].sort((x, y) => x - y).join('-')
+        const key = [ids.get(a), ids.get(b)].sort().join('-')
         if (a !== b && !pairs.has(key)) pairs.set(key, { a, b, status })
       }
       for (const [a, b] of [['alice', 'bob'], ['bob', 'carol'], ['carol', 'dave'], ['erin', 'frank'], ['grace', 'henry'], ['isla', 'jack']]) addPair(a, b, 'ACCEPTED')
@@ -102,7 +106,8 @@ async function seed() {
       await tx.friendship.createMany({
         data: [...pairs.values()].map(({ a, b, status }) => ({
           requesterId: ids.get(a), addresseeId: ids.get(b),
-          pairLowId: Math.min(ids.get(a), ids.get(b)), pairHighId: Math.max(ids.get(a), ids.get(b)),
+          // Id berupa UUID (string): urutkan dengan `<`, bukan Math.min/max.
+          pairLowId: ids.get(a) < ids.get(b) ? ids.get(a) : ids.get(b), pairHighId: ids.get(a) < ids.get(b) ? ids.get(b) : ids.get(a),
           status, respondedAt: status === 'ACCEPTED' ? daysAgo(rand(60)) : null,
         })),
       })

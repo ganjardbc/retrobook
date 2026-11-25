@@ -13,7 +13,7 @@ import { albumsApi, type Album } from '../services/albums'
 const MAX_FILES = 10
 const route = useRoute()
 const router = useRouter()
-const viewing = ref<number | null>(null)
+const viewing = ref<number | null>(null) // indeks foto di lightbox
 const auth = useAuthStore()
 const album = ref<Album | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -22,7 +22,7 @@ const error = ref('')
 
 async function load() {
   try {
-    album.value = await albumsApi.get(Number(route.params.id))
+    album.value = await albumsApi.get(String(route.params.id))
   } catch {
     error.value = t('album.notFound')
   }
@@ -52,7 +52,7 @@ async function removeAlbum() {
     error.value = t('album.deleteError')
   }
 }
-async function removePhoto(photoId: number) {
+async function removePhoto(photoId: string) {
   if (!album.value || !window.confirm(t('album.photo.delete.confirm'))) return
   try {
     await albumsApi.removePhoto(album.value.id, photoId)

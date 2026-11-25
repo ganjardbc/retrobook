@@ -120,7 +120,7 @@ describe('Activity Log (integrasi)', () => {
 
     // Belum ada chat: ticker kosong walau ada aktivitas.
     expect((await h.as(me).get('/activity/friends')).body.items).toEqual([])
-    const chat = (senderId: number, minutesAgo: number) =>
+    const chat = (senderId: string, minutesAgo: number) =>
       h.prisma.message.create({
         data: { senderId, receiverId: me.id, content: 'hai', createdAt: at(minutesAgo) },
       })
@@ -131,7 +131,7 @@ describe('Activity Log (integrasi)', () => {
     const res = await h.as(me).get('/activity/friends')
     expect(res.status).toBe(200)
     expect(
-      res.body.items.map((i: { type: string; actor: { id: number } }) => [i.type, i.actor.id]),
+      res.body.items.map((i: { type: string; actor: { id: string } }) => [i.type, i.actor.id]),
     ).toEqual([
       ['LIKE', friend.id],
       ['POST', friend.id],

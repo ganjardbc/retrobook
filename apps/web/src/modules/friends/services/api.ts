@@ -8,7 +8,7 @@ import type {
 } from '@retrobook/shared'
 import { request } from '@/plugins/http'
 
-const qs = (cursor?: number | null, extra = '') =>
+const qs = (cursor?: string | null, extra = '') =>
   `?limit=10${cursor ? `&cursor=${cursor}` : ''}${extra}`
 
 export const friendsApi = {
@@ -17,14 +17,14 @@ export const friendsApi = {
     request<{ items: FriendSuggestion[] }>(`/friends/suggestions?limit=${limit}`),
   /** Teman yang berulang tahun pada `date` (YYYY-MM-DD, tanggal lokal pengguna; FRD-07). */
   birthdays: (date: string) => request<{ items: UserSummary[] }>(`/friends/birthdays?date=${date}`),
-  requests: (cursor?: number | null) =>
+  requests: (cursor?: string | null) =>
     request<Paged<FriendRequest>>(`/friends/requests${qs(cursor)}`),
-  list: (cursor?: number | null, q = '') =>
+  list: (cursor?: string | null, q = '') =>
     request<FriendsPage>(`/friends${qs(cursor, q ? `&q=${encodeURIComponent(q)}` : '')}`),
-  send: (userId: number) =>
+  send: (userId: string) =>
     request<FriendshipResult>('/friends/requests', { method: 'POST', body: { userId } }),
-  accept: (userId: number) =>
+  accept: (userId: string) =>
     request<FriendshipResult>(`/friends/requests/${userId}/accept`, { method: 'POST' }),
-  reject: (userId: number) => request<void>(`/friends/requests/${userId}`, { method: 'DELETE' }),
-  unfriend: (userId: number) => request<void>(`/friends/${userId}`, { method: 'DELETE' }),
+  reject: (userId: string) => request<void>(`/friends/requests/${userId}`, { method: 'DELETE' }),
+  unfriend: (userId: string) => request<void>(`/friends/${userId}`, { method: 'DELETE' }),
 }

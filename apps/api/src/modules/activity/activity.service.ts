@@ -9,8 +9,8 @@ const RECENT_CHAT_MS = 60 * 60_000
 
 export type ActivityItem = {
   type: 'POST' | 'COMMENT' | 'LIKE'
-  id: number
-  postId: number
+  id: string
+  postId: string
   text: string
   createdAt: string
 }
@@ -29,7 +29,7 @@ export class ActivityService {
 
   // shortcut: kursor berupa waktu ISO item terakhir; dua item dengan milidetik sama di batas halaman bisa terlewat.
   async list(
-    userId: number,
+    userId: string,
     limit: number,
     cursor?: string,
   ): Promise<{ items: ActivityItem[]; nextCursor: string | null }> {
@@ -95,7 +95,7 @@ export class ActivityService {
    * semua lewat VisibilityService; aktivitas pada post yang tidak boleh dilihat pembaca tidak muncul.
    * Pelaku dipersempit ke teman yang sedang online dan mengirim pesan kepada pembaca dalam 60 menit terakhir.
    */
-  async friends(viewerId: number, limit: number): Promise<FriendActivity[]> {
+  async friends(viewerId: string, limit: number): Promise<FriendActivity[]> {
     const v = this.visibility
     const actor = { AND: [v.userWhere(viewerId), v.friendOf(viewerId)] }
     const post = v.postWhere(viewerId)

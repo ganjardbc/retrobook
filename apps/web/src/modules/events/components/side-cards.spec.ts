@@ -15,12 +15,12 @@ const router = () =>
     history: createMemoryHistory(),
     routes: [{ path: '/:p(.*)*', component: { template: '<p/>' } }],
   })
-const group = (id: number, name: string): GroupSummary => ({
+const group = (id: string, name: string): GroupSummary => ({
   id,
   name,
   description: '',
   privacy: 'PUBLIC',
-  createdBy: 1,
+  createdBy: '1',
   createdAt: '2026-01-01T00:00:00.000Z',
   memberCount: 4,
   isMember: false,
@@ -35,7 +35,7 @@ describe('EventsTodayCard', () => {
     vi.mocked(eventsApi.list).mockResolvedValueOnce({
       items: [
         {
-          id: 7,
+          id: '7',
           title: 'Kopdar',
           description: '',
           location: '',
@@ -61,15 +61,15 @@ describe('SuggestedGroupsCard', () => {
   it('Join memanggil API lalu menghapus grup dari kartu', async () => {
     vi.mocked(groupsApi.list).mockResolvedValueOnce({
       items: [],
-      suggested: [group(1, 'Klub A'), group(2, 'Klub B')],
+      suggested: [group('1', 'Klub A'), group('2', 'Klub B')],
     })
-    vi.mocked(groupsApi.join).mockResolvedValueOnce({ ...group(1, 'Klub A'), isMember: true })
+    vi.mocked(groupsApi.join).mockResolvedValueOnce({ ...group('1', 'Klub A'), isMember: true })
     const w = mount(SuggestedGroupsCard, { global: { plugins: [router()] } })
     await flushPromises()
     expect(w.findAll('li')).toHaveLength(2)
     await w.find('button').trigger('click')
     await flushPromises()
-    expect(groupsApi.join).toHaveBeenCalledWith(1)
+    expect(groupsApi.join).toHaveBeenCalledWith('1')
     expect(w.findAll('li')).toHaveLength(1)
   })
 })
