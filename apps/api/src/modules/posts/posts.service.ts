@@ -483,7 +483,8 @@ export class PostsService {
     await this.prisma.savedPost.upsert({
       where: { userId_postId: { userId: viewerId, postId: id } },
       create: { userId: viewerId, postId: id },
-      update: {},
+      // Simpan ulang menaikkan post ke atas daftar /saved (urut menurut waktu simpan).
+      update: { createdAt: new Date() },
     })
     return { savedByMe: true }
   }

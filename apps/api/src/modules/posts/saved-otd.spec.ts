@@ -130,6 +130,27 @@ describe('Save dan On This Day (integrasi)', () => {
       expect(second.nextCursor).toBeNull()
     })
 
+    it('simpan ulang menaikkan post ke atas daftar', async () => {
+      const alice = await mkUser('alice')
+      const bob = await mkUser('bob')
+      const a = await prisma.post.create({
+        data: { authorId: alice.id, content: 'a', privacy: Privacy.PUBLIC },
+      })
+      const b = await prisma.post.create({
+        data: { authorId: alice.id, content: 'b', privacy: Privacy.PUBLIC },
+      })
+      const old = seqTime(Date.now() - 600_000)
+      for (const p of [a, b]) {
+        await prisma.savedPost.create({ data: { userId: bob.id, postId: p.id, createdAt: old() } })
+      }
+      const order = async () =>
+        (await api(bob).get('/saved')).body.items.map((i: { content: string }) => i.content)
+      expect(await order()).toEqual(['b', 'a'])
+      await api(bob).put(`/posts/${a.id}/save`).expect(200)
+      expect(await order()).toEqual(['a', 'b'])
+      expect(await prisma.savedPost.count({ where: { userId: bob.id } })).toBe(2) // tidak menggandakan
+    })
+
     it('post yang tak boleh dilihat: 404; simpanan yang kemudian jadi privat tersaring', async () => {
       const alice = await mkUser('alice')
       const bob = await mkUser('bob')
