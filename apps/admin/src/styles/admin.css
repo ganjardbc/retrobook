@@ -377,3 +377,9 @@ a.quick-card:hover { transform: translateY(-2px); box-shadow: var(--admin-shadow
 .words-list li { display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 10px; border: 1px solid #e5eaf1; border-radius: 14px; font-size: 11px; }
 
 .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid #edf0f4; }
+
+.announce-list { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.announce-list li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #edf0f4; }
+.audit-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.audit-table th, .audit-table td { padding: 6px 8px; border-bottom: 1px solid #edf0f4; text-align: left; vertical-align: top; }
+.audit-table code { overflow-wrap: anywhere; color: #6b7a90; }

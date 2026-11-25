@@ -11,6 +11,7 @@ export type NotificationDto = {
   actor: UserSummary | null
   postId: number | null
   commentId: number | null
+  announcementId: number | null
   text: string
   readAt: string | null
   createdAt: string
@@ -29,6 +30,8 @@ const select = {
   type: true,
   postId: true,
   commentId: true,
+  announcementId: true,
+  announcement: { select: { title: true } },
   readAt: true,
   createdAt: true,
   actor: {
@@ -105,6 +108,16 @@ export class NotificationsService {
     }
   }
 
+  /** ADM-13: kirim `notification:new` untuk semua notifikasi satu pengumuman (setelah commit). Gagal kirim tidak melempar. */
+  async pushAnnouncement(announcementId: number): Promise<void> {
+    try {
+      const rows = await this.prisma.notification.findMany({ where: { announcementId }, select: { ...select, userId: true } })
+      for (const { userId, ...row } of rows) this.push(userId, this.toDto(row))
+    } catch (e) {
+      this.log.warn(`push pengumuman ${announcementId} gagal: ${String(e)}`)
+    }
+  }
+
   async list(viewerId: number, limit: number, cursor?: number): Promise<Paged<NotificationDto>> {
     const rows = await this.prisma.notification.findMany({
       where: this.visibleTo(viewerId),
@@ -147,6 +160,7 @@ export class NotificationsService {
         { OR: [{ actorId: null }, { actor: this.visibility.userWhere(viewerId) }] },
         { OR: [{ postId: null }, { post: this.visibility.postWhere(viewerId) }] },
         { OR: [{ commentId: null }, { comment: this.visibility.commentWhere(viewerId) }] },
+        { OR: [{ announcementId: null }, { announcement: { active: true } }] },
       ],
     }
   }
@@ -158,7 +172,8 @@ export class NotificationsService {
       actor: row.actor,
       postId: row.postId,
       commentId: row.commentId,
-      text: TEXT[row.type].replace('{name}', row.actor?.displayName ?? ''),
+      announcementId: row.announcementId,
+      text: row.announcement?.title ?? TEXT[row.type].replace('{name}', row.actor?.displayName ?? ''),
       readAt: row.readAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
     }

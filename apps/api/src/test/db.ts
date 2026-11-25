@@ -7,6 +7,7 @@ export async function resetDb(prisma: PrismaClient) {
   await prisma.setting.deleteMany()
   await prisma.report.deleteMany()
   await prisma.notification.deleteMany()
+  await prisma.announcement.deleteMany()
   await prisma.postHashtag.deleteMany()
   await prisma.postTag.deleteMany()
   await prisma.like.deleteMany()

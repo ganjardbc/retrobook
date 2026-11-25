@@ -5,6 +5,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { postsApi } from '@/modules/posts/services/api'
 import Button from '@/components/Button.vue'
 import PostCard from '@/modules/posts/components/PostCard.vue'
+import AnnouncementBanner from '@/modules/feed/components/AnnouncementBanner.vue'
 import StatusBox from '@/modules/feed/components/StatusBox.vue'
 import { useAuthStore } from '@/modules/auth/stores'
 import { useFeedStore } from '@/modules/feed/stores'
@@ -61,6 +62,7 @@ watch(
 
 <template>
   <div class="home">
+    <AnnouncementBanner />
     <StatusBox ref="statusBox" />
     <label class="home__sort">
       {{ t('feed.sort.label') }}

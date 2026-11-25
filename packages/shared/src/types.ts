@@ -93,6 +93,7 @@ export type AppNotification = {
   actor: UserSummary | null
   postId: number | null
   commentId: number | null
+  announcementId?: number | null
   text: string
   readAt: string | null
   createdAt: string

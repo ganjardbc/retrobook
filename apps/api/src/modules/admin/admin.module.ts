@@ -16,11 +16,16 @@ import { AdminBlockedWordsService } from './blocked-words/admin-blocked-words.se
 import { AdminSettingsController } from './settings/admin-settings.controller'
 import { AdminSettingsService } from './settings/admin-settings.service'
 import { SettingsModule } from '../settings/settings.module'
+import { AdminAnnouncementsController } from './announcements/admin-announcements.controller'
+import { AdminAnnouncementsService } from './announcements/admin-announcements.service'
+import { NotificationsModule } from '../notifications/notifications.module'
+import { AdminAuditLogsController } from './audit-logs/admin-audit-logs.controller'
+import { AdminAuditLogsService } from './audit-logs/admin-audit-logs.service'
 
 @Module({
-  imports: [AuthModule, SettingsModule],
-  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController, AdminBlockedWordsController, AdminSettingsController],
-  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, AdminBlockedWordsService, AdminSettingsService, RolesGuard],
+  imports: [AuthModule, SettingsModule, NotificationsModule],
+  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController, AdminBlockedWordsController, AdminSettingsController, AdminAnnouncementsController, AdminAuditLogsController],
+  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, AdminBlockedWordsService, AdminSettingsService, AdminAnnouncementsService, AdminAuditLogsService, RolesGuard],
   exports: [AdminAuditService],
 })
 export class AdminModule {}
