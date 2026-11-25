@@ -253,12 +253,12 @@ async function bulk(action: 'hide' | 'show' | 'delete') {
         ><button
           v-if="moderation.filter || searchInput"
           class="button button--quiet"
-          @click="
+          @click="() => {
             moderation.filter = ''
             moderation.from = ''
             moderation.to = ''
             searchInput = ''
-          "
+          }"
         >
           Bersihkan filter
         </button></template
