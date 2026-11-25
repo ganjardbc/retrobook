@@ -154,8 +154,10 @@ test('EVT-01 create an event and RSVP Going', async ({ page }) => {
     .getByRole('link', { name: new RegExp(title) })
     .first()
     .click()
-  await page.getByRole('button', { name: 'Going', exact: true }).click()
-  await expect(page.getByText('1 going')).toBeVisible()
+  await expect(page).toHaveURL(/\/events\/\d+/)
+  const main = page.getByRole('main') // kartu Events today di kolom kanan juga punya tombol Going
+  await main.getByRole('button', { name: 'Going', exact: true }).click()
+  await expect(main.getByText('1 going')).toBeVisible()
 })
 
 test('NOT-01 write a note and it shows on the profile', async ({ page }) => {
