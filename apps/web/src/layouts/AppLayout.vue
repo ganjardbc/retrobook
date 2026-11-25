@@ -54,7 +54,12 @@ router.afterEach(() => (menuOpen.value = false))
     <NavBar @toggle-menu="menuOpen = !menuOpen" />
     <div class="layout__body">
       <div class="layout__cols">
-        <aside :ref="sticky" class="layout__left" :class="{ 'layout__left--open': menuOpen }">
+        <aside
+          v-if="!isMessages"
+          :ref="sticky"
+          class="layout__left"
+          :class="{ 'layout__left--open': menuOpen }"
+        >
           <LeftMenu />
         </aside>
         <main id="main-content" class="layout__main" tabindex="-1"><RouterView /></main>
@@ -92,27 +97,19 @@ router.afterEach(() => (menuOpen.value = false))
 .layout--profile .layout__cols {
   grid-template-columns: minmax(0, 1fr);
 }
+/* Messages: satu kolom selebar dan sepusat halaman profil, tanpa menu kiri; tinggi pas layar (kolom kanan chat tetap disisakan .layout__body). */
 .layout--messages .layout__cols {
-  grid-template-columns: var(--w-left) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   box-sizing: border-box;
   height: calc(100vh - var(--h-navbar));
   height: calc(100dvh - var(--h-navbar));
   min-height: 0;
   overflow: hidden;
 }
-/* overflow: hidden menjadikan .layout__cols scrollport sticky, sehingga --sticky-top menggeser menu ke bawah. */
-.layout--messages .layout__left {
-  position: static;
-}
 .layout--messages .layout__main {
   height: 100%;
   min-height: 0;
   overflow: hidden;
-}
-@media (max-width: 640px) {
-  .layout--messages .layout__cols {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 .layout--profile .layout__left {
   display: none;

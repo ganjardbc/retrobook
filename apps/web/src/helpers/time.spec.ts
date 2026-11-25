@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatShortAgo, formatTime } from '@/helpers/time'
+import { formatDayLabel, formatShortAgo, formatTime } from '@/helpers/time'
 
 const now = new Date('2026-11-24T12:00:00.000Z')
 const ago = (ms: number) => new Date(now.getTime() - ms).toISOString()
@@ -32,5 +32,17 @@ describe('formatShortAgo', () => {
     ['2026-01-10T12:05:00Z', '1m'],
   ])('%s -> %s', (iso, label) => {
     expect(formatShortAgo(iso, now)).toBe(label)
+  })
+})
+
+describe('formatDayLabel', () => {
+  const local = new Date(2026, 10, 24, 12) // tengah hari waktu lokal, aman dari geseran zona
+  const day = (y: number, m: number, d: number) => new Date(y, m, d, 9).toISOString()
+
+  it('hari ini, kemarin, lalu tanggal (tahun hanya bila bukan tahun ini)', () => {
+    expect(formatDayLabel(day(2026, 10, 24), local)).toBe('Today')
+    expect(formatDayLabel(day(2026, 10, 23), local)).toBe('Yesterday')
+    expect(formatDayLabel(day(2026, 10, 13), local)).toBe('November 13')
+    expect(formatDayLabel(day(2025, 10, 13), local)).toBe('November 13, 2025')
   })
 })

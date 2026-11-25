@@ -3,9 +3,10 @@ import type { ChatFriend, ChatMessage, Conversation, UserSummary } from '@retrob
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
-import { formatShortAgo, formatTime } from '@/helpers/time'
+import { formatClock, formatDayLabel, formatShortAgo, formatTime } from '@/helpers/time'
+import { useDismissOnOutside } from '@/composables/dismissOnOutside'
 import { chatApi } from '@/modules/chat/services/api'
 import { type LocalMessage, useChatStore } from '@/modules/chat/stores'
 import { useAuthStore } from '@/modules/auth/stores'
@@ -26,11 +27,16 @@ const listFailed = ref(false)
 const query = ref('')
 // ?with=<id> membuka percakapan tertentu (dari jendela chat melayang).
 const route = useRoute()
+const router = useRouter()
 const withId = Number(route.query.with)
 const selectedId = ref<number | null>(Number.isInteger(withId) && withId > 0 ? withId : null)
 const draft = ref('')
 const log = ref<HTMLElement | null>(null)
 const input = ref<HTMLInputElement | null>(null)
+const menuOpen = ref(false)
+const menuRoot = ref<HTMLElement | null>(null)
+const actionError = ref(false)
+useDismissOnOutside(menuRoot, menuOpen)
 const compact = ref(
   typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches,
 )
@@ -45,6 +51,7 @@ const contacts = computed<Contact[]>(() => {
   })
   const others = chat.friends
     .filter((friend) => !recentIds.has(friend.user.id))
+    .filter((friend) => !friend.hidden || chat.threads[friend.user.id]?.messages.length)
     .map((friend) => toContact(friend.user, friend))
   return [...recent, ...others]
     .map((contact) => {
@@ -84,6 +91,16 @@ const seenId = computed(
       )
       .at(-1)?.id ?? null,
 )
+// Pesan diberi label hari bila berbeda dari pesan sebelumnya (pemisah ala WhatsApp).
+const rows = computed(() => {
+  let last = ''
+  return (activeThread.value?.messages ?? []).map((message) => {
+    const day = new Date(message.createdAt).toDateString()
+    const label = day === last ? null : formatDayLabel(message.createdAt)
+    last = day
+    return { message, label }
+  })
+})
 const isMobileConversation = computed(() => selectedId.value !== null)
 
 function toContact(user: UserSummary, friend?: ChatFriend, conversation?: Conversation): Contact {
@@ -140,6 +157,30 @@ function preview(contact: Contact) {
   return contact.lastMessage?.content || t('messages.start')
 }
 
+// Kembali ke halaman sebelumnya; tanpa riwayat (tab baru) ke beranda.
+function exit() {
+  if (window.history.state?.back) router.back()
+  else void router.push('/')
+}
+
+async function runAction(kind: 'clear' | 'remove') {
+  const contact = activeContact.value
+  menuOpen.value = false
+  if (!contact) return
+  const key = kind === 'clear' ? 'messages.clear.confirm' : 'messages.delete.confirm'
+  if (!window.confirm(t(key, { name: contact.user.displayName }))) return
+  actionError.value = false
+  try {
+    if (kind === 'clear') await chat.clearHistory(contact.user.id)
+    else await chat.removeSession(contact.user.id)
+    // Daftar percakapan lokal ikut dibersihkan supaya pratinjau lama tidak tampil.
+    conversations.value = conversations.value.filter((c) => c.user.id !== contact.user.id)
+    if (kind === 'remove') backToList()
+  } catch {
+    actionError.value = true
+  }
+}
+
 function backToList() {
   selectedId.value = null
   draft.value = ''
@@ -193,6 +234,9 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateCompact))
   <section class="messages" :class="{ 'messages--active': isMobileConversation }">
     <aside class="messages__sidebar" :aria-label="t('messages.title')">
       <header class="messages__sidebar-head">
+        <button class="messages__exit" type="button" :aria-label="t('messages.exit')" @click="exit">
+          <Icon icon="mdi:arrow-left" aria-hidden="true" />
+        </button>
         <h1>{{ t('messages.title') }}</h1>
         <span
           class="messages__connection"
@@ -256,13 +300,19 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateCompact))
           >
             <Icon icon="mdi:arrow-left" aria-hidden="true" />
           </button>
-          <Avatar
-            :name="activeContact.user.displayName"
-            :src="activeContact.user.avatarUrl"
-            size="m"
-          />
+          <RouterLink class="messages__who" :to="`/${activeContact.user.username}`">
+            <Avatar
+              :name="activeContact.user.displayName"
+              :src="activeContact.user.avatarUrl"
+              size="m"
+            />
+          </RouterLink>
           <div class="messages__person">
-            <h2>{{ activeContact.user.displayName }}</h2>
+            <h2>
+              <RouterLink :to="`/${activeContact.user.username}`">{{
+                activeContact.user.displayName
+              }}</RouterLink>
+            </h2>
             <p>
               <template v-if="activeContact.online">{{ t('chat.online') }}</template>
               <template v-else-if="activeContact.lastSeenAt">
@@ -271,14 +321,27 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateCompact))
               <template v-else>{{ t('chat.offline') }}</template>
             </p>
           </div>
-          <RouterLink
-            class="messages__profile"
-            :to="`/${activeContact.user.username}`"
-            :aria-label="t('messages.profile')"
-            :title="t('messages.profile')"
-          >
-            <Icon icon="mdi:account-circle-outline" aria-hidden="true" />
-          </RouterLink>
+          <div ref="menuRoot" class="messages__menu">
+            <button
+              class="messages__more"
+              type="button"
+              aria-haspopup="true"
+              :aria-expanded="menuOpen"
+              :aria-label="t('messages.more')"
+              :title="t('messages.more')"
+              @click="menuOpen = !menuOpen"
+            >
+              <Icon icon="mdi:dots-horizontal" aria-hidden="true" />
+            </button>
+            <div v-if="menuOpen" class="messages__dropdown" role="menu">
+              <button type="button" role="menuitem" @click="runAction('clear')">
+                {{ t('messages.clear') }}
+              </button>
+              <button type="button" role="menuitem" @click="runAction('remove')">
+                {{ t('messages.delete') }}
+              </button>
+            </div>
+          </div>
         </header>
 
         <div ref="log" class="messages__log" role="log" aria-live="polite">
@@ -313,27 +376,39 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateCompact))
             <strong>{{ t('messages.startWith', { name: activeContact.user.displayName }) }}</strong>
             <span>{{ t('messages.sayHello') }}</span>
           </p>
-          <div
-            v-for="message in activeThread?.messages ?? []"
-            :key="message.id"
-            class="messages__message"
-            :class="{
-              'messages__message--mine': mine(message),
-              'messages__message--pending': message.pending,
-            }"
-          >
-            <span class="messages__bubble" :title="formatTime(message.createdAt)">{{
-              message.content
-            }}</span>
-            <span v-if="message.id === seenId" class="messages__seen">{{ t('chat.seen') }}</span>
-            <span v-if="message.failed" class="messages__failed">
-              {{ t('chat.failed') }}
-              <button type="button" @click="chat.retry(activeContact.user.id, message.id)">
-                {{ t('chat.retry') }}
-              </button>
-            </span>
-          </div>
+          <template v-for="{ message, label } in rows" :key="message.id">
+            <p v-if="label" class="messages__day">
+              <span>{{ label }}</span>
+            </p>
+            <div
+              class="messages__message"
+              :class="{
+                'messages__message--mine': mine(message),
+                'messages__message--pending': message.pending,
+              }"
+            >
+              <span class="messages__bubble">
+                <span class="messages__text">{{ message.content }}</span>
+                <time
+                  class="messages__time"
+                  :datetime="message.createdAt"
+                  :title="formatTime(message.createdAt)"
+                  >{{ formatClock(message.createdAt) }}</time
+                >
+              </span>
+              <span v-if="message.id === seenId" class="messages__meta">{{ t('chat.seen') }}</span>
+              <span v-if="message.failed" class="messages__failed">
+                {{ t('chat.failed') }}
+                <button type="button" @click="chat.retry(activeContact.user.id, message.id)">
+                  {{ t('chat.retry') }}
+                </button>
+              </span>
+            </div>
+          </template>
         </div>
+        <p v-if="actionError" class="messages__typing" role="alert">
+          {{ t('messages.actionError') }}
+        </p>
         <p v-if="chat.typing[activeContact.user.id]" class="messages__typing" role="status">
           {{ t('chat.typing', { name: activeContact.user.displayName }) }}
         </p>
@@ -393,7 +468,23 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateCompact))
   background: var(--c-card-subtle);
   border-bottom: 1px solid var(--c-border-soft);
 }
+.messages__exit {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  background: none;
+  color: var(--c-link);
+  font-size: var(--fs-title);
+  cursor: pointer;
+}
+.messages__exit:hover {
+  background: var(--c-hover-bg);
+}
 .messages h1 {
+  flex: 1;
   margin: 0;
   font-size: var(--fs-base);
 }
@@ -543,7 +634,45 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateCompact))
   font-size: var(--fs-small);
   opacity: 0.8;
 }
-.messages__profile,
+.messages__person h2 a {
+  color: inherit;
+}
+.messages__person h2 a:hover {
+  text-decoration: underline;
+}
+.messages__who {
+  display: flex;
+  flex: none;
+}
+.messages__menu {
+  position: relative;
+}
+.messages__dropdown {
+  position: absolute;
+  top: calc(100% + var(--sp-1));
+  right: 0;
+  z-index: 5;
+  min-width: 180px;
+  background: var(--c-card);
+  border: var(--card-border);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 20%);
+}
+.messages__dropdown button {
+  display: block;
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  border: 0;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.messages__dropdown button:hover {
+  background: var(--c-hover-bg);
+}
+.messages__more,
 .messages__back {
   display: grid;
   width: 28px;
@@ -556,7 +685,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateCompact))
   font-size: var(--fs-title);
   cursor: pointer;
 }
-.messages__profile:hover,
+.messages__more:hover,
 .messages__back:hover {
   background: var(--c-brand-dark);
   text-decoration: none;
@@ -594,13 +723,38 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateCompact))
 .messages__message--mine {
   align-items: flex-end;
 }
+.messages__day {
+  align-self: center;
+  margin: var(--sp-2) 0;
+}
+.messages__day span {
+  padding: 2px var(--sp-3);
+  background: var(--c-card-subtle);
+  border: 1px solid var(--c-border-soft);
+  border-radius: var(--radius);
+  color: var(--c-text-muted);
+  font-size: var(--fs-small);
+}
+.messages__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.messages__time {
+  align-self: flex-end;
+  flex: none;
+  font-size: 10px;
+  line-height: 1.6;
+  opacity: 0.7;
+}
 .messages__bubble {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-2);
   max-width: min(74%, 560px);
   padding: var(--sp-1) var(--sp-2);
   background: var(--c-card-subtle);
   border: 1px solid var(--c-border-soft);
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
 }
 .messages__message--mine .messages__bubble {
   background: var(--c-brand);
@@ -610,7 +764,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateCompact))
 .messages__message--pending {
   opacity: 0.6;
 }
-.messages__seen {
+.messages__meta {
   color: var(--c-text-muted);
   font-size: var(--fs-small);
 }

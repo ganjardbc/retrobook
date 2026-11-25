@@ -285,6 +285,14 @@ export const en = {
   'messages.sayHello': 'Say hello and start the conversation.',
   'messages.profile': 'View profile',
   'messages.back': 'Back to conversations',
+  'messages.exit': 'Go back',
+  'messages.more': 'Conversation options',
+  'messages.clear': 'Clear chat',
+  'messages.clear.confirm': 'Clear this chat for you? {name} will still see the messages.',
+  'messages.delete': 'Delete conversation',
+  'messages.delete.confirm':
+    'Delete this conversation from your list? {name} will still see the messages.',
+  'messages.actionError': 'That did not work. Please try again.',
   'messages.chooseTitle': 'Your conversations, all in one place',
   'messages.chooseBody': 'Choose a friend to pick up where you left off.',
   'pokes.title': 'Pokes',
@@ -498,6 +506,8 @@ export const en = {
   'feed.retry': 'Try again',
 
   'time.justNow': 'just now',
+  'time.today': 'Today',
+  'time.yesterday': 'Yesterday',
   'time.minuteAgo': '1 minute ago',
   'time.minutesAgo': '{n} minutes ago',
   'time.hourAgo': '1 hour ago',

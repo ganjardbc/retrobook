@@ -34,6 +34,8 @@ vi.mock('@/modules/chat/services/api', () => ({
     history: vi.fn(),
     send: vi.fn(),
     read: vi.fn(),
+    clear: vi.fn(),
+    remove: vi.fn(),
   },
 }))
 const api = vi.mocked(chatApi)
@@ -52,6 +54,7 @@ const friend = (id: number, name: string, over: Partial<ChatFriend> = {}): ChatF
   client: null,
   lastSeenAt: null,
   unreadCount: 0,
+  hidden: false,
   ...over,
 })
 const msg = (id: number, from: number, to: number, content = `m${id}`): ChatMessage => ({
@@ -186,6 +189,42 @@ describe('chat store: presence', () => {
     sock.fire('connect')
     await flushPromises()
     expect(api.friends).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('chat store: clear chat dan hapus sesi', () => {
+  it('clear: riwayat dan belum dibaca dikosongkan, teman tetap tampil', async () => {
+    api.clear.mockResolvedValue(undefined)
+    const chat = await started()
+    chat.openWindow(user(3, 'Carol'))
+    await flushPromises()
+    await chat.clearHistory(3)
+    expect(api.clear).toHaveBeenCalledWith(3)
+    expect(chat.thread(3).messages).toEqual([])
+    expect(chat.thread(3).loaded).toBe(true)
+    const carol = chat.friends.find((f) => f.user.id === 3)!
+    expect(carol.unreadCount).toBe(0)
+    expect(carol.hidden).toBe(false)
+  })
+
+  it('hapus sesi: teman disembunyikan dan jendela ditutup; pesan baru menampilkannya lagi', async () => {
+    api.remove.mockResolvedValue(undefined)
+    const chat = await started()
+    chat.openWindow(user(2, 'Bob'))
+    await flushPromises()
+    await chat.removeSession(2)
+    const bob = chat.friends.find((f) => f.user.id === 2)!
+    expect(bob.hidden).toBe(true)
+    expect(chat.windows).toHaveLength(0)
+    sock.fire('message:new', msg(30, 2, ME))
+    expect(bob.hidden).toBe(false)
+  })
+
+  it('galat server dilempar dan state lokal tidak berubah', async () => {
+    api.remove.mockRejectedValue(new Error('x'))
+    const chat = await started()
+    await expect(chat.removeSession(2)).rejects.toThrow()
+    expect(chat.friends.find((f) => f.user.id === 2)!.hidden).toBe(false)
   })
 })
 

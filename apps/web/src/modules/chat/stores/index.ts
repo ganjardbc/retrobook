@@ -181,6 +181,31 @@ export const useChatStore = defineStore('chat', () => {
     if ((friendOf(user.id)?.unreadCount ?? 0) > 0) void markRead(user.id)
   }
 
+  function resetThread(userId: number) {
+    const t = thread(userId)
+    t.messages = []
+    t.nextCursor = null
+    t.loaded = true
+    t.failed = false
+    const f = friendOf(userId)
+    if (f) f.unreadCount = 0
+  }
+
+  /** Clear chat: riwayat hilang dari layar saya saja. Galat dilempar ke pemanggil. */
+  async function clearHistory(userId: number) {
+    await chatApi.clear(userId)
+    resetThread(userId)
+  }
+
+  /** Hapus sesi: riwayat hilang, teman disembunyikan dari daftar Messages, jendela melayang ditutup. */
+  async function removeSession(userId: number) {
+    await chatApi.remove(userId)
+    resetThread(userId)
+    const f = friendOf(userId)
+    if (f) f.hidden = true
+    closeWindow(userId)
+  }
+
   function closeWindow(userId: number) {
     stopTyping(userId)
     windows.value = windows.value.filter((w) => w.user.id !== userId)
@@ -243,6 +268,8 @@ export const useChatStore = defineStore('chat', () => {
       clientId: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
     }
     stopTyping(userId) // mengirim berarti selesai mengetik
+    const known = friendOf(userId)
+    if (known) known.hidden = false
     const t = thread(userId)
     t.messages = [...t.messages, local]
     return deliver(userId, local)
@@ -262,6 +289,8 @@ export const useChatStore = defineStore('chat', () => {
     const partner = mine ? msg.receiverId : msg.senderId
     const t = thread(partner)
     if (t.messages.some((m) => m.id === msg.id)) return
+    const known = friendOf(partner)
+    if (known) known.hidden = false // pesan baru menghidupkan lagi sesi yang dihapus
     // Pesan yang dikirim tab ini: ack-nya yang akan menggantikan pending, jangan ditambah dua kali.
     if (mine && t.messages.some((m) => m.pending && m.content === msg.content)) return
     // Riwayat belum pernah dimuat: loadLatest nanti membawa pesan ini; cukup hitung belum dibaca.
@@ -351,6 +380,8 @@ export const useChatStore = defineStore('chat', () => {
     markRead,
     openWindow,
     closeWindow,
+    clearHistory,
+    removeSession,
     toggleMinimize,
     send,
     retry,
