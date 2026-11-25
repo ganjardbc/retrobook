@@ -2,7 +2,6 @@
 import type { GroupPrivacy, GroupSummary } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { onMounted, ref } from 'vue'
-import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import LoadingRows from '@/components/LoadingRows.vue'
@@ -10,7 +9,7 @@ import FormRow from '@/components/FormRow.vue'
 import IconSelect, { type IconOption } from '@/components/IconSelect.vue'
 import PageCard from '@/components/PageCard.vue'
 import { ApiRequestError } from '@/plugins/http'
-import { RouterLink } from 'vue-router'
+import GroupRow from '../components/GroupRow.vue'
 import { groupsApi } from '../services/api'
 
 const privacyOptions: IconOption[] = [
@@ -77,7 +76,7 @@ onMounted(() => void load())
 
 <template>
   <div class="groups">
-    <PageCard :title="t('groups.mine')">
+    <PageCard :title="t('groups.mine')" flush>
       <template #actions>
         <Button v-if="!showForm" @click="showForm = true">{{ t('groups.create') }}</Button>
       </template>
@@ -96,20 +95,10 @@ onMounted(() => void load())
           <Button variant="default" @click="closeForm">{{ t('page.cancel') }}</Button>
         </div>
       </form>
-      <p v-if="error" class="form-error" role="alert">{{ error }}</p>
+      <p v-if="error" class="form-error groups__error" role="alert">{{ error }}</p>
       <LoadingRows v-if="loading" />
       <ul v-if="groups.length" class="list">
-        <li v-for="group in groups" :key="group.id" class="item">
-          <Avatar :name="group.name" size="m" />
-          <div class="item__main">
-            <RouterLink class="item__name" :to="`/groups/${group.id}`">{{ group.name }}</RouterLink>
-            <span class="item__meta"
-              >{{ t('groups.members', { count: group.memberCount }) }} ·
-              {{ t(`groups.privacy.${group.privacy}`) }}</span
-            >
-            <span v-if="group.description" class="item__desc">{{ group.description }}</span>
-          </div>
-        </li>
+        <GroupRow v-for="group in groups" :key="group.id" :group="group" show-privacy />
       </ul>
       <EmptyState
         v-else-if="!loading"
@@ -119,17 +108,11 @@ onMounted(() => void load())
       />
     </PageCard>
 
-    <PageCard v-if="suggested.length" :title="t('groups.discover')">
+    <PageCard v-if="suggested.length" :title="t('groups.discover')" flush>
       <ul class="list">
-        <li v-for="group in suggested" :key="group.id" class="item">
-          <Avatar :name="group.name" size="m" />
-          <div class="item__main">
-            <RouterLink class="item__name" :to="`/groups/${group.id}`">{{ group.name }}</RouterLink>
-            <span class="item__meta">{{ t('groups.members', { count: group.memberCount }) }}</span>
-            <span v-if="group.description" class="item__desc">{{ group.description }}</span>
-          </div>
+        <GroupRow v-for="group in suggested" :key="group.id" :group="group">
           <Button @click="join(group)">{{ t('groups.join') }}</Button>
-        </li>
+        </GroupRow>
       </ul>
     </PageCard>
   </div>
@@ -143,7 +126,7 @@ onMounted(() => void load())
 .form {
   display: grid;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-3);
+  margin: var(--sp-3);
   padding: var(--sp-3);
   background: var(--c-card-subtle);
   border: 1px solid var(--c-border-soft);
@@ -153,39 +136,13 @@ onMounted(() => void load())
   gap: var(--sp-2);
   padding-left: 118px;
 }
+.groups__error {
+  margin: var(--sp-3);
+}
 .list {
   margin: 0;
   padding: 0;
   list-style: none;
-}
-.item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--sp-3);
-  padding: var(--sp-2) 0;
-}
-.item + .item {
-  border-top: 1px solid var(--c-border-soft);
-}
-.item:first-child {
-  padding-top: 0;
-}
-.item__main {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-}
-.item__name {
-  font-weight: bold;
-  overflow-wrap: anywhere;
-}
-.item__meta,
-.item__desc {
-  color: var(--c-text-muted);
-}
-.item__desc {
-  overflow-wrap: anywhere;
 }
 @media (max-width: 560px) {
   .form__actions {

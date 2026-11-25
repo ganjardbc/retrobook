@@ -2,7 +2,7 @@
 import type { GroupSummary } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { Icon } from '@iconify/vue'
 import Button from '@/components/Button.vue'
 import { groupsApi } from '@/modules/groups/services/api'
 
@@ -29,6 +29,7 @@ async function join(group: GroupSummary) {
   }
 }
 import PageCard from '@/components/PageCard.vue'
+import GroupRow from '@/modules/groups/components/GroupRow.vue'
 </script>
 
 <template>
@@ -40,13 +41,11 @@ import PageCard from '@/components/PageCard.vue'
     flush
   >
     <ul class="list">
-      <li v-for="g in groups" :key="g.id" class="item">
-        <span class="item__text">
-          <RouterLink class="item__name" :to="`/groups/${g.id}`">{{ g.name }}</RouterLink>
-          <small>{{ t('groups.members', { count: g.memberCount }) }}</small>
-        </span>
-        <Button :disabled="busy === g.id" @click="join(g)">{{ t('groups.join') }}</Button>
-      </li>
+      <GroupRow v-for="g in groups" :key="g.id" compact :group="g">
+        <Button class="join" variant="default" :disabled="busy === g.id" @click="join(g)">
+          <Icon icon="mdi:plus" aria-hidden="true" />{{ t('groups.join') }}
+        </Button>
+      </GroupRow>
     </ul>
   </PageCard>
 </template>
@@ -57,29 +56,14 @@ import PageCard from '@/components/PageCard.vue'
 }
 .list {
   margin: 0;
-  padding: 0;
+  padding: var(--sp-1) 0;
   list-style: none;
 }
-.item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3);
-}
-.item + .item {
-  border-top: 1px solid var(--c-border-soft);
-}
-.item__text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.item__name {
-  font-weight: bold;
-  overflow-wrap: anywhere;
-}
-.item__text small {
-  color: var(--c-text-muted);
+/* Tombol sekunder abu terang bergaya 2015, sama dengan kartu People You May Know. */
+.join {
+  min-height: 22px;
+  gap: var(--sp-1);
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-small);
 }
 </style>

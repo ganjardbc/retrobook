@@ -78,8 +78,12 @@ onMounted(() => void load())
         <Avatar :name="group.name" size="l" />
         <div class="about__text">
           <span class="about__meta"
-            >{{ t('groups.members', { count: group.memberCount }) }} ·
-            {{ t(`groups.privacy.${group.privacy}`) }}</span
+            >{{
+              t(group.memberCount === 1 ? 'groups.members.one' : 'groups.members', {
+                count: group.memberCount,
+              })
+            }}
+            · {{ t(`groups.privacy.${group.privacy}`) }}</span
           >
           <p v-if="group.description">{{ group.description }}</p>
         </div>

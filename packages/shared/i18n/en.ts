@@ -131,6 +131,7 @@ export const en = {
   'groups.mine': 'Your Groups',
   'groups.discover': 'Discover Groups',
   'groups.members': '{count} members',
+  'groups.members.one': '{count} member',
   'groups.empty': "You haven't joined any groups yet.",
   'groups.emptyHint': 'Create a group or join one below.',
   'groups.join': 'Join',
