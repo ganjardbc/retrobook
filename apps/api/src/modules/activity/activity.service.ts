@@ -1,7 +1,6 @@
 import type { FriendActivity } from '@retrobook/shared'
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
-import { RealtimeGateway } from '../realtime/realtime.gateway'
 import { VisibilityService } from '../visibility/visibility.service'
 
 /** Jendela "sudah chat" untuk ticker teman (60 menit). */
@@ -25,7 +24,6 @@ export class ActivityService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly visibility: VisibilityService,
-    private readonly realtime: RealtimeGateway,
   ) {}
 
   // shortcut: kursor berupa waktu ISO item terakhir; dua item dengan milidetik sama di batas halaman bisa terlewat.
@@ -106,7 +104,7 @@ export class ActivityService {
       distinct: ['senderId'],
       select: { senderId: true },
     })
-    const ids = [...(await this.realtime.onlineClients(chatted.map((m) => m.senderId))).keys()]
+    const ids = chatted.map((m) => m.senderId)
     if (!ids.length) return []
     const user = {
       select: { id: true, username: true, displayName: true, avatarUrl: true, isBot: true },

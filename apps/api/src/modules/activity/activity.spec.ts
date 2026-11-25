@@ -7,7 +7,6 @@ import { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { AppModule } from '../../app.module'
-import { RealtimeGateway } from '../realtime/realtime.gateway'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
 import { testHelpers } from '../../test/helpers'
@@ -15,7 +14,6 @@ import { testHelpers } from '../../test/helpers'
 describe('Activity Log (integrasi)', () => {
   let app: INestApplication
   let h: ReturnType<typeof testHelpers>
-  let online: number[] = []
 
   beforeAll(async () => {
     const mod = await Test.createTestingModule({ imports: [AppModule] }).compile()
@@ -23,17 +21,8 @@ describe('Activity Log (integrasi)', () => {
     configureApp(app)
     await app.init()
     h = testHelpers(app)
-    // Presence berasal dari socket; di tes cukup daftar id yang dianggap online.
-    jest
-      .spyOn(app.get(RealtimeGateway), 'onlineClients')
-      .mockImplementation(
-        async (ids) => new Map(ids.filter((i) => online.includes(i)).map((i) => [i, 'WEB'])),
-      )
   })
-  beforeEach(() => {
-    online = []
-    return resetDb(h.prisma)
-  })
+  beforeEach(() => resetDb(h.prisma))
   afterAll(async () => {
     await resetDb(h.prisma)
     await app.close()
@@ -102,7 +91,7 @@ describe('Activity Log (integrasi)', () => {
     expect((await h.as(me).get('/activity')).body.items).toEqual([])
   })
 
-  it('ticker teman: hanya teman online yang chat dalam 60 menit, konten terlihat, terbaru dulu', async () => {
+  it('ticker teman: hanya teman yang chat dalam 60 menit, konten terlihat, terbaru dulu', async () => {
     const [me, friend, stranger, third] = await Promise.all([
       h.mkUser('me'),
       h.mkUser('friend'),
@@ -129,8 +118,7 @@ describe('Activity Log (integrasi)', () => {
       data: { postId: secret.id, authorId: friend.id, content: 'bocor?', createdAt: at(5) },
     })
 
-    // Belum ada chat: ticker kosong walau teman online.
-    online = [friend.id, third.id]
+    // Belum ada chat: ticker kosong walau ada aktivitas.
     expect((await h.as(me).get('/activity/friends')).body.items).toEqual([])
     const chat = (senderId: number, minutesAgo: number) =>
       h.prisma.message.create({
@@ -139,9 +127,6 @@ describe('Activity Log (integrasi)', () => {
     await chat(friend.id, 90) // di luar 60 menit
     expect((await h.as(me).get('/activity/friends')).body.items).toEqual([])
     await chat(friend.id, 10)
-    online = []
-    expect((await h.as(me).get('/activity/friends')).body.items).toEqual([]) // offline
-    online = [friend.id]
 
     const res = await h.as(me).get('/activity/friends')
     expect(res.status).toBe(200)
