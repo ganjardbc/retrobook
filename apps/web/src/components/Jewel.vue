@@ -76,22 +76,19 @@ onBeforeUnmount(() => {
   background: none;
   /* Tanpa kabar: ikon gelap (referensi 2019); ada kabar: terang. */
   color: var(--c-brand-dark);
-  font-size: 16px;
+  font-size: 20px;
   cursor: pointer;
+  transition: color 0.15s;
 }
 .jewel__btn--on,
 .jewel__btn:hover,
 .jewel__btn[aria-expanded='true'] {
   color: var(--c-text-on-brand);
 }
-.jewel__btn:hover,
-.jewel__btn[aria-expanded='true'] {
-  background: var(--c-brand-dark);
-}
 .jewel__badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: -3px;
+  right: -1px;
   min-width: 14px;
   padding: 0 3px;
   background: var(--c-badge);
