@@ -3,10 +3,9 @@ import { t } from '@retrobook/shared/i18n'
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ApiRequestError } from '@/plugins/http'
-import AppFooter from '@/components/AppFooter.vue'
 import Button from '@/components/Button.vue'
-import WordMark from '@/components/WordMark.vue'
 import { authApi } from '@/modules/auth/services/api'
+import AuthLayout from '@/modules/auth/components/AuthLayout.vue'
 
 const email = ref('')
 const busy = ref(false)
@@ -29,60 +28,37 @@ async function submit() {
 </script>
 
 <template>
-  <div class="page">
-    <header class="bar">
-      <div class="bar__inner">
-        <WordMark />
-        <RouterLink class="bar__link" to="/login">{{ t('auth.forgot.back') }}</RouterLink>
-      </div>
-    </header>
-    <main class="main">
-      <form class="card" @submit.prevent="submit">
-        <h1>{{ t('auth.forgot.title') }}</h1>
-        <p v-if="sent" class="muted" role="status">{{ t('auth.forgot.sent') }}</p>
-        <template v-else>
-          <p class="muted">{{ t('auth.forgot.body') }}</p>
-          <div v-if="errors.length" class="form-error" role="alert">
-            <div v-for="message in errors" :key="message">{{ message }}</div>
-          </div>
-          <label>
-            <span>{{ t('auth.forgot.email') }}</span>
-            <input v-model="email" name="email" type="email" autocomplete="email" required />
-          </label>
-          <Button variant="success" type="submit" :disabled="busy">{{ t('auth.forgot.submit') }}</Button>
-        </template>
-      </form>
-    </main>
-    <AppFooter />
-  </div>
+  <AuthLayout>
+    <template #header>
+      <RouterLink to="/login">{{ t('auth.forgot.back') }}</RouterLink>
+    </template>
+    <form class="card" @submit.prevent="submit">
+      <h1>{{ t('auth.forgot.title') }}</h1>
+      <p v-if="sent" class="muted" role="status">{{ t('auth.forgot.sent') }}</p>
+      <template v-else>
+        <p class="muted">{{ t('auth.forgot.body') }}</p>
+        <div v-if="errors.length" class="form-error" role="alert">
+          <div v-for="message in errors" :key="message">{{ message }}</div>
+        </div>
+        <label>
+          <span>{{ t('auth.forgot.email') }}</span>
+          <input v-model="email" name="email" type="email" autocomplete="email" required />
+        </label>
+        <Button variant="success" type="submit" :disabled="busy">{{ t('auth.forgot.submit') }}</Button>
+      </template>
+    </form>
+  </AuthLayout>
 </template>
 
 <style scoped>
-.bar {
-  background: var(--c-brand);
-  border-bottom: 1px solid var(--c-brand-dark);
-}
-.bar__inner {
-  max-width: var(--w-page);
-  margin: 0 auto;
-  padding: var(--sp-3) var(--sp-4);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.bar__link {
-  color: var(--c-text-on-brand);
-}
-.main {
-  max-width: 420px;
-  margin: 0 auto;
-  padding: var(--sp-5) var(--sp-4);
-}
 .card {
+  width: min(420px, 100%);
+  max-width: 420px;
+  margin: var(--sp-5) auto;
+  padding: var(--sp-5) var(--sp-4);
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
-  padding: var(--sp-4);
   background: var(--c-card);
   border: var(--card-border);
   border-radius: var(--radius);

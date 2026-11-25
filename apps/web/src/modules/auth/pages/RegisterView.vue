@@ -3,11 +3,10 @@ import { t } from '@retrobook/shared/i18n'
 import { reactive, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { ApiRequestError } from '@/plugins/http'
-import AppFooter from '@/components/AppFooter.vue'
 import Button from '@/components/Button.vue'
-import WordMark from '@/components/WordMark.vue'
 import { useCountdown } from '@/composables/countdown'
 import { useAuthStore } from '@/modules/auth/stores'
+import AuthLayout from '@/modules/auth/components/AuthLayout.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -34,15 +33,11 @@ async function submit() {
 </script>
 
 <template>
-  <div class="page">
-    <header class="bar">
-      <div class="bar__inner">
-        <WordMark />
-        <RouterLink class="bar__link" to="/login">{{ t('auth.register.haveAccount') }}</RouterLink>
-      </div>
-    </header>
-
-    <main class="main">
+  <AuthLayout>
+    <template #header>
+      <RouterLink to="/login">{{ t('auth.register.haveAccount') }}</RouterLink>
+    </template>
+    <div class="main">
       <form class="card" @submit.prevent="submit">
         <h1>{{ t('auth.register.title') }}</h1>
         <p class="muted">{{ t('auth.register.subtitle') }}</p>
@@ -95,27 +90,11 @@ async function submit() {
         }}</Button>
         <p class="parody">{{ t('auth.register.parody') }}</p>
       </form>
-    </main>
-    <AppFooter />
-  </div>
+    </div>
+  </AuthLayout>
 </template>
 
 <style scoped>
-.bar {
-  background: var(--c-brand);
-  border-bottom: 1px solid var(--c-brand-dark);
-}
-.bar__inner {
-  max-width: var(--w-page);
-  margin: 0 auto;
-  padding: var(--sp-3) var(--sp-4);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.bar__link {
-  color: var(--c-text-on-brand);
-}
 .main {
   max-width: 420px;
   margin: 0 auto;
