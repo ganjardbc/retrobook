@@ -76,6 +76,7 @@ export const en = {
 
   'nav.home': 'Home',
   'nav.menu': 'Menu',
+  'nav.skip': 'Skip to content',
   'nav.main': 'Main navigation',
   'search.placeholder': 'Search for people',
   'search.button': 'Search',

@@ -202,6 +202,7 @@ Format waktu: relatif ("2 hrs", "Yesterday at 9:41am"), lalu tanggal penuh setel
 - Teks utama `--c-text` di atas `--c-card` memenuhi kontras cukup; `--c-text-muted` (~#90949c) di atas putih **hanya sekitar 3:1**, jadi pakai untuk waktu dan label sekunder saja, bukan untuk informasi penting.
 - Gambar yang bermakna punya `alt`; avatar dekoratif `alt=""`.
 - Badge notifikasi punya teks alternatif ("3 notifikasi belum dibaca").
+- Audit T-85: semua input di user app dan admin sudah berlabel (dibungkus `<label>` atau `FormRow`). Ditambahkan tautan "Skip to content" (`.skip-link`, target `<main id="main-content">`) dan aturan `prefers-reduced-motion` global di `base.css`. Kontras terukur: `--c-text-muted` 3,19:1 di putih (2,64:1 di `--c-bg`) dan teks putih di `--c-success` 3,04:1, keduanya di bawah AA 4,5:1; token sengaja belum diubah karena diukur dari referensi (keputusan D-8).
 - Jangan mengandalkan warna saja untuk status online: tambahkan label "Web" atau "Mobile".
 
 ## 9. Admin panel

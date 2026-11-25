@@ -49,6 +49,31 @@ input {
   white-space: nowrap;
 }
 
+/* Tautan lompat: tersembunyi sampai mendapat fokus keyboard. */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: var(--sp-2);
+  z-index: 1000;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-card);
+  color: var(--c-link);
+}
+.skip-link:focus {
+  top: var(--sp-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Cincin fokus keyboard yang terlihat di semua kontrol (kontras terhadap latar kartu dan navbar). */
 :focus-visible {
   outline: 2px solid var(--c-brand);

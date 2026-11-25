@@ -160,7 +160,7 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 | [x] T-82 | Save post: Save/Unsave, `/saved`, tabel `saved_posts`, `savedByMe` pada Post | SAV-01 |
 | [x] T-83 | Year in Review di profil (akhir tahun) | YIR-01 |
 | [x] T-84 | Pencarian isi post teman (Graph Search ringan, lewat `VisibilityService`) | SRC-05 |
-| [ ] T-85 | Aksesibilitas: fokus keyboard, kontras token, label ARIA | NFR |
+| [x] T-85 | Aksesibilitas: fokus keyboard, kontras token, label ARIA | NFR |
 | [ ] T-86 | Tes E2E untuk fitur T-71 sampai T-82 | test plan |
 | [ ] T-87 | Audit privasi endpoint baru (album, grup, event, notes, life event, saved) | R-03 |
 | [ ] T-88 | Performa feed dengan seeder besar (N+1, indeks) | NFR |
@@ -178,6 +178,7 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 | D-5 | Aturan umur token dan batas rate limit | Minggu 1 dan 6 | 15 menit dan 30 hari; angka di API spec |
 | D-6 | Poke hanya antar teman atau semua | T-34 | Hanya antar teman |
 | D-7 | Penyedia email dan model bahasa | T-70 dan T-66 | Tunda; keduanya opsional |
+| D-8 | Gelapkan `--c-text-muted` (#909092) dan `--c-success` agar lolos kontras AA, atau pertahankan nilai terukur dari referensi | T-85 | Gelapkan sedikit (#6e7074 dan #4a7a3c, 4,96:1 dan 5,07:1) dan catat selisihnya di tabel pengukuran |
 
 ## Risiko yang dipantau tiap akhir minggu
 

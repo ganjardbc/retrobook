@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@retrobook/shared/i18n'
 import { computed, onBeforeUnmount, onMounted, ref, type ComponentPublicInstance } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import EventsTodayCard from '@/modules/events/components/EventsTodayCard.vue'
@@ -45,13 +46,14 @@ router.afterEach(() => (menuOpen.value = false))
 
 <template>
   <div class="layout" :class="{ 'layout--profile': route.meta.layout === 'profile' }">
+    <a class="skip-link" href="#main-content">{{ t('nav.skip') }}</a>
     <NavBar @toggle-menu="menuOpen = !menuOpen" />
     <div class="layout__body">
       <div class="layout__cols">
         <aside :ref="sticky" class="layout__left" :class="{ 'layout__left--open': menuOpen }">
           <LeftMenu />
         </aside>
-        <main class="layout__main"><RouterView /></main>
+        <main id="main-content" class="layout__main" tabindex="-1"><RouterView /></main>
         <!-- Kartu di atas, info footer di dasar kolom. -->
         <!-- Profil: kolom kanan dikosongkan dulu (tanpa footer); lebar total tetap sama. -->
         <aside v-if="!isProfile" :ref="sticky" class="layout__right">
