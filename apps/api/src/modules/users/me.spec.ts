@@ -261,6 +261,7 @@ describe('Edit profil dan foto (integrasi)', () => {
       username: 'sesi_user',
       displayName: 'Sesi',
       avatarUrl: null,
+      role: 'USER',
     })
   })
 })

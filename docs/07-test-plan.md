@@ -114,7 +114,7 @@ Admin melihat semua termasuk `hidden` lewat `/api/admin/*` saja. Kasus tambahan:
 | ADM-04 | Ubah status memutus sesi; setiap perubahan menulis `audit_logs` dalam transaksi yang sama (jika audit gagal, perubahan dibatalkan) | integrasi | P1 |
 | ADM-08, BR-07 | Sembunyikan post: hilang untuk user, terlihat di admin; tampilkan lagi memulihkan | integrasi | P1 |
 | ADM-10 | Putuskan laporan (abaikan, sembunyikan, hapus, skors) mengubah status dan mencatat audit dalam satu panggilan | integrasi | P1 |
-| ADM-11, BR-08 | Kata terlarang ditolak saat tulis dan konten yang sudah memuatnya ditandai | integrasi | P2 |
+| ADM-11, BR-08 | Kata terlarang tidak menolak tulisan; konten baru dan lama yang memuatnya ditandai `flagged` | integrasi | P2 |
 | ADM-12, BR-12 | Maintenance mode: non-admin 403, admin tetap bisa masuk | integrasi | P2 |
 | ADM-14 | Audit log tidak punya endpoint ubah atau hapus (PATCH dan DELETE 404 atau 405) | integrasi | P1 |
 | BR-14 | Tidak bisa menghapus, menonaktifkan, atau menurunkan admin terakhir (422) | integrasi | P1 |

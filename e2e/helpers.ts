@@ -1,4 +1,6 @@
 import { randomBytes } from 'node:crypto'
+import { createRequire } from 'node:module'
+import { resolve } from 'node:path'
 import { expect, type Browser, type Page } from '@playwright/test'
 
 const password = 'phase1-demo-password'
@@ -43,4 +45,46 @@ export async function makeFriends(browser: Browser, alicePage: Page, aliceDispla
   await alicePage.goto(`/${bob.username}`)
   await expect(alicePage.getByRole('button', { name: 'Friends' })).toBeVisible()
   return { bobContext, bobPage, bob }
+}
+
+// --- Fase 3 (admin) ---
+export const ADMIN_URL = 'http://127.0.0.1:5174'
+const requireFromApi = createRequire(resolve('apps/api/package.json'))
+
+/** Klien Prisma ke database uji (skrip `test:e2e` mengisi DATABASE_URL). Hanya untuk menyiapkan data tes. */
+export function prismaForE2E() {
+  const { PrismaClient } = requireFromApi('@prisma/client') as typeof import('@prisma/client')
+  return new PrismaClient()
+}
+
+export async function promoteToAdmin(username: string) {
+  const prisma = prismaForE2E()
+  try {
+    await prisma.user.update({ where: { username }, data: { role: 'ADMIN' } })
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+export async function userId(username: string) {
+  const prisma = prismaForE2E()
+  try {
+    return (await prisma.user.findUniqueOrThrow({ where: { username } })).id
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+/** Buat akun lewat UI user app, jadikan admin, lalu masuk ke admin panel di halaman yang diberikan. */
+export async function loginAsNewAdmin(browser: Browser) {
+  const context = await browser.newContext()
+  const page = await context.newPage()
+  const admin = await register(page)
+  await promoteToAdmin(admin.username)
+  await page.goto(`${ADMIN_URL}/login`)
+  await page.getByLabel('Email atau username').fill(admin.username)
+  await page.getByLabel('Kata sandi').fill(password)
+  await page.getByRole('button', { name: /Masuk ke admin/ }).click()
+  await expect(page.getByRole('heading', { name: /Ringkasan|Dashboard/i }).first()).toBeVisible()
+  return { context, page, admin }
 }

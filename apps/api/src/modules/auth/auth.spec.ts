@@ -48,6 +48,7 @@ describe('Auth (integrasi)', () => {
         username: 'budi_01',
         displayName: 'Budi',
         avatarUrl: null,
+        role: 'USER',
       })
       expect(res.body.accessToken).toEqual(expect.any(String))
       expect(JSON.stringify(res.body)).not.toMatch(/password|argon2/i)

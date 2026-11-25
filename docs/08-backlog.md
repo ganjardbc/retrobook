@@ -116,10 +116,10 @@ Keluaran: menulis status, memberi like dan komentar, privasi dasar bekerja dan t
 | [x] T-54 | Moderasi post dan komentar: sembunyikan, tampilkan, hapus, aksi massal | L | ADM-08, 09, BR-07 |
 | [x] T-55 | Antrean laporan dengan keputusan sekali panggil (tiga klik) | L | ADM-10 |
 | [x] T-56 | Kata terlarang: kelola, filter saat tulis, tandai konten lama | M | ADM-11, BR-08 |
-| [ ] T-57 | Pengaturan sistem: maintenance mode, buka atau tutup pendaftaran; halaman `/maintenance` | M | ADM-12, BR-12 |
-| [ ] T-58 | Pengumuman dan banner, notifikasi ANNOUNCEMENT | M | ADM-13 |
-| [ ] T-59 | Halaman audit log hanya baca | S | ADM-14 |
-| [ ] T-60 | Tes admin: semua rute menolak non-admin; E2E-08 sampai 10 | L | Test 3.6, 4 |
+| [x] T-57 | Pengaturan sistem: maintenance mode, buka atau tutup pendaftaran; halaman `/maintenance` | M | ADM-12, BR-12 |
+| [x] T-58 | Pengumuman dan banner, notifikasi ANNOUNCEMENT | M | ADM-13 |
+| [x] T-59 | Halaman audit log hanya baca | S | ADM-14 |
+| [x] T-60 | Tes admin: semua rute menolak non-admin; E2E-08 sampai 10 | L | Test 3.6, 4 |
 
 **Gerbang R3:** semua Must admin lulus; alur laporan tiga klik tercatat di audit; demo admin direkam.
 
