@@ -89,21 +89,13 @@ async function logout() {
     padding-right: var(--w-chat);
   }
 }
-/* Kolom kiri dan kanan menempel di bawah navbar saat feed digulir; kolom kanan yang lebih tinggi
-   dari layar bisa digulir sendiri. */
+/* Kolom kiri dan kanan menempel di bawah navbar mengikuti scroll window (tanpa scroll sendiri).
+   shortcut: kolom kanan yang lebih tinggi dari layar terpotong di bawah; upgrade bila kartu bertambah. */
 .layout__left,
 .layout__right {
   position: sticky;
   top: calc(var(--h-navbar) + var(--sp-3));
   align-self: start;
-}
-.layout__right {
-  max-height: calc(100vh - var(--h-navbar) - 2 * var(--sp-3));
-  overflow-y: auto;
-  scrollbar-width: none;
-}
-.layout__right::-webkit-scrollbar {
-  display: none;
 }
 /* UX-11: satu breakpoint di sekitar 900 px menyembunyikan kolom kanan. */
 @media (max-width: 900px) {
