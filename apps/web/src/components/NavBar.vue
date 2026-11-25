@@ -25,7 +25,7 @@ const auth = useAuthStore()
       >
         <Icon icon="mdi:menu" aria-hidden="true" />
       </button>
-      <RouterLink class="navbar__brand" to="/"><WordMark /></RouterLink>
+      <RouterLink class="navbar__brand" to="/"><WordMark variant="mark" /></RouterLink>
       <SearchBox v-if="auth.user" />
       <span class="navbar__spacer" />
       <template v-if="auth.user">
