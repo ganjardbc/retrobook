@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, type ComponentPublicInstance } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '@/modules/auth/stores'
 import BirthdaysCard from '@/modules/friends/components/BirthdaysCard.vue'
 import PeopleYouMayKnow from '@/modules/friends/components/PeopleYouMayKnow.vue'
 import ChatDock from '@/modules/chat/components/ChatDock.vue'
@@ -15,7 +14,6 @@ import AppFooter from '@/components/AppFooter.vue'
 import LeftMenu from '@/components/LeftMenu.vue'
 import NavBar from '@/components/NavBar.vue'
 
-const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const menuOpen = ref(false)
@@ -39,16 +37,11 @@ onBeforeUnmount(() => {
 
 // Menu kiri di layar sempit berupa panel tarik; tutup saat pindah halaman.
 router.afterEach(() => (menuOpen.value = false))
-
-async function logout() {
-  await auth.logout()
-  await router.replace({ name: 'login' })
-}
 </script>
 
 <template>
   <div class="layout" :class="{ 'layout--profile': route.meta.layout === 'profile' }">
-    <NavBar @toggle-menu="menuOpen = !menuOpen" @logout="logout" />
+    <NavBar @toggle-menu="menuOpen = !menuOpen" />
     <div class="layout__body">
       <div class="layout__cols">
         <aside :ref="sticky" class="layout__left" :class="{ 'layout__left--open': menuOpen }">

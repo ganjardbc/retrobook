@@ -7,6 +7,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { blocksApi } from '@/modules/profile/services/blocks'
 import { useChatStore } from '@/modules/chat/stores'
 import { pokesApi } from '@/modules/pokes/services/api'
+import { useAuthStore } from '@/modules/auth/stores'
 import { useProfileStore } from '@/modules/profile/stores'
 import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
@@ -46,6 +47,11 @@ async function poke() {
   }
 }
 const router = useRouter()
+const auth = useAuthStore()
+async function logout() {
+  await auth.logout()
+  await router.replace({ name: 'login' })
+}
 async function block() {
   if (!window.confirm(t('profile.action.block.confirm', { name: props.profile.displayName })))
     return
@@ -126,6 +132,7 @@ async function block() {
             <RouterLink to="/me/blocked" role="menuitem" @click="moreOpen = false">{{
               t('profile.action.blocked')
             }}</RouterLink>
+            <button type="button" role="menuitem" @click="logout">{{ t('common.logOut') }}</button>
           </div>
         </div>
       </template>
@@ -285,13 +292,21 @@ async function block() {
   border: var(--card-border);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
-.header__menu a {
+.header__menu a,
+.header__menu button {
   display: block;
+  width: 100%;
   padding: var(--sp-2) var(--sp-3);
+  border: 0;
+  background: none;
   color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   white-space: nowrap;
 }
-.header__menu a:hover {
+.header__menu a:hover,
+.header__menu button:hover {
   background: var(--c-hover-bg);
   text-decoration: none;
 }

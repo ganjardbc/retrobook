@@ -10,7 +10,7 @@ import FriendRequestsJewel from '@/modules/friends/components/FriendRequestsJewe
 import NotificationsJewel from '@/modules/notifications/components/NotificationsJewel.vue'
 import WordMark from '@/components/WordMark.vue'
 
-defineEmits<{ 'toggle-menu': []; logout: [] }>()
+defineEmits<{ 'toggle-menu': [] }>()
 const auth = useAuthStore()
 </script>
 
@@ -44,9 +44,6 @@ const auth = useAuthStore()
           <MessagesJewel />
           <NotificationsJewel />
         </div>
-        <button class="navbar__link navbar__logout" type="button" @click="$emit('logout')">
-          {{ t('common.logOut') }}
-        </button>
       </template>
     </nav>
   </header>
@@ -103,15 +100,6 @@ const auth = useAuthStore()
   padding: var(--sp-3);
   color: var(--c-text-muted);
 }
-.navbar__logout {
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
-.navbar__logout:hover {
-  text-decoration: underline;
-}
 .navbar__brand :deep(.wordmark) {
   font-size: 24px;
 }
@@ -141,9 +129,6 @@ const auth = useAuthStore()
   }
   .navbar__inner {
     gap: var(--sp-2);
-  }
-  .navbar__logout {
-    white-space: nowrap;
   }
 }
 </style>

@@ -82,21 +82,6 @@ describe('AppLayout', () => {
     expect(w.text()).toContain('Fun project / parody')
   })
 
-  it('Log Out: panggil server, bersihkan sesi, kembali ke /login', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
-    vi.stubGlobal('fetch', fetchMock)
-    session.set({ accessToken: 'a', refreshToken: 'r' })
-    const router = makeRouter()
-    await router.push('/')
-    const w = mount(AppLayout, { global: { plugins: [router] } })
-    await flushPromises()
-    await w.find('.navbar__logout').trigger('click')
-    await flushPromises()
-    expect(fetchMock).toHaveBeenCalled()
-    expect(useAuthStore().isLoggedIn).toBe(false)
-    expect(router.currentRoute.value.name).toBe('login')
-  })
-
   it('tombol menu membuka dan menutup panel menu kiri', async () => {
     const router = makeRouter()
     await router.push('/')

@@ -52,6 +52,7 @@ async function mountAt(path: string) {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
+      { path: '/login', name: 'login', component: { template: '<i />' } },
       {
         path: '/:username',
         component: ProfileView,
@@ -143,6 +144,18 @@ describe('ProfileView', () => {
     expect(own.w.find('.header__photo--avatar').exists()).toBe(true)
     expect(own.w.find('.header__photo--cover').exists()).toBe(true)
     expect(other.w.find('.header__photo').exists()).toBe(false) // orang lain: tanpa kontrol foto
+  })
+
+  it('menu "...": Log Out mencabut sesi lalu menuju /login', async () => {
+    vi.spyOn(usersApi, 'profile').mockResolvedValueOnce(profile({ relationship: 'SELF' }))
+    const out = vi.spyOn(useAuthStore(), 'logout').mockResolvedValue()
+    const own = await mountAt('/siti')
+    await own.w.find('.header__more button').trigger('click')
+    const item = own.w.findAll('.header__menu button').find((b) => b.text() === 'Log Out')
+    await item!.trigger('click')
+    await flushPromises()
+    expect(out).toHaveBeenCalled()
+    expect(own.router.currentRoute.value.name).toBe('login')
   })
 
   it('profil teman: StatusBox dinding tanpa pilihan privasi; bukan teman: tanpa kotak', async () => {
