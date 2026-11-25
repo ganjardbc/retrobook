@@ -3,12 +3,11 @@ import { join } from 'node:path'
 import { chromium } from '@playwright/test'
 
 // Demo Fase 3 (R3): Bob melaporkan post Alice, admin memutuskan dalam dua klik, audit log mencatatnya.
-// Prasyarat: seed dijalankan, web (5176), admin (5174), API hidup, dan satu akun seed berperan ADMIN
-// (mis. `UPDATE users SET role='ADMIN' WHERE username='carol'`). Skrip tidak mengubah data peran sendiri.
+// Prasyarat: seed dijalankan (membuat akun admin / retrobook-demo), web (5176), admin (5174), dan API hidup.
 const outputDir = join(process.cwd(), 'docs/demo')
 const webURL = process.env.DEMO_BASE_URL ?? 'http://127.0.0.1:5176'
 const adminURL = process.env.DEMO_ADMIN_URL ?? 'http://127.0.0.1:5174'
-const adminUser = process.env.DEMO_ADMIN_USER ?? 'carol'
+const adminUser = process.env.DEMO_ADMIN_USER ?? 'admin'
 const password = 'retrobook-demo'
 const size = { width: 1440, height: 900 }
 const browser = await chromium.launch({ headless: true })

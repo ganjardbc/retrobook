@@ -383,8 +383,8 @@ Seed membuat data yang cukup untuk menguji feed, chat, dan antrean moderasi; mig
 
 | Data seed          | Jumlah usulan         | Catatan                                                                   |
 |--------------------|-----------------------|---------------------------------------------------------------------------|
-| Admin              | 1                     | Dibuat dari variabel lingkungan; satu-satunya jalur membuat admin pertama |
-| User biasa         | 30                    | Termasuk 5 akun bot (is_bot true) dengan bot_profiles                     |
+| Admin              | 1                     | Lingkungan nyata: skrip `admin:create` dari variabel lingkungan. Seed dev membuat `admin` demo |
+| User biasa         | 30                    | Akun bot (5, is_bot true dengan bot_profiles) menunggu T-66 (bonus)       |
 | Friendships        | sekitar 120           | Campuran ACCEPTED dan PENDING                                             |
 | Posts              | 200                   | Campuran privasi, sebagian dengan foto placeholder dan hashtag            |
 | Comments dan likes | sekitar 600 dan 1.000 | Acak, tanpa melanggar UNIQUE                                              |
