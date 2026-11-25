@@ -7,6 +7,7 @@ import Avatar from '@/components/Avatar.vue'
 import Jewel from '@/components/Jewel.vue'
 import { formatTime } from '@/helpers/time'
 import { useAuthStore } from '@/modules/auth/stores'
+import { notificationTarget } from '@/modules/notifications/helpers'
 import { useNotificationsStore } from '@/modules/notifications/stores'
 
 const auth = useAuthStore()
@@ -19,17 +20,7 @@ watch(open, (isOpen) => {
   if (isOpen) void store.open()
 })
 
-/** Halaman satu post belum ada di web (backlog); notifikasi post membawa ke profil aktor. */
-const target = (n: AppNotification) =>
-  n.type === 'POKE'
-    ? '/pokes'
-    : n.type === 'WALL_POST' && auth.user
-      ? `/${auth.user.username}` // tertulis di dinding saya
-      : n.type === 'FRIEND_REQUEST'
-        ? '/friends'
-        : n.actor
-          ? `/${n.actor.username}`
-          : '/'
+const target = (n: AppNotification) => notificationTarget(n, auth.user?.username)
 </script>
 
 <template>
@@ -53,6 +44,9 @@ const target = (n: AppNotification) =>
         </RouterLink>
       </li>
     </ul>
+    <RouterLink class="all" to="/notifications" @click="open = false">{{
+      t('jewel.notifications.seeAll')
+    }}</RouterLink>
   </Jewel>
 </template>
 
@@ -93,5 +87,11 @@ const target = (n: AppNotification) =>
 .item__time {
   color: var(--c-text-muted);
   font-size: var(--fs-small);
+}
+.all {
+  display: block;
+  padding: var(--sp-2) var(--sp-3);
+  border-top: 1px solid var(--c-border-soft);
+  text-align: center;
 }
 </style>
