@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, type ComponentPublicInstance } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/modules/auth/stores'
 import BirthdaysCard from '@/modules/friends/components/BirthdaysCard.vue'
@@ -9,6 +9,7 @@ import ChatSidebar from '@/modules/chat/components/ChatSidebar.vue'
 import SponsoredCard from '@/modules/feed/components/SponsoredCard.vue'
 import TrendingCard from '@/modules/search/components/TrendingCard.vue'
 import { useChatStore } from '@/modules/chat/stores'
+import { stickyBottom } from '@/helpers/stickyBottom'
 import { disconnectRealtime } from '@/plugins/realtime'
 import AppFooter from '@/components/AppFooter.vue'
 import LeftMenu from '@/components/LeftMenu.vue'
@@ -20,10 +21,18 @@ const route = useRoute()
 const menuOpen = ref(false)
 const isProfile = computed(() => route.meta.layout === 'profile')
 
+// Kolom samping menempel di bawah navbar dan ikut bergulir sampai dasarnya terlihat.
+const stickyTop = () => (document.querySelector('.navbar')?.clientHeight ?? 0) + 12 // 12 = --sp-3
+const stops: Array<() => void> = []
+function sticky(el: Element | ComponentPublicInstance | null) {
+  if (el instanceof HTMLElement) stops.push(stickyBottom(el, stickyTop))
+}
+
 // Koneksi realtime hidup selama shell member tampil (logout atau pindah ke tamu memutusnya).
 const chat = useChatStore()
 onMounted(() => chat.start())
 onBeforeUnmount(() => {
+  stops.splice(0).forEach((stop) => stop())
   chat.stop()
   disconnectRealtime()
 })
@@ -42,11 +51,13 @@ async function logout() {
     <NavBar @toggle-menu="menuOpen = !menuOpen" @logout="logout" />
     <div class="layout__body">
       <div class="layout__cols">
-        <aside class="layout__left" :class="{ 'layout__left--open': menuOpen }"><LeftMenu /></aside>
+        <aside :ref="sticky" class="layout__left" :class="{ 'layout__left--open': menuOpen }">
+          <LeftMenu />
+        </aside>
         <main class="layout__main"><RouterView /></main>
         <!-- Kartu di atas, info footer di dasar kolom. -->
         <!-- Profil: kolom kanan dikosongkan dulu (tanpa footer); lebar total tetap sama. -->
-        <aside v-if="!isProfile" class="layout__right">
+        <aside v-if="!isProfile" :ref="sticky" class="layout__right">
           <TrendingCard />
           <SponsoredCard />
           <BirthdaysCard />
@@ -89,12 +100,11 @@ async function logout() {
     padding-right: var(--w-chat);
   }
 }
-/* Kolom kiri dan kanan menempel di bawah navbar mengikuti scroll window (tanpa scroll sendiri).
-   shortcut: kolom kanan yang lebih tinggi dari layar terpotong di bawah; upgrade bila kartu bertambah. */
+/* Kolom kiri dan kanan menempel mengikuti scroll window; --sticky-top diisi helpers/stickyBottom. */
 .layout__left,
 .layout__right {
   position: sticky;
-  top: calc(var(--h-navbar) + var(--sp-3));
+  top: var(--sticky-top, calc(var(--h-navbar) + var(--sp-3)));
   align-self: start;
 }
 /* UX-11: satu breakpoint di sekitar 900 px menyembunyikan kolom kanan. */
