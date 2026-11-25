@@ -16,7 +16,8 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "build": "pnpm -r build",
-    "test:e2e": "pnpm --filter @retrobook/db migrate:test && pnpm --filter @retrobook/api exec dotenv -e ../../.env -- sh -c 'DATABASE_URL=$TEST_DATABASE_URL pnpm --dir ../.. exec playwright test --config playwright.config.ts'"
+    "test:e2e": "pnpm --filter @retrobook/db migrate:test && pnpm --filter @retrobook/api exec dotenv -e ../../.env -- sh -c 'DATABASE_URL=$TEST_DATABASE_URL pnpm --dir ../.. exec playwright test --config playwright.config.ts'",
+    "perf:read": "node scripts/perf-read.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

@@ -158,6 +158,8 @@ Dijalankan pada Chromium; skenario realtime memakai dua konteks browser. Data di
 | Layar | 1280, 1024, 900, dan 390 px: tidak ada layout patah | tidak ada scroll horizontal |
 | Aksesibilitas | Tab melalui form login, status box, dropdown jewel; kontras teks utama | semua dapat dioperasikan |
 
+Status T-63 (performa): `pnpm perf:read` (`scripts/perf-read.mjs`) mengisi DB `*_perf` atau `*_test` (30 user, 200 post, 120 pertemanan; skala naik lewat `PERF_USERS`, `PERF_POSTS`, `PERF_FRIENDS`), memeriksa paginasi tanpa duplikat, lalu menembak `/feed?limit=10` dan `/users/:u/posts` dengan 50 permintaan paralel x 4 putaran. Alur: buat DB, `DATABASE_URL=... prisma migrate deploy`, jalankan API dari `dist` dengan `RATE_LIMIT_DISABLED=true` pada DB itu, lalu jalankan skrip dengan `DATABASE_URL` dan `API_URL`. Hasil p95 pada mesin dev (MySQL lokal): skala spesifikasi 85 ms feed, 107 ms profil; 20.000 post dan 600 user 120 ms feed. Dua temuan diperbaiki: (1) `_count` terfilter pada include post membuat Prisma mengagregasi seluruh tabel likes dan komentar di setiap query (feed 1,5 detik pada 5.000 post); sekarang jumlah dihitung per halaman lewat `groupBy`; (2) kandidat feed dipersempit memakai id teman (`feedWhere(viewerId, friendIds)`) sehingga MySQL memakai indeks penulis, bukan memindai seluruh tabel (10 detik pada 20.000 post). Batas yang diketahui: `sort=top` mengurutkan dengan agregat like (POST-09) dan belum dioptimalkan; admin moderasi masih memakai `_count` terfilter.
+
 ## 6. Daftar periksa keamanan
 
 - Setiap endpoint mutasi memeriksa kepemilikan atau peran di server (uji dengan mengganti ID di URL milik orang lain).

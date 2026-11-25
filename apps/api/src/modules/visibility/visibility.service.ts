@@ -102,18 +102,26 @@ export class VisibilityService {
     return { user: this.userWhere(viewerId) }
   }
 
-  /** News feed (POST-04): post yang terlihat dan ditulis diri sendiri atau teman. */
-  feedWhere(viewerId: number): Prisma.PostWhereInput {
+  /**
+   * News feed (POST-04): post yang terlihat dan ditulis diri sendiri atau teman.
+   * `friendIds` (id teman ACCEPTED viewer, dari FriendsService atau query pemanggil) hanya mempersempit
+   * kandidat lewat indeks penulis/pemilik dinding; aturan privasi tetap dari `postWhere` (T-63: tanpa
+   * daftar ini MySQL memindai seluruh tabel posts dengan subquery pertemanan per baris).
+   */
+  feedWhere(viewerId: number, friendIds?: number[]): Prisma.PostWhereInput {
+    const circle = friendIds && [viewerId, ...friendIds]
     return {
       AND: [
         this.postWhere(viewerId),
         {
-          OR: [
-            { authorId: viewerId },
-            { author: this.friendOf(viewerId) },
-            { wallOwnerId: viewerId },
-            { wallOwner: this.friendOf(viewerId) },
-          ],
+          OR: circle
+            ? [{ authorId: { in: circle } }, { wallOwnerId: { in: circle } }]
+            : [
+                { authorId: viewerId },
+                { author: this.friendOf(viewerId) },
+                { wallOwnerId: viewerId },
+                { wallOwner: this.friendOf(viewerId) },
+              ],
         },
       ],
     }

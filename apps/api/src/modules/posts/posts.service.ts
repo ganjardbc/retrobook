@@ -26,11 +26,10 @@ const userSummary = {
 } satisfies Prisma.UserSelect
 
 // Penyuka yang disembunyikan (BANNED/terhapus) tidak ikut dihitung; aturannya ada di VisibilityService.
-const postInclude = (
-  likerWhere: Prisma.LikeWhereInput,
-  commentWhere: Prisma.CommentWhereInput,
-  userWhere: Prisma.UserWhereInput,
-) =>
+// Jumlah like dan komentar sengaja BUKAN `_count` di sini: Prisma menerjemahkannya menjadi agregat atas
+// seluruh tabel likes/comments pada setiap query (T-63: feed melambat linear terhadap ukuran tabel).
+// Jumlahnya dihitung per halaman lewat `counts()` di bawah.
+const postInclude = (likerWhere: Prisma.LikeWhereInput, userWhere: Prisma.UserWhereInput) =>
   ({
     // Yang di-tag tetapi BANNED, terhapus, atau terblokir bagi pembaca tidak ditampilkan.
     tags: {
@@ -40,12 +39,6 @@ const postInclude = (
     },
     author: { select: userSummary },
     wallOwner: { select: userSummary },
-    _count: {
-      select: {
-        likes: { where: likerWhere },
-        comments: { where: commentWhere },
-      },
-    },
     likes: {
       where: likerWhere,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
@@ -212,7 +205,7 @@ export class PostsService {
     sort: FeedSort = 'recent',
   ): Promise<Paged<PostDto>> {
     const rows = await this.prisma.post.findMany({
-      where: this.visibility.feedWhere(viewerId),
+      where: this.visibility.feedWhere(viewerId, await this.friendIds(viewerId)),
       orderBy:
         sort === 'top'
           ? [{ likes: { _count: 'desc' } }, { createdAt: 'desc' }, { id: 'desc' }]
@@ -408,11 +401,7 @@ export class PostsService {
   }
 
   private include(viewerId: number) {
-    return postInclude(
-      this.visibility.likerWhere(viewerId),
-      this.visibility.commentWhere(viewerId),
-      this.visibility.userWhere(viewerId),
-    )
+    return postInclude(this.visibility.likerWhere(viewerId), this.visibility.userWhere(viewerId))
   }
 
   private async assertUpload(imageUrl: string | null) {
@@ -421,7 +410,40 @@ export class PostsService {
     }
   }
 
+  /** Id teman ACCEPTED viewer (dua arah) untuk mempersempit kandidat feed lewat indeks. */
+  private async friendIds(viewerId: number): Promise<number[]> {
+    const rows = await this.prisma.friendship.findMany({
+      where: { status: 'ACCEPTED', OR: [{ requesterId: viewerId }, { addresseeId: viewerId }] },
+      select: { requesterId: true, addresseeId: true },
+    })
+    return rows.map((r) => (r.requesterId === viewerId ? r.addresseeId : r.requesterId))
+  }
+
+  /** Jumlah like dan komentar yang terlihat bagi viewer untuk satu halaman post (dua query terindeks). */
+  private async counts(viewerId: number, ids: number[]) {
+    const [likes, comments] = await Promise.all([
+      this.prisma.like.groupBy({
+        by: ['postId'],
+        where: { postId: { in: ids }, ...this.visibility.likerWhere(viewerId) },
+        _count: { _all: true },
+      }),
+      this.prisma.comment.groupBy({
+        by: ['postId'],
+        where: { postId: { in: ids }, ...this.visibility.commentWhere(viewerId) },
+        _count: { _all: true },
+      }),
+    ])
+    return {
+      likes: new Map(likes.map((l) => [l.postId, l._count._all])),
+      comments: new Map(comments.map((c) => [c.postId, c._count._all])),
+    }
+  }
+
   private async toDtos(viewerId: number, rows: PostRow[]): Promise<PostDto[]> {
+    const counts = await this.counts(
+      viewerId,
+      rows.map((r) => r.id),
+    )
     const liked = await this.prisma.like.findMany({
       where: {
         userId: viewerId,
@@ -458,13 +480,14 @@ export class PostsService {
         })
       }
     }
-    return rows.map((r) => this.toDto(r, likedIds, shared))
+    return rows.map((r) => this.toDto(r, likedIds, shared, counts))
   }
 
   private toDto(
     row: PostRow,
     likedIds: Set<number | null>,
     shared: Map<number, SharedPost>,
+    counts?: { likes: Map<number | null, number>; comments: Map<number, number> },
   ): PostDto {
     return {
       id: row.id,
@@ -477,8 +500,8 @@ export class PostsService {
       feeling: row.feeling,
       privacy: row.privacy,
       tags: row.tags.map((t) => t.user as UserSummary),
-      likeCount: row._count.likes,
-      commentCount: row._count.comments,
+      likeCount: counts?.likes.get(row.id) ?? 0,
+      commentCount: counts?.comments.get(row.id) ?? 0,
       likedByMe: likedIds.has(row.id),
       likedPreview: row.likes.map((l) => l.user as UserSummary),
       editedAt: row.editedAt?.toISOString() ?? null,
