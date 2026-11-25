@@ -3,6 +3,8 @@ import { t } from '@retrobook/shared/i18n'
 import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import Button from '@/components/Button.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
+import Lightbox from '@/components/Lightbox.vue'
 import { useProfileStore } from '@/modules/profile/stores'
 import { useAuthStore } from '@/modules/auth/stores'
 import { albumsApi, type Album } from '@/modules/profile/services/albums'
@@ -11,6 +13,8 @@ const store = useProfileStore()
 const list = store.photos
 const auth = useAuthStore()
 const albums = ref<Album[]>([])
+const viewing = ref<number | null>(null)
+const alt = () => t('profile.photos.alt', { name: store.profile?.displayName ?? '' })
 
 onMounted(() => void list.loadMore())
 watch(
@@ -47,17 +51,13 @@ watch(
       >
     </div>
     <ul v-if="list.items.length" class="photos__grid">
-      <li v-for="p in list.items" :key="p.postId">
-        <a :href="p.url" target="_blank" rel="noopener noreferrer" class="photos__link">
-          <img
-            :src="p.url"
-            :alt="t('profile.photos.alt', { name: store.profile?.displayName ?? '' })"
-            loading="lazy"
-          />
-        </a>
+      <li v-for="(p, i) in list.items" :key="p.postId">
+        <button type="button" class="photos__link" @click="viewing = i">
+          <img :src="p.url" :alt="alt()" loading="lazy" />
+        </button>
       </li>
     </ul>
-    <p v-else-if="list.loading" class="photos__note" role="status">{{ t('common.loading') }}</p>
+    <LoadingRows v-else-if="list.loading" />
     <p v-else-if="list.failed" class="photos__note" role="alert">
       {{ t('feed.error') }}
       <Button variant="default" @click="list.loadMore()">{{ t('feed.retry') }}</Button>
@@ -68,6 +68,12 @@ watch(
         t('profile.more')
       }}</Button>
     </div>
+    <Lightbox
+      v-if="viewing !== null"
+      :photos="list.items.map((p) => ({ url: p.url, alt: alt() }))"
+      :start="viewing"
+      @close="viewing = null"
+    />
   </section>
 </template>
 
@@ -94,7 +100,12 @@ watch(
 }
 .photos__link {
   display: block;
+  width: 100%;
   aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
 }
 .photos__link img {
   display: block;

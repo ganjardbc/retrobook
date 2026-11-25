@@ -3,6 +3,9 @@ import { t } from '@retrobook/shared/i18n'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Button from '@/components/Button.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
+import PageCard from '@/components/PageCard.vue'
 import { postsApi } from '@/modules/posts/services/api'
 import { usePostList } from '@/modules/posts/composables/postList'
 import PostCard from '@/modules/posts/components/PostCard.vue'
@@ -58,7 +61,7 @@ watch(
 
 <template>
   <div class="hashtag-page">
-    <h1 class="hashtag-page__title">{{ t('hashtag.title', { tag: `#${tag}` }) }}</h1>
+    <PageCard :title="t('hashtag.title', { tag: `#${tag}` })" />
     <p v-if="likeFailed" class="form-error" role="alert">{{ t('like.error') }}</p>
     <PostCard
       v-for="post in list.items.value"
@@ -70,16 +73,16 @@ watch(
       @shared="list.prepend"
       @updated="list.replace"
     />
-    <p v-if="list.loading.value" class="hashtag-page__note" role="status">
-      {{ t('common.loading') }}
-    </p>
+    <LoadingRows v-if="list.loading.value" />
     <p v-else-if="list.failed.value" class="hashtag-page__note" role="alert">
       {{ t('search.error') }}
       <Button variant="default" @click="list.loadMore()">{{ t('feed.retry') }}</Button>
     </p>
-    <p v-else-if="list.done.value && list.items.value.length === 0" class="hashtag-page__note">
-      {{ t('hashtag.empty') }}
-    </p>
+    <EmptyState
+      v-else-if="list.done.value && list.items.value.length === 0"
+      icon="mdi:pound"
+      :title="t('hashtag.empty')"
+    />
     <div ref="sentinel" class="hashtag-page__sentinel" />
   </div>
 </template>
@@ -89,11 +92,6 @@ watch(
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
-}
-.hashtag-page__title {
-  margin: 0;
-  font-size: var(--fs-title);
-  overflow-wrap: anywhere;
 }
 .hashtag-page__note {
   margin: 0;

@@ -14,8 +14,10 @@ export const postsApi = {
     /** WAL-02: id teman yang di-tag. */
     taggedUserIds?: number[]
   }) => request<Post>('/posts', { method: 'POST', body: input }),
-  update: (id: number, input: { content: string; privacy: Privacy; feeling?: PostFeeling | null }) =>
-    request<Post>(`/posts/${id}`, { method: 'PATCH', body: input }),
+  update: (
+    id: number,
+    input: { content: string; privacy: Privacy; feeling?: PostFeeling | null },
+  ) => request<Post>(`/posts/${id}`, { method: 'PATCH', body: input }),
   like: (id: number) =>
     request<{ likeCount: number; likedByMe: boolean }>(`/posts/${id}/like`, { method: 'PUT' }),
   unlike: (id: number) =>

@@ -231,7 +231,12 @@ defineExpose({ focusInput: () => input.value?.focus() })
           <Icon icon="mdi:camera" aria-hidden="true" />
         </button>
       </div>
-      <Button type="submit" :disabled="sending || (!draft.trim() && !imageUrl)">Kirim</Button>
+      <Button
+        type="submit"
+        class="visually-hidden"
+        :disabled="sending || (!draft.trim() && !imageUrl)"
+        >{{ t('comments.send') }}</Button
+      >
     </form>
     <div v-if="imageUrl" class="comments__preview">
       <img :src="imageUrl" :alt="t('comments.photoPreview')" />

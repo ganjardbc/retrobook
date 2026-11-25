@@ -17,6 +17,9 @@ export const albumsApi = {
   get: (id: number) => request<Album>(`/albums/${id}`),
   create: (name: string, privacy: Album['privacy']) =>
     request<Album>('/albums', { method: 'POST', body: { name, privacy } }),
+  remove: (id: number) => request<void>(`/albums/${id}`, { method: 'DELETE' }),
+  removePhoto: (id: number, photoId: number) =>
+    request<void>(`/albums/${id}/photos/${photoId}`, { method: 'DELETE' }),
   addPhotos: (id: number, files: File[]) => {
     const form = new FormData()
     for (const file of files) form.append('files', file)

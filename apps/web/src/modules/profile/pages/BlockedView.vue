@@ -4,6 +4,9 @@ import { t } from '@retrobook/shared/i18n'
 import { onMounted, ref } from 'vue'
 import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
+import PageCard from '@/components/PageCard.vue'
 import { blocksApi } from '@/modules/profile/services/blocks'
 
 const users = ref<UserSummary[]>([])
@@ -36,9 +39,8 @@ onMounted(load)
 
 <template>
   <div class="page">
-    <h1 class="page__title">{{ t('blocked.title') }}</h1>
     <p v-if="failed" class="form-error" role="alert">{{ t('blocked.error') }}</p>
-    <section class="card">
+    <PageCard :title="t('blocked.title')" flush>
       <ul v-if="users.length" class="list">
         <li v-for="u in users" :key="u.id" class="row">
           <Avatar :name="u.displayName" :src="u.avatarUrl" size="m" />
@@ -46,22 +48,18 @@ onMounted(load)
           <Button variant="default" @click="unblock(u)">{{ t('blocked.unblock') }}</Button>
         </li>
       </ul>
-      <p v-else-if="loading" class="note" role="status">{{ t('common.loading') }}</p>
-      <p v-else class="note">{{ t('blocked.empty') }}</p>
-    </section>
+      <LoadingRows v-else-if="loading" />
+      <EmptyState
+        v-else
+        icon="mdi:account-cancel-outline"
+        :title="t('blocked.empty')"
+        :hint="t('blocked.emptyHint')"
+      />
+    </PageCard>
   </div>
 </template>
 
 <style scoped>
-.page__title {
-  margin: 0 0 var(--sp-3);
-  font-size: var(--fs-title);
-}
-.card {
-  background: var(--c-card);
-  border: var(--card-border);
-  border-radius: var(--radius);
-}
 .list {
   list-style: none;
   margin: 0;
@@ -70,16 +68,14 @@ onMounted(load)
 .row {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
+  gap: var(--sp-3);
   padding: var(--sp-2) var(--sp-3);
-  border-bottom: 1px solid var(--c-border-soft);
+  border-top: 1px solid var(--c-border-soft);
+}
+.row:first-child {
+  border-top: 0;
 }
 .row__name {
   flex: 1;
-}
-.note {
-  margin: 0;
-  padding: var(--sp-3);
-  color: var(--c-text-muted);
 }
 </style>

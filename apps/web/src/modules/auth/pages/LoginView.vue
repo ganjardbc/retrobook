@@ -71,25 +71,35 @@ async function submitSignup() {
   <AuthLayout>
     <template #header>
       <form class="bar__form" @submit.prevent="submit">
-          <label for="login-identifier">
-            <span>{{ t('auth.login.identifier') }}</span>
-            <input id="login-identifier" v-model="identifier" name="identifier" autocomplete="username" required />
-          </label>
-          <div class="password-field">
-            <label for="login-password">{{ t('auth.login.password') }}</label>
-            <input
-              id="login-password"
-              v-model="password"
-              name="password"
-              type="password"
-              autocomplete="current-password"
-              required
-            />
-            <RouterLink class="forgot" to="/forgot-password">{{ t('auth.forgot.link') }}</RouterLink>
-          </div>
-          <Button class="bar__submit" variant="default" type="submit" :disabled="busy || wait.active.value">{{
-            t('auth.login.submit')
-          }}</Button>
+        <label for="login-identifier">
+          <span>{{ t('auth.login.identifier') }}</span>
+          <input
+            id="login-identifier"
+            v-model="identifier"
+            name="identifier"
+            autocomplete="username"
+            required
+          />
+        </label>
+        <div class="password-field">
+          <label for="login-password">{{ t('auth.login.password') }}</label>
+          <input
+            id="login-password"
+            v-model="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+          <RouterLink class="forgot" to="/forgot-password">{{ t('auth.forgot.link') }}</RouterLink>
+        </div>
+        <Button
+          class="bar__submit"
+          variant="default"
+          type="submit"
+          :disabled="busy || wait.active.value"
+          >{{ t('auth.login.submit') }}</Button
+        >
       </form>
     </template>
 
@@ -117,15 +127,33 @@ async function submitSignup() {
             <div class="signup__fields">
               <label>
                 <span>{{ t('auth.register.displayName') }}</span>
-                <input v-model="signup.displayName" name="displayName" autocomplete="name" maxlength="80" required />
+                <input
+                  v-model="signup.displayName"
+                  name="displayName"
+                  autocomplete="name"
+                  maxlength="80"
+                  required
+                />
               </label>
               <label>
                 <span>{{ t('auth.register.username') }}</span>
-                <input v-model="signup.username" name="username" autocomplete="username" maxlength="30" required />
+                <input
+                  v-model="signup.username"
+                  name="username"
+                  autocomplete="username"
+                  maxlength="30"
+                  required
+                />
               </label>
               <label class="signup__wide">
                 <span>{{ t('auth.register.email') }}</span>
-                <input v-model="signup.email" name="email" type="email" autocomplete="email" required />
+                <input
+                  v-model="signup.email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                />
               </label>
               <label class="signup__wide">
                 <span>{{ t('auth.register.password') }}</span>
@@ -139,7 +167,11 @@ async function submitSignup() {
                 />
               </label>
             </div>
-            <Button variant="success" type="submit" :disabled="signupBusy || signupWait.active.value">
+            <Button
+              variant="success"
+              type="submit"
+              :disabled="signupBusy || signupWait.active.value"
+            >
               {{ t('auth.register.submit') }}
             </Button>
             <p class="signup__parody">{{ t('auth.register.parody') }}</p>
@@ -165,8 +197,12 @@ async function submitSignup() {
   font-size: 13px;
   font-weight: 600;
 }
-.password-field { gap: 5px; }
-.password-field label { display: block; }
+.password-field {
+  gap: 5px;
+}
+.password-field label {
+  display: block;
+}
 .bar__form input {
   width: 188px;
   height: 32px;
@@ -188,7 +224,9 @@ async function submitSignup() {
   font-weight: 400;
   line-height: 1.2;
 }
-.forgot:hover { color: #fff; }
+.forgot:hover {
+  color: #fff;
+}
 .bar__form :deep(.btn) {
   min-height: 32px;
   margin-top: 21px;
@@ -197,10 +235,14 @@ async function submitSignup() {
   border-radius: 2px;
   background: #5b78ad;
   color: #fff;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 18%), 0 1px 1px rgb(0 0 0 / 16%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 18%),
+    0 1px 1px rgb(0 0 0 / 16%);
   font-size: 14px;
 }
-.bar__form :deep(.btn:hover:not(:disabled)) { background: #6985b9; }
+.bar__form :deep(.btn:hover:not(:disabled)) {
+  background: #6985b9;
+}
 .main {
   width: min(1160px, 100%);
   margin: 0 auto;
@@ -209,7 +251,7 @@ async function submitSignup() {
 }
 .main__cols {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(330px, .88fr);
+  grid-template-columns: minmax(0, 1.12fr) minmax(330px, 0.88fr);
   align-items: start;
   gap: clamp(52px, 8vw, 112px);
 }
@@ -222,7 +264,7 @@ async function submitSignup() {
   color: #30343b;
   font-size: clamp(30px, 3.2vw, 40px);
   font-weight: 700;
-  letter-spacing: -.8px;
+  letter-spacing: -0.8px;
   line-height: 1.18;
 }
 .tagline p {
@@ -284,7 +326,9 @@ async function submitSignup() {
   outline: 2px solid #8da8d5;
   outline-offset: 1px;
 }
-.signup__wide { grid-column: 1 / -1; }
+.signup__wide {
+  grid-column: 1 / -1;
+}
 .signup :deep(.btn) {
   min-width: 220px;
   min-height: 46px;
@@ -292,11 +336,15 @@ async function submitSignup() {
   border-color: #3e7a32;
   border-radius: 5px;
   background: linear-gradient(#70b85b, #4a9638);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 28%), 0 1px 2px rgb(0 0 0 / 12%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 28%),
+    0 1px 2px rgb(0 0 0 / 12%);
   font-size: 18px;
   text-shadow: 0 1px 1px rgb(0 0 0 / 18%);
 }
-.signup :deep(.btn:hover:not(:disabled)) { background: linear-gradient(#7bc365, #4f9d3c); }
+.signup :deep(.btn:hover:not(:disabled)) {
+  background: linear-gradient(#7bc365, #4f9d3c);
+}
 .signup__parody {
   max-width: 480px;
   margin: 0;
@@ -312,20 +360,45 @@ async function submitSignup() {
     gap: 10px;
   }
   .bar__form > label,
-  .password-field { flex: 1 1 180px; }
-  .bar__form input { width: 100%; }
-  .bar__form :deep(.btn) { margin-top: 0; }
-  .main { padding: 28px 20px 44px; }
-  .main__cols { grid-template-columns: 1fr; gap: 34px; }
-  .tagline { padding-top: 6px; }
-  .signup__form h2 { font-size: 32px; }
-  .signup__fields { grid-template-columns: 1fr; }
-  .signup__wide { grid-column: auto; }
+  .password-field {
+    flex: 1 1 180px;
+  }
+  .bar__form input {
+    width: 100%;
+  }
+  .bar__form :deep(.btn) {
+    margin-top: 0;
+  }
+  .main {
+    padding: 28px 20px 44px;
+  }
+  .main__cols {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+  .tagline {
+    padding-top: 6px;
+  }
+  .signup__form h2 {
+    font-size: 32px;
+  }
+  .signup__fields {
+    grid-template-columns: 1fr;
+  }
+  .signup__wide {
+    grid-column: auto;
+  }
 }
 @media (max-width: 420px) {
-  .bar__form { align-items: stretch; }
+  .bar__form {
+    align-items: stretch;
+  }
   .bar__form > label,
-  .password-field { flex-basis: 100%; }
-  .bar__form :deep(.btn) { align-self: flex-start; }
+  .password-field {
+    flex-basis: 100%;
+  }
+  .bar__form :deep(.btn) {
+    align-self: flex-start;
+  }
 }
 </style>

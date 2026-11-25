@@ -48,3 +48,13 @@ input {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Cincin fokus keyboard yang terlihat di semua kontrol (kontras terhadap latar kartu dan navbar). */
+:focus-visible {
+  outline: 2px solid var(--c-brand);
+  outline-offset: 2px;
+}
+.navbar :focus-visible,
+[class*='navbar'] :focus-visible {
+  outline-color: var(--c-text-on-brand);
+}

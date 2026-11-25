@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import Button from '@/components/Button.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
 import FormRow from '@/components/FormRow.vue'
 import PageCard from '@/components/PageCard.vue'
 import { ApiRequestError } from '@/plugins/http'
@@ -96,7 +97,7 @@ onMounted(() => void load())
       </div>
     </form>
     <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-    <p v-if="loading" role="status">{{ t('page.loading') }}</p>
+    <LoadingRows v-if="loading" />
     <ul v-if="events.length" class="list">
       <li v-for="event in events" :key="event.id" class="item">
         <DateBadge :iso="event.startsAt" />

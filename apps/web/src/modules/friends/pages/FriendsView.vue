@@ -2,6 +2,9 @@
 import { t } from '@retrobook/shared/i18n'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import Button from '@/components/Button.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
+import PageCard from '@/components/PageCard.vue'
 import FriendRow from '@/modules/friends/components/FriendRow.vue'
 import { useAuthStore } from '@/modules/auth/stores'
 import { useFriendsStore } from '@/modules/friends/stores'
@@ -40,11 +43,9 @@ function unfriend(id: number, name: string) {
 
 <template>
   <div class="friends">
-    <h1 class="friends__title">{{ t('friends.title') }}</h1>
     <p v-if="actionError" class="form-error" role="alert">{{ t('friends.error.action') }}</p>
 
-    <section v-if="store.requests.length" class="card" :aria-label="t('friends.requests.title')">
-      <h2 class="card__head">{{ t('friends.requests.title') }}</h2>
+    <PageCard v-if="store.requests.length" :title="t('friends.requests.title')" heading="h2" flush>
       <ul class="list">
         <FriendRow v-for="r in store.requests" :key="r.user.id" :user="r.user">
           <Button variant="success" @click="run(store.accept(r.user.id))">{{
@@ -55,18 +56,18 @@ function unfriend(id: number, name: string) {
           }}</Button>
         </FriendRow>
       </ul>
-      <div v-if="!store.requestsDone" class="card__more">
+      <div v-if="!store.requestsDone" class="more">
         <Button variant="default" :disabled="store.requestsLoading" @click="store.loadRequests()">{{
           t('friends.loadMore')
         }}</Button>
       </div>
-    </section>
+    </PageCard>
 
-    <section class="card" :aria-label="t('friends.all')">
-      <h2 class="card__head">
-        {{ t('friends.all') }} <span class="card__count">{{ countLabel }}</span>
-      </h2>
-      <div class="card__search">
+    <PageCard :title="t('friends.all')" flush>
+      <template #actions>
+        <span class="count">{{ countLabel }}</span>
+      </template>
+      <div class="search">
         <input
           v-model="search"
           type="search"
@@ -76,7 +77,6 @@ function unfriend(id: number, name: string) {
           @input="onSearch"
         />
       </div>
-
       <ul v-if="store.friends.length" class="list">
         <FriendRow v-for="u in store.friends" :key="u.id" :user="u">
           <Button variant="default" @click="unfriend(u.id, u.displayName)">{{
@@ -84,19 +84,23 @@ function unfriend(id: number, name: string) {
           }}</Button>
         </FriendRow>
       </ul>
-      <p v-else-if="store.friendsLoading" class="note" role="status">{{ t('common.loading') }}</p>
+      <LoadingRows v-else-if="store.friendsLoading" />
       <p v-else-if="store.friendsFailed" class="note" role="alert">
         {{ t('friends.error.load') }}
         <Button variant="default" @click="store.loadFriends()">{{ t('feed.retry') }}</Button>
       </p>
-      <p v-else class="note">{{ store.query ? t('friends.empty.search') : t('friends.empty') }}</p>
-
-      <div v-if="store.friends.length && !store.friendsDone" class="card__more">
+      <EmptyState
+        v-else
+        icon="mdi:account-multiple-outline"
+        :title="store.query ? t('friends.empty.search') : t('friends.empty')"
+        :hint="store.query ? undefined : t('friends.emptyHint')"
+      />
+      <div v-if="store.friends.length && !store.friendsDone" class="more">
         <Button variant="default" :disabled="store.friendsLoading" @click="store.loadFriends()">{{
           t('friends.loadMore')
         }}</Button>
       </div>
-    </section>
+    </PageCard>
   </div>
 </template>
 
@@ -106,33 +110,18 @@ function unfriend(id: number, name: string) {
   flex-direction: column;
   gap: var(--sp-3);
 }
-.friends__title {
-  margin: 0;
-  font-size: var(--fs-title);
-}
-.card {
-  background: var(--c-card);
-  border: var(--card-border);
-  border-radius: var(--radius);
-}
-.card__head {
-  margin: 0;
-  padding: var(--sp-3);
-  background: var(--c-card-subtle);
-  border-bottom: 1px solid var(--c-border-soft);
-  font-size: var(--fs-post);
-}
-.card__count {
+.count {
   color: var(--c-text-muted);
-  font-weight: normal;
 }
-.card__search {
+.search {
   padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--c-border-soft);
 }
-.card__search input {
+.search input {
   width: 100%;
+  box-sizing: border-box;
 }
-.card__more {
+.more {
   padding: var(--sp-3);
   text-align: center;
 }

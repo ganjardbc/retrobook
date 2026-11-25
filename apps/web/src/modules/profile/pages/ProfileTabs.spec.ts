@@ -136,13 +136,17 @@ describe('tab Friends dan Photos profil', () => {
     expect(w.text()).toContain('No friends to show.')
   })
 
-  it('tab Photos: grid gambar dengan alt dan tautan ke gambar; dimuat saat tab dibuka', async () => {
+  it('tab Photos: grid gambar dengan alt; klik membuka lightbox dan Escape menutupnya; dimuat saat tab dibuka', async () => {
     const { w } = await mountAt('/siti/photos')
     const links = w.findAll('.photos__link')
     expect(links).toHaveLength(3)
-    expect(links[0]!.attributes('href')).toBe(photo(1).url)
-    expect(links[0]!.attributes('rel')).toContain('noopener')
     expect(links[0]!.find('img').attributes('alt')).toBe('Photo from Siti Aminah')
+    await links[0]!.trigger('click')
+    const dialog = document.body.querySelector('[role="dialog"]')
+    expect(dialog?.querySelector('img')?.getAttribute('src')).toBe(photo(1).url)
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await w.vm.$nextTick()
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull()
   })
 
   it('tab Photos: kosong dan galat', async () => {

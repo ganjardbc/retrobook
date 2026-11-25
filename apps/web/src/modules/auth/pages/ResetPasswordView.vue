@@ -51,9 +51,18 @@ async function submit() {
           </div>
           <label>
             <span>{{ t('auth.reset.password') }}</span>
-            <input v-model="password" name="password" type="password" autocomplete="new-password" minlength="8" required />
+            <input
+              v-model="password"
+              name="password"
+              type="password"
+              autocomplete="new-password"
+              minlength="8"
+              required
+            />
           </label>
-          <Button variant="success" type="submit" :disabled="busy || !token">{{ t('auth.reset.submit') }}</Button>
+          <Button variant="success" type="submit" :disabled="busy || !token">{{
+            t('auth.reset.submit')
+          }}</Button>
         </template>
       </form>
     </main>

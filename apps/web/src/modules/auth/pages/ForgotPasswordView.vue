@@ -44,7 +44,9 @@ async function submit() {
           <span>{{ t('auth.forgot.email') }}</span>
           <input v-model="email" name="email" type="email" autocomplete="email" required />
         </label>
-        <Button variant="success" type="submit" :disabled="busy">{{ t('auth.forgot.submit') }}</Button>
+        <Button variant="success" type="submit" :disabled="busy">{{
+          t('auth.forgot.submit')
+        }}</Button>
       </template>
     </form>
   </AuthLayout>

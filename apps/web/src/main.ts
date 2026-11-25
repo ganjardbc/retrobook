@@ -23,7 +23,8 @@ async function bootstrap() {
       void router.push({ name: 'login', query: { reason } })
     },
     onMaintenance: () => {
-      if (router.currentRoute.value.name !== 'maintenance') void router.push({ name: 'maintenance' })
+      if (router.currentRoute.value.name !== 'maintenance')
+        void router.push({ name: 'maintenance' })
     },
   })
   await auth.init()

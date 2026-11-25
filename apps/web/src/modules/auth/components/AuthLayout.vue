@@ -54,7 +54,9 @@ import WordMark from '@/components/WordMark.vue'
   color: #d3def0;
   font-size: 14px;
 }
-.auth-layout__header-actions :deep(a:hover) { color: #fff; }
+.auth-layout__header-actions :deep(a:hover) {
+  color: #fff;
+}
 .auth-layout__main {
   width: 100%;
   flex: 1;

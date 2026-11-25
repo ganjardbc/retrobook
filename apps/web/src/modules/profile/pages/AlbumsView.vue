@@ -7,6 +7,7 @@ import { RouterLink } from 'vue-router'
 import Button from '@/components/Button.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import FormRow from '@/components/FormRow.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
 import IconSelect, { type IconOption } from '@/components/IconSelect.vue'
 import PageCard from '@/components/PageCard.vue'
 import { PRIVACY_ICONS } from '@/helpers/privacy'
@@ -83,7 +84,7 @@ onMounted(() => void load())
       </div>
     </form>
     <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-    <p v-if="loading" role="status">{{ t('page.loading') }}</p>
+    <LoadingRows v-if="loading" />
     <ul v-if="albums.length" class="grid">
       <li v-for="album in albums" :key="album.id">
         <RouterLink class="tile" :to="`/albums/${album.id}`">

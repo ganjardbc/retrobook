@@ -81,4 +81,21 @@ describe('Album (integrasi)', () => {
       .attach('files', Buffer.from('x'), 'a.png')
     expect(res.status).toBe(404)
   })
+
+  it('hanya pemilik yang bisa menghapus album dan foto; album terhapus hilang untuk semua', async () => {
+    const owner = await h.mkUser('owner')
+    const other = await h.mkUser('other')
+    const album = (await mk(owner, 'PUBLIC')).body
+    const photo = await h.prisma.photo.create({
+      data: { albumId: album.id, ownerId: owner.id, url: '/uploads/x.png', caption: '' },
+    })
+    expect((await h.as(other).del(`/albums/${album.id}/photos/${photo.id}`)).status).toBe(404)
+    expect((await h.as(other).del(`/albums/${album.id}`)).status).toBe(404)
+    expect((await h.as(owner).del(`/albums/${album.id}/photos/${photo.id}`)).status).toBe(204)
+    expect(await h.prisma.photo.count({ where: { albumId: album.id } })).toBe(0)
+    expect((await h.as(owner).del(`/albums/${album.id}`)).status).toBe(204)
+    expect((await h.as(owner).get(`/albums/${album.id}`)).status).toBe(404)
+    expect((await h.as(owner).get('/albums')).body).toEqual([])
+    expect((await h.as(owner).del(`/albums/${album.id}`)).status).toBe(404)
+  })
 })

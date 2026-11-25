@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Post,
@@ -31,6 +33,22 @@ export class AlbumsController {
   @Get(':id')
   get(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
     return this.albums.get(user.id, id)
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  async remove(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+    await this.albums.remove(user.id, id)
+  }
+
+  @Delete(':id/photos/:photoId')
+  @HttpCode(204)
+  async removePhoto(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('photoId', ParseIntPipe) photoId: number,
+  ) {
+    await this.albums.removePhoto(user.id, id, photoId)
   }
 
   @Post(':id/photos')

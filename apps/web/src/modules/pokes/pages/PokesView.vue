@@ -2,6 +2,9 @@
 import { t } from '@retrobook/shared/i18n'
 import { onMounted, ref, watch } from 'vue'
 import Button from '@/components/Button.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
+import PageCard from '@/components/PageCard.vue'
 import { useAuthStore } from '@/modules/auth/stores'
 import { useNotificationsStore } from '@/modules/notifications/stores'
 import PokeCard from '@/modules/pokes/components/PokeCard.vue'
@@ -32,9 +35,8 @@ async function run(action: Promise<boolean>) {
 
 <template>
   <div class="pokes">
-    <h1 class="pokes__title">{{ t('pokes.title') }}</h1>
     <p v-if="actionError" class="form-error" role="alert">{{ t('pokes.error.action') }}</p>
-    <section class="card" :aria-label="t('pokes.title')">
+    <PageCard :title="t('pokes.title')" flush>
       <ul v-if="store.items.length" class="list">
         <PokeCard
           v-for="p in store.items"
@@ -44,37 +46,28 @@ async function run(action: Promise<boolean>) {
           @remove="run(store.remove(p.user.id))"
         />
       </ul>
-      <p v-else-if="store.loading" class="note" role="status">{{ t('common.loading') }}</p>
+      <LoadingRows v-else-if="store.loading" />
       <p v-else-if="store.failed" class="note" role="alert">
         {{ t('pokes.error.load') }}
         <Button variant="default" @click="store.load()">{{ t('feed.retry') }}</Button>
       </p>
-      <p v-else class="note">{{ t('pokes.empty') }}</p>
-      <div v-if="store.items.length && !store.done" class="card__more">
+      <EmptyState
+        v-else
+        icon="mdi:hand-pointing-right"
+        :title="t('pokes.empty')"
+        :hint="t('pokes.emptyHint')"
+      />
+      <div v-if="store.items.length && !store.done" class="more">
         <Button variant="default" :disabled="store.loading" @click="store.load()">{{
           t('pokes.loadMore')
         }}</Button>
       </div>
-    </section>
+    </PageCard>
   </div>
 </template>
 
 <style scoped>
-.pokes {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-}
-.pokes__title {
-  margin: 0;
-  font-size: var(--fs-title);
-}
-.card {
-  background: var(--c-card);
-  border: var(--card-border);
-  border-radius: var(--radius);
-}
-.card__more {
+.more {
   padding: var(--sp-3);
   text-align: center;
 }

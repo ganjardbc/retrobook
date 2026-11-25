@@ -340,6 +340,7 @@ Presence: online bila minimal satu koneksi aktif; `users.last_seen_at` diperbaru
 |---|---|---|---|
 | GET/POST | `/albums` | Daftar album sendiri (beserta jumlah/cover foto) dan buat album (`name`, `privacy`; default FRIENDS) | ALB-01 |
 | GET | `/albums/:id` | Detail album dan foto; privasi album diterapkan, ID yang tidak terlihat menghasilkan 404 | ALB-01 |
+| DELETE | `/albums/:id`, `/albums/:id/photos/:photoId` | Hapus album (soft delete) atau satu foto; hanya pemilik, selain itu 404; 204 tanpa isi. Berkas gambar belum dibersihkan dari penyimpanan | ALB-01 |
 | POST | `/albums/:id/photos` | Unggah beberapa foto (`files`, maksimal 10; JPG/PNG/WebP, maksimal 5 MB per foto) | ALB-01 |
 | GET | `/groups` | `{ items, suggested }`: grup yang diikuti dan grup publik rekomendasi, urut anggota terbanyak | GRP-01 |
 | POST | `/groups` | Buat grup (`name`, `description`, `privacy` PUBLIC/CLOSED); pembuat otomatis menjadi ADMIN | GRP-01 |

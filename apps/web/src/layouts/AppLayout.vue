@@ -20,6 +20,8 @@ const router = useRouter()
 const route = useRoute()
 const menuOpen = ref(false)
 const isProfile = computed(() => route.meta.layout === 'profile')
+// Halaman form dan pengaturan: kolom kanan hanya berisi footer, tanpa kartu yang mengalihkan perhatian.
+const isFocus = computed(() => route.meta.focus === true)
 
 // Kolom samping menempel di bawah navbar dan ikut bergulir sampai dasarnya terlihat.
 const stickyTop = () => (document.querySelector('.navbar')?.clientHeight ?? 0) + 12 // 12 = --sp-3
@@ -53,12 +55,14 @@ router.afterEach(() => (menuOpen.value = false))
         <!-- Kartu di atas, info footer di dasar kolom. -->
         <!-- Profil: kolom kanan dikosongkan dulu (tanpa footer); lebar total tetap sama. -->
         <aside v-if="!isProfile" :ref="sticky" class="layout__right">
-          <TrendingCard />
-          <SponsoredCard />
-          <EventsTodayCard />
-          <BirthdaysCard />
-          <SuggestedGroupsCard v-if="route.name !== 'groups'" />
-          <PeopleYouMayKnow />
+          <template v-if="!isFocus">
+            <TrendingCard />
+            <SponsoredCard />
+            <EventsTodayCard />
+            <BirthdaysCard />
+            <SuggestedGroupsCard v-if="route.name !== 'groups'" />
+            <PeopleYouMayKnow />
+          </template>
           <AppFooter class="layout__footer" />
         </aside>
       </div>

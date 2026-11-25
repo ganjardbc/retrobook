@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { t } from '@retrobook/shared/i18n'
 import { onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { ApiRequestError } from '@/plugins/http'
 import { meApi } from '@/modules/profile/services/me'
 import { usersApi } from '@/modules/profile/services/api'
 import Button from '@/components/Button.vue'
+import FormRow from '@/components/FormRow.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
+import PageCard from '@/components/PageCard.vue'
 import { useAuthStore } from '@/modules/auth/stores'
 import { useProfileStore } from '@/modules/profile/stores'
 
@@ -73,83 +76,61 @@ async function save() {
 </script>
 
 <template>
-  <form class="edit" @submit.prevent="save">
-    <h1 class="edit__title">{{ t('edit.title') }}</h1>
-    <p v-if="loading" role="status">{{ t('common.loading') }}</p>
-
-    <template v-else>
+  <PageCard :title="t('edit.title')">
+    <template #actions>
+      <RouterLink to="/me/privacy">{{ t('edit.privacy') }}</RouterLink>
+    </template>
+    <LoadingRows v-if="loading" :rows="4" />
+    <form v-else class="edit" @submit.prevent="save">
       <div v-if="errors.length" class="form-error" role="alert">
         <div v-for="m in errors" :key="m">{{ m }}</div>
       </div>
 
-      <label>
-        <span>{{ t('edit.displayName') }}</span>
-        <input v-model="form.displayName" name="displayName" maxlength="80" required />
-      </label>
-      <label>
-        <span>{{ t('edit.bio') }}</span>
-        <textarea v-model="form.bio" name="bio" rows="4" maxlength="2000" />
-      </label>
-      <label>
-        <span>{{ t('edit.currentCity') }}</span>
-        <input v-model="form.currentCity" name="currentCity" maxlength="80" />
-      </label>
-      <label>
-        <span>{{ t('edit.hometown') }}</span>
-        <input v-model="form.hometown" name="hometown" maxlength="80" />
-      </label>
-      <label>
-        <span>{{ t('edit.workplace') }}</span>
-        <input v-model="form.workplace" name="workplace" maxlength="120" />
-      </label>
-      <label>
-        <span>{{ t('edit.school') }}</span>
-        <input v-model="form.school" name="school" maxlength="120" />
-      </label>
-      <label>
-        <span>{{ t('edit.birthday') }}</span>
-        <input v-model="form.birthday" name="birthday" type="date" min="1900-01-01" />
-      </label>
+      <FormRow :label="t('edit.displayName')" for-id="ed-name">
+        <input id="ed-name" v-model="form.displayName" name="displayName" maxlength="80" required />
+      </FormRow>
+      <FormRow :label="t('edit.bio')" for-id="ed-bio">
+        <textarea id="ed-bio" v-model="form.bio" name="bio" rows="4" maxlength="2000" />
+      </FormRow>
+      <FormRow :label="t('edit.currentCity')" for-id="ed-city">
+        <input id="ed-city" v-model="form.currentCity" name="currentCity" maxlength="80" />
+      </FormRow>
+      <FormRow :label="t('edit.hometown')" for-id="ed-home">
+        <input id="ed-home" v-model="form.hometown" name="hometown" maxlength="80" />
+      </FormRow>
+      <FormRow :label="t('edit.workplace')" for-id="ed-work">
+        <input id="ed-work" v-model="form.workplace" name="workplace" maxlength="120" />
+      </FormRow>
+      <FormRow :label="t('edit.school')" for-id="ed-school">
+        <input id="ed-school" v-model="form.school" name="school" maxlength="120" />
+      </FormRow>
+      <FormRow :label="t('edit.birthday')" for-id="ed-bday">
+        <input id="ed-bday" v-model="form.birthday" name="birthday" type="date" min="1900-01-01" />
+      </FormRow>
 
       <div class="edit__actions">
         <Button type="submit" :disabled="saving">{{
           saving ? t('edit.saving') : t('edit.save')
         }}</Button>
         <Button variant="default" :to="`/${auth.user?.username}`">{{ t('edit.cancel') }}</Button>
-        <Button variant="default" to="/me/privacy">Privasi</Button>
       </div>
-    </template>
-  </form>
+    </form>
+  </PageCard>
 </template>
 
 <style scoped>
 .edit {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: var(--sp-3);
-  padding: var(--sp-4);
-  background: var(--c-card);
-  border: var(--card-border);
-  border-radius: var(--radius);
-}
-.edit__title {
-  margin: 0;
-  font-size: var(--fs-title);
-}
-.edit label {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-}
-.edit textarea {
-  font: inherit;
-  padding: var(--sp-2);
-  border: 1px solid var(--c-input-border);
-  border-radius: var(--radius);
-  resize: vertical;
 }
 .edit__actions {
   display: flex;
   gap: var(--sp-2);
+  padding-left: 118px;
+}
+@media (max-width: 560px) {
+  .edit__actions {
+    padding-left: 0;
+  }
 }
 </style>

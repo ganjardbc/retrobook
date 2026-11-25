@@ -1,23 +1,28 @@
 <script setup lang="ts">
 import { t } from '@retrobook/shared/i18n'
-import { RouterLink } from 'vue-router'
+import Button from '@/components/Button.vue'
+import PageCard from '@/components/PageCard.vue'
+import AuthLayout from '@/modules/auth/components/AuthLayout.vue'
 </script>
 
 <template>
-  <main class="nf">
-    <h1>{{ t('maintenance.title') }}</h1>
-    <p>{{ t('maintenance.body') }}</p>
-    <RouterLink to="/">{{ t('maintenance.retry') }}</RouterLink>
-  </main>
+  <AuthLayout>
+    <div class="nf">
+      <PageCard :title="t('maintenance.title')">
+        <p class="nf__body">{{ t('maintenance.body') }}</p>
+        <Button to="/">{{ t('maintenance.retry') }}</Button>
+      </PageCard>
+    </div>
+  </AuthLayout>
 </template>
 
 <style scoped>
 .nf {
   max-width: 480px;
   margin: var(--sp-5) auto;
-  padding: var(--sp-4);
-  background: var(--c-card);
-  border: var(--card-border);
-  border-radius: var(--radius);
+  padding: 0 var(--sp-3);
+}
+.nf__body {
+  margin: 0 0 var(--sp-3);
 }
 </style>

@@ -133,7 +133,11 @@ describe('http client', () => {
     setHttpHooks({ onSessionLost, onMaintenance })
     session.set(tokens(1))
     fetchMock.mockResolvedValueOnce(
-      json(403, { statusCode: 403, message: 'Sedang dalam pemeliharaan', code: 'MAINTENANCE_MODE' }),
+      json(403, {
+        statusCode: 403,
+        message: 'Sedang dalam pemeliharaan',
+        code: 'MAINTENANCE_MODE',
+      }),
     )
     await expect(request('/feed')).rejects.toMatchObject({ code: 'MAINTENANCE_MODE' })
     expect(onMaintenance).toHaveBeenCalledOnce()

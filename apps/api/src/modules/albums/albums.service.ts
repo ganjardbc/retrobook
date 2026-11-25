@@ -72,4 +72,20 @@ export class AlbumsService {
         }),
       )
   }
+
+  /** Soft delete (BR-06): album hilang dari semua query baca; berkas gambar dibiarkan (belum ada pembersihan). */
+  async remove(ownerId: number, albumId: number) {
+    const { count } = await this.prisma.album.updateMany({
+      where: { id: albumId, ownerId, deletedAt: null },
+      data: { deletedAt: new Date() },
+    })
+    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Album tidak ditemukan')
+  }
+
+  async removePhoto(ownerId: number, albumId: number, photoId: number) {
+    const { count } = await this.prisma.photo.deleteMany({
+      where: { id: photoId, albumId, ownerId, album: { deletedAt: null } },
+    })
+    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Foto tidak ditemukan')
+  }
 }

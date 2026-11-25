@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { POST_FEELINGS, PRIVACIES, type Post, type PostFeeling, type Privacy } from '@retrobook/shared'
+import {
+  POST_FEELINGS,
+  PRIVACIES,
+  type Post,
+  type PostFeeling,
+  type Privacy,
+} from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'

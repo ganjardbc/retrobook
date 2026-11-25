@@ -5,6 +5,7 @@ import { onMounted, ref } from 'vue'
 import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
 import FormRow from '@/components/FormRow.vue'
 import IconSelect, { type IconOption } from '@/components/IconSelect.vue'
 import PageCard from '@/components/PageCard.vue'
@@ -96,7 +97,7 @@ onMounted(() => void load())
         </div>
       </form>
       <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-      <p v-if="loading" role="status">{{ t('page.loading') }}</p>
+      <LoadingRows v-if="loading" />
       <ul v-if="groups.length" class="list">
         <li v-for="group in groups" :key="group.id" class="item">
           <Avatar :name="group.name" size="m" />

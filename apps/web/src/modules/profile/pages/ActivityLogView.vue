@@ -2,6 +2,9 @@
 import { t } from '@retrobook/shared/i18n'
 import { onMounted, ref } from 'vue'
 import Button from '@/components/Button.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
+import PageCard from '@/components/PageCard.vue'
 import { postsApi } from '@/modules/posts/services/api'
 import { commentsApi } from '@/modules/posts/services/comments'
 import { activityApi, type ActivityItem } from '@/modules/profile/services/activity'
@@ -46,9 +49,8 @@ onMounted(() => void load())
 
 <template>
   <div class="page">
-    <h1 class="page__title">{{ t('activity.title') }}</h1>
     <p v-if="failed" class="form-error" role="alert">{{ t('activity.error') }}</p>
-    <section class="card">
+    <PageCard :title="t('activity.title')" flush>
       <ul v-if="items.length" class="list">
         <li v-for="i in items" :key="`${i.type}-${i.id}`" class="row">
           <div class="row__body">
@@ -61,27 +63,23 @@ onMounted(() => void load())
           }}</Button>
         </li>
       </ul>
-      <p v-else-if="loading" class="note" role="status">{{ t('common.loading') }}</p>
-      <p v-else-if="loaded" class="note">{{ t('activity.empty') }}</p>
+      <LoadingRows v-else-if="loading" />
+      <EmptyState
+        v-else-if="loaded"
+        icon="mdi:history"
+        :title="t('activity.empty')"
+        :hint="t('activity.emptyHint')"
+      />
       <div v-if="cursor" class="more">
         <Button variant="default" :disabled="loading" @click="load(true)">{{
           t('activity.more')
         }}</Button>
       </div>
-    </section>
+    </PageCard>
   </div>
 </template>
 
 <style scoped>
-.page__title {
-  margin: 0 0 var(--sp-3);
-  font-size: var(--fs-title);
-}
-.card {
-  background: var(--c-card);
-  border: var(--card-border);
-  border-radius: var(--radius);
-}
 .list {
   list-style: none;
   margin: 0;
@@ -92,7 +90,10 @@ onMounted(() => void load())
   align-items: flex-start;
   gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-3);
-  border-bottom: 1px solid var(--c-border-soft);
+  border-top: 1px solid var(--c-border-soft);
+}
+.row:first-child {
+  border-top: 0;
 }
 .row__body {
   flex: 1;
@@ -108,10 +109,8 @@ onMounted(() => void load())
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.note,
 .more {
-  margin: 0;
   padding: var(--sp-3);
-  color: var(--c-text-muted);
+  text-align: center;
 }
 </style>

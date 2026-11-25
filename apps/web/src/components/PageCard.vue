@@ -1,6 +1,9 @@
 <script setup lang="ts">
 /** Kartu halaman penuh: header abu dengan judul dan aksi, isi di bawahnya (pola sama dengan kartu kolom kanan). */
-withDefaults(defineProps<{ title: string; heading?: 'h1' | 'h2' }>(), { heading: 'h1' })
+withDefaults(defineProps<{ title: string; heading?: 'h1' | 'h2'; flush?: boolean }>(), {
+  heading: 'h1',
+  flush: false,
+})
 </script>
 
 <template>
@@ -9,7 +12,9 @@ withDefaults(defineProps<{ title: string; heading?: 'h1' | 'h2' }>(), { heading:
       <component :is="heading" class="pcard__title">{{ title }}</component>
       <div class="pcard__actions"><slot name="actions" /></div>
     </header>
-    <div class="pcard__body"><slot /></div>
+    <div v-if="$slots.default" class="pcard__body" :class="{ 'pcard__body--flush': flush }">
+      <slot />
+    </div>
   </section>
 </template>
 
@@ -41,5 +46,8 @@ withDefaults(defineProps<{ title: string; heading?: 'h1' | 'h2' }>(), { heading:
 }
 .pcard__body {
   padding: var(--sp-3);
+}
+.pcard__body--flush {
+  padding: 0;
 }
 </style>
