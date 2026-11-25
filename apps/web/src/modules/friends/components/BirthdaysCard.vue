@@ -16,11 +16,11 @@ onMounted(async () => {
     people.value = []
   }
 })
+import PageCard from '@/components/PageCard.vue'
 </script>
 
 <template>
-  <section v-if="people.length" class="card" :aria-label="t('birthdays.title')">
-    <h2 class="card__head">{{ t('birthdays.title') }}</h2>
+  <PageCard v-if="people.length" class="bday" :title="t('birthdays.title')" heading="h2" flush>
     <ul class="list">
       <li v-for="p in people" :key="p.id" class="item">
         <Icon icon="mdi:cake-variant" class="item__icon" aria-hidden="true" />
@@ -30,21 +30,12 @@ onMounted(async () => {
         </span>
       </li>
     </ul>
-  </section>
+  </PageCard>
 </template>
 
 <style scoped>
-.card {
+.bday {
   margin-bottom: var(--sp-3);
-  background: var(--c-card);
-  border: var(--card-border);
-}
-.card__head {
-  margin: 0;
-  padding: var(--sp-2) var(--sp-3);
-  background: var(--c-card-subtle);
-  border-bottom: 1px solid var(--c-border-soft);
-  font-size: var(--fs-base);
 }
 .list {
   margin: 0;

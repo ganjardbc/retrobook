@@ -22,11 +22,11 @@ onMounted(async () => {
     item.value = null
   }
 })
+import PageCard from '@/components/PageCard.vue'
 </script>
 
 <template>
-  <section v-if="item" class="card" :aria-label="t('sponsored.title')">
-    <h2 class="card__head">{{ t('sponsored.title') }}</h2>
+  <PageCard v-if="item" class="sponsored" :title="t('sponsored.title')" heading="h2" flush>
     <a
       class="card__body"
       :href="item.linkUrl"
@@ -37,21 +37,12 @@ onMounted(async () => {
       <strong>{{ item.title }}</strong>
       <span class="card__text">{{ item.body }}</span>
     </a>
-  </section>
+  </PageCard>
 </template>
 
 <style scoped>
-.card {
+.sponsored {
   margin-bottom: var(--sp-3);
-  background: var(--c-card);
-  border: var(--card-border);
-}
-.card__head {
-  margin: 0;
-  padding: var(--sp-2) var(--sp-3);
-  background: var(--c-card-subtle);
-  border-bottom: 1px solid var(--c-border-soft);
-  font-size: var(--fs-base);
 }
 .card__body {
   display: flex;

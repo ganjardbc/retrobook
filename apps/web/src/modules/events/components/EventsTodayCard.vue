@@ -18,11 +18,11 @@ onMounted(async () => {
     events.value = []
   }
 })
+import PageCard from '@/components/PageCard.vue'
 </script>
 
 <template>
-  <section v-if="events.length" class="card" :aria-label="t('eventsToday.title')">
-    <h2 class="card__head">{{ t('eventsToday.title') }}</h2>
+  <PageCard v-if="events.length" class="etoday" :title="t('eventsToday.title')" heading="h2" flush>
     <ul class="list">
       <li v-for="e in events" :key="e.id" class="item">
         <Icon icon="mdi:calendar" class="item__icon" aria-hidden="true" />
@@ -32,21 +32,12 @@ onMounted(async () => {
         </span>
       </li>
     </ul>
-  </section>
+  </PageCard>
 </template>
 
 <style scoped>
-.card {
+.etoday {
   margin-bottom: var(--sp-3);
-  background: var(--c-card);
-  border: var(--card-border);
-}
-.card__head {
-  margin: 0;
-  padding: var(--sp-2) var(--sp-3);
-  background: var(--c-card-subtle);
-  border-bottom: 1px solid var(--c-border-soft);
-  font-size: var(--fs-base);
 }
 .list {
   margin: 0;

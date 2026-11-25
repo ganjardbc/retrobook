@@ -28,11 +28,17 @@ async function join(group: GroupSummary) {
     busy.value = null
   }
 }
+import PageCard from '@/components/PageCard.vue'
 </script>
 
 <template>
-  <section v-if="groups.length" class="card" :aria-label="t('suggestedGroups.title')">
-    <h2 class="card__head">{{ t('suggestedGroups.title') }}</h2>
+  <PageCard
+    v-if="groups.length"
+    class="sgroups"
+    :title="t('suggestedGroups.title')"
+    heading="h2"
+    flush
+  >
     <ul class="list">
       <li v-for="g in groups" :key="g.id" class="item">
         <span class="item__text">
@@ -42,21 +48,12 @@ async function join(group: GroupSummary) {
         <Button :disabled="busy === g.id" @click="join(g)">{{ t('groups.join') }}</Button>
       </li>
     </ul>
-  </section>
+  </PageCard>
 </template>
 
 <style scoped>
-.card {
+.sgroups {
   margin-bottom: var(--sp-3);
-  background: var(--c-card);
-  border: var(--card-border);
-}
-.card__head {
-  margin: 0;
-  padding: var(--sp-2) var(--sp-3);
-  background: var(--c-card-subtle);
-  border-bottom: 1px solid var(--c-border-soft);
-  font-size: var(--fs-base);
 }
 .list {
   margin: 0;
