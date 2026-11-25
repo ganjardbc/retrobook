@@ -13,6 +13,8 @@ declare module 'vue-router' {
     last?: boolean
     /** 'profile': tanpa menu kiri, lebar timeline (UI spec 3). */
     layout?: 'profile'
+    /** Halaman utama dengan sidebar pendamping disembunyikan. */
+    focus?: boolean
   }
 }
 

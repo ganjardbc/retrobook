@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { Conversation } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
+import { Icon } from '@iconify/vue'
 import { ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
 import Jewel from '@/components/Jewel.vue'
 import { chatApi } from '@/modules/chat/services/api'
@@ -59,6 +61,10 @@ function pick(c: Conversation) {
         </button>
       </li>
     </ul>
+    <RouterLink class="view-all" to="/messages" @click="open = false">
+      <span>{{ t('chat.viewAll') }}</span>
+      <Icon icon="mdi:arrow-expand" aria-hidden="true" />
+    </RouterLink>
   </Jewel>
 </template>
 
@@ -106,5 +112,22 @@ function pick(c: Conversation) {
   color: var(--c-text-muted);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.view-all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 42px;
+  padding: var(--sp-2) var(--sp-3);
+  border-top: 1px solid var(--c-border-soft);
+  color: var(--c-link);
+  font-weight: bold;
+}
+.view-all:hover {
+  background: var(--c-hover-bg);
+  text-decoration: none;
+}
+.view-all :deep(svg) {
+  font-size: 16px;
 }
 </style>

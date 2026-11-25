@@ -21,6 +21,7 @@ const router = useRouter()
 const route = useRoute()
 const menuOpen = ref(false)
 const isProfile = computed(() => route.meta.layout === 'profile')
+const isMessages = computed(() => route.name === 'messages')
 // Halaman form dan pengaturan: kolom kanan hanya berisi footer, tanpa kartu yang mengalihkan perhatian.
 const isFocus = computed(() => route.meta.focus === true)
 
@@ -45,7 +46,10 @@ router.afterEach(() => (menuOpen.value = false))
 </script>
 
 <template>
-  <div class="layout" :class="{ 'layout--profile': route.meta.layout === 'profile' }">
+  <div
+    class="layout"
+    :class="{ 'layout--profile': route.meta.layout === 'profile', 'layout--messages': isMessages }"
+  >
     <a class="skip-link" href="#main-content">{{ t('nav.skip') }}</a>
     <NavBar @toggle-menu="menuOpen = !menuOpen" />
     <div class="layout__body">
@@ -56,7 +60,7 @@ router.afterEach(() => (menuOpen.value = false))
         <main id="main-content" class="layout__main" tabindex="-1"><RouterView /></main>
         <!-- Kartu di atas, info footer di dasar kolom. -->
         <!-- Profil: kolom kanan dikosongkan dulu (tanpa footer); lebar total tetap sama. -->
-        <aside v-if="!isProfile" :ref="sticky" class="layout__right">
+        <aside v-if="!isProfile && !isMessages" :ref="sticky" class="layout__right">
           <template v-if="!isFocus">
             <TrendingCard />
             <SponsoredCard />
@@ -87,6 +91,28 @@ router.afterEach(() => (menuOpen.value = false))
 /* Profil: tanpa menu kiri, lebar total tetap sama dengan halaman lain. */
 .layout--profile .layout__cols {
   grid-template-columns: minmax(0, 1fr);
+}
+.layout--messages .layout__cols {
+  grid-template-columns: var(--w-left) minmax(0, 1fr);
+  box-sizing: border-box;
+  height: calc(100vh - var(--h-navbar));
+  height: calc(100dvh - var(--h-navbar));
+  min-height: 0;
+  overflow: hidden;
+}
+/* overflow: hidden menjadikan .layout__cols scrollport sticky, sehingga --sticky-top menggeser menu ke bawah. */
+.layout--messages .layout__left {
+  position: static;
+}
+.layout--messages .layout__main {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  .layout--messages .layout__cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .layout--profile .layout__left {
   display: none;

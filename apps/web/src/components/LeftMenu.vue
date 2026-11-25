@@ -23,6 +23,7 @@ const main: Item[] = [
     tone: 'blue',
     count: () => friends.requests.length,
   },
+  { label: 'menu.messages', to: '/messages', icon: 'mdi:message-text-outline', tone: 'blue' },
   {
     label: 'menu.pokes',
     to: '/pokes',
