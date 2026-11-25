@@ -9,7 +9,7 @@ import type { User } from '@prisma/client'
 import { AppModule } from '../../app.module'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
-import { testHelpers } from '../../test/helpers'
+import { testHelpers, seqTime } from '../../test/helpers'
 
 describe('Sort feed (integrasi)', () => {
   let app: INestApplication
@@ -29,10 +29,11 @@ describe('Sort feed (integrasi)', () => {
   })
 
   const ids = (res: { body: { items: { id: string }[] } }) => res.body.items.map((p) => p.id)
-  /** Buat post milik `author` dengan `likes` penyuka (pengguna baru). Dibuat berurutan, jadi id naik = lebih baru. */
+  /** Buat post milik `author` dengan `likes` penyuka (pengguna baru). Waktu buat menaik (seqTime), jadi yang dibuat belakangan = lebih baru. */
+  const at = seqTime()
   const mkPost = async (author: User, likes: number, privacy: 'FRIENDS' | 'PUBLIC' = 'FRIENDS') => {
     const post = await h.prisma.post.create({
-      data: { authorId: author.id, content: 'p', privacy },
+      data: { authorId: author.id, content: 'p', privacy, createdAt: at() },
     })
     for (let i = 0; i < likes; i++) {
       const liker = await h.mkUser('liker')

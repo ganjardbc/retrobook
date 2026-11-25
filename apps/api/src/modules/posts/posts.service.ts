@@ -496,23 +496,23 @@ export class PostsService {
 
   /** SAV-01: daftar simpanan, terbaru disimpan dulu; yang kini tak terlihat disaring VisibilityService. */
   async saved(viewerId: string, limit: number, cursor?: string): Promise<Paged<PostDto>> {
-    const rows = await this.prisma.post.findMany({
-      where: {
-        AND: [
-          this.visibility.postWhere(viewerId, true),
-          { savedBy: { some: { userId: viewerId } } },
-        ],
-      },
-      // shortcut: urut menurut waktu post, bukan waktu simpan; ganti ke kursor (saved_at, id) bila perlu.
-      orderBy: NEWEST_FIRST,
+    // Urut menurut waktu simpan (saved_posts.created_at, post_id); kursor = id post terakhir halaman sebelumnya.
+    const rows = await this.prisma.savedPost.findMany({
+      where: { userId: viewerId, post: this.visibility.postWhere(viewerId, true) },
+      orderBy: [{ createdAt: 'desc' }, { postId: 'desc' }],
       take: limit + 1,
-      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-      include: this.include(viewerId),
+      ...(cursor
+        ? { cursor: { userId_postId: { userId: viewerId, postId: cursor } }, skip: 1 }
+        : {}),
+      include: { post: { include: this.include(viewerId) } },
     })
     const page = rows.slice(0, limit)
     return {
-      items: await this.toDtos(viewerId, page),
-      nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+      items: await this.toDtos(
+        viewerId,
+        page.map((r) => r.post),
+      ),
+      nextCursor: rows.length > limit ? page[page.length - 1]!.postId : null,
     }
   }
 

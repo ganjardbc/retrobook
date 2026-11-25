@@ -18,6 +18,7 @@ import { configureApp } from '../../common/configure-app'
 import { PrismaService } from '../../prisma/prisma.service'
 import { resetDb } from '../../test/db'
 import { pairOf } from '../friends/pair'
+import { seqTime } from '../../test/helpers'
 
 describe('Save dan On This Day (integrasi)', () => {
   let app: INestApplication
@@ -99,6 +100,34 @@ describe('Save dan On This Day (integrasi)', () => {
       expect((await api(alice).get('/saved')).body.items).toHaveLength(0)
       expect((await api(bob).del(`/posts/${post.id}/save`)).body).toEqual({ savedByMe: false })
       expect((await api(bob).get('/saved')).body.items).toHaveLength(0)
+    })
+
+    it('urut menurut waktu simpan (bukan waktu post), kursor menelusuri tanpa duplikat', async () => {
+      const alice = await mkUser('alice')
+      const bob = await mkUser('bob')
+      const at = seqTime()
+      // Waktu post berlawanan dengan waktu simpan: p1 paling baru dibuat tetapi paling dulu disimpan.
+      const p1 = await prisma.post.create({
+        data: { authorId: alice.id, content: 'p1', privacy: Privacy.PUBLIC, createdAt: at() },
+      })
+      const p2 = await prisma.post.create({
+        data: { authorId: alice.id, content: 'p2', privacy: Privacy.PUBLIC, createdAt: at() },
+      })
+      const p3 = await prisma.post.create({
+        data: { authorId: alice.id, content: 'p3', privacy: Privacy.PUBLIC, createdAt: at() },
+      })
+      const savedAt = seqTime(Date.now() - 600_000)
+      for (const p of [p3, p1, p2]) {
+        await prisma.savedPost.create({
+          data: { userId: bob.id, postId: p.id, createdAt: savedAt() },
+        })
+      }
+      const first = (await api(bob).get('/saved?limit=2')).body
+      expect(first.items.map((i: { content: string }) => i.content)).toEqual(['p2', 'p1'])
+      expect(first.nextCursor).toBe(p1.id)
+      const second = (await api(bob).get(`/saved?limit=2&cursor=${first.nextCursor}`)).body
+      expect(second.items.map((i: { content: string }) => i.content)).toEqual(['p3'])
+      expect(second.nextCursor).toBeNull()
     })
 
     it('post yang tak boleh dilihat: 404; simpanan yang kemudian jadi privat tersaring', async () => {
