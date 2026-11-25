@@ -7,6 +7,7 @@ import { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
 import { AppModule } from '../../app.module'
+import { RealtimeGateway } from '../realtime/realtime.gateway'
 import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
 import { testHelpers } from '../../test/helpers'
@@ -14,6 +15,7 @@ import { testHelpers } from '../../test/helpers'
 describe('Activity Log (integrasi)', () => {
   let app: INestApplication
   let h: ReturnType<typeof testHelpers>
+  let online: number[] = []
 
   beforeAll(async () => {
     const mod = await Test.createTestingModule({ imports: [AppModule] }).compile()
@@ -21,8 +23,17 @@ describe('Activity Log (integrasi)', () => {
     configureApp(app)
     await app.init()
     h = testHelpers(app)
+    // Presence berasal dari socket; di tes cukup daftar id yang dianggap online.
+    jest
+      .spyOn(app.get(RealtimeGateway), 'onlineClients')
+      .mockImplementation(
+        async (ids) => new Map(ids.filter((i) => online.includes(i)).map((i) => [i, 'WEB'])),
+      )
   })
-  beforeEach(() => resetDb(h.prisma))
+  beforeEach(() => {
+    online = []
+    return resetDb(h.prisma)
+  })
   afterAll(async () => {
     await resetDb(h.prisma)
     await app.close()
@@ -89,5 +100,59 @@ describe('Activity Log (integrasi)', () => {
     expect((await h.as(me).del(`/posts/${mine.id}`)).status).toBeLessThan(300)
     expect((await h.as(me).del(`/posts/${post.id}/like`)).status).toBeLessThan(300)
     expect((await h.as(me).get('/activity')).body.items).toEqual([])
+  })
+
+  it('ticker teman: hanya teman online yang chat dalam 60 menit, konten terlihat, terbaru dulu', async () => {
+    const [me, friend, stranger, third] = await Promise.all([
+      h.mkUser('me'),
+      h.mkUser('friend'),
+      h.mkUser('stranger'),
+      h.mkUser('third'),
+    ])
+    await h.befriend(me, friend)
+    await h.befriend(friend, third)
+    expect((await request(app.getHttpServer()).get('/api/activity/friends')).status).toBe(401)
+    const open = await h.prisma.post.create({
+      data: { authorId: stranger.id, content: 'publik', privacy: 'PUBLIC', createdAt: at(30) },
+    })
+    const secret = await h.prisma.post.create({
+      data: { authorId: third.id, content: 'rahasia', privacy: 'FRIENDS', createdAt: at(30) },
+    })
+    await h.prisma.post.create({
+      data: { authorId: friend.id, content: 'post teman', privacy: 'PUBLIC', createdAt: at(20) },
+    })
+    await h.prisma.post.create({
+      data: { authorId: stranger.id, content: 'bukan teman', privacy: 'PUBLIC', createdAt: at(15) },
+    })
+    await h.prisma.like.create({ data: { userId: friend.id, postId: open.id, createdAt: at(10) } })
+    await h.prisma.comment.create({
+      data: { postId: secret.id, authorId: friend.id, content: 'bocor?', createdAt: at(5) },
+    })
+
+    // Belum ada chat: ticker kosong walau teman online.
+    online = [friend.id, third.id]
+    expect((await h.as(me).get('/activity/friends')).body.items).toEqual([])
+    const chat = (senderId: number, minutesAgo: number) =>
+      h.prisma.message.create({
+        data: { senderId, receiverId: me.id, content: 'hai', createdAt: at(minutesAgo) },
+      })
+    await chat(friend.id, 90) // di luar 60 menit
+    expect((await h.as(me).get('/activity/friends')).body.items).toEqual([])
+    await chat(friend.id, 10)
+    online = []
+    expect((await h.as(me).get('/activity/friends')).body.items).toEqual([]) // offline
+    online = [friend.id]
+
+    const res = await h.as(me).get('/activity/friends')
+    expect(res.status).toBe(200)
+    expect(
+      res.body.items.map((i: { type: string; actor: { id: number } }) => [i.type, i.actor.id]),
+    ).toEqual([
+      ['LIKE', friend.id],
+      ['POST', friend.id],
+    ])
+    // Teman diblokir: aktivitasnya hilang dari ticker.
+    await h.prisma.block.create({ data: { blockerId: me.id, blockedId: friend.id } })
+    expect((await h.as(me).get('/activity/friends')).body.items).toEqual([])
   })
 })

@@ -17,9 +17,24 @@ class ActivityQuery {
   cursor?: string
 }
 
+class FriendsQuery {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(30)
+  limit = 15
+}
+
 @Controller('activity')
 export class ActivityController {
   constructor(private readonly activity: ActivityService) {}
+
+  /** Aktivitas teman untuk sidebar chat; tanpa kursor, cukup yang terbaru. */
+  @Get('friends')
+  friends(@CurrentUser() user: AuthUser, @Query() q: FriendsQuery) {
+    return this.activity.friends(user.id, q.limit).then((items) => ({ items }))
+  }
 
   @Get()
   list(@CurrentUser() user: AuthUser, @Query() q: ActivityQuery) {

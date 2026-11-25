@@ -139,6 +139,19 @@ export type ChatMessage = {
   createdAt: string
 }
 
+/** Satu baris aktivitas teman di sidebar chat (`GET /activity/friends`). */
+export type FriendActivity = {
+  type: 'POST' | 'COMMENT' | 'LIKE'
+  id: number
+  actor: UserSummary
+  postId: number
+  /** Penulis post yang disukai atau dikomentari; untuk type POST sama dengan actor. */
+  postAuthor: { id: number; displayName: string }
+  /** Cuplikan isi (post atau komentar), maksimal 100 karakter. */
+  text: string
+  createdAt: string
+}
+
 /** Teman di sidebar chat (`GET /chat/friends`); `client` terisi bila online. */
 export type ChatFriend = {
   user: UserSummary

@@ -1,6 +1,11 @@
+import type { FriendActivity } from '@retrobook/shared'
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
+import { RealtimeGateway } from '../realtime/realtime.gateway'
 import { VisibilityService } from '../visibility/visibility.service'
+
+/** Jendela "sudah chat" untuk ticker teman (60 menit). */
+const RECENT_CHAT_MS = 60 * 60_000
 
 export type ActivityItem = {
   type: 'POST' | 'COMMENT' | 'LIKE'
@@ -20,6 +25,7 @@ export class ActivityService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly visibility: VisibilityService,
+    private readonly realtime: RealtimeGateway,
   ) {}
 
   // shortcut: kursor berupa waktu ISO item terakhir; dua item dengan milidetik sama di batas halaman bisa terlewat.
@@ -82,5 +88,84 @@ export class ActivityService {
       items: page.map(({ at: _at, ...item }) => item),
       nextCursor: all.length > limit ? page.at(-1)!.createdAt : null,
     }
+  }
+
+  /**
+   * Ticker di sidebar chat: aktivitas terbaru teman (post, komentar, like), terbaru dulu. Pelaku harus
+   * teman ACCEPTED yang masih terlihat, dan konten (post induk, komentar) harus terlihat bagi pembaca,
+   * semua lewat VisibilityService; aktivitas pada post yang tidak boleh dilihat pembaca tidak muncul.
+   * Pelaku dipersempit ke teman yang sedang online dan mengirim pesan kepada pembaca dalam 60 menit terakhir.
+   */
+  async friends(viewerId: number, limit: number): Promise<FriendActivity[]> {
+    const v = this.visibility
+    const actor = { AND: [v.userWhere(viewerId), v.friendOf(viewerId)] }
+    const post = v.postWhere(viewerId)
+    const since = new Date(Date.now() - RECENT_CHAT_MS)
+    const chatted = await this.prisma.message.findMany({
+      where: { receiverId: viewerId, deletedAt: null, createdAt: { gte: since }, sender: actor },
+      distinct: ['senderId'],
+      select: { senderId: true },
+    })
+    const ids = [...(await this.realtime.onlineClients(chatted.map((m) => m.senderId))).keys()]
+    if (!ids.length) return []
+    const user = {
+      select: { id: true, username: true, displayName: true, avatarUrl: true, isBot: true },
+    }
+    const parent = {
+      select: { id: true, content: true, author: { select: { id: true, displayName: true } } },
+    }
+    const [posts, comments, likes] = await Promise.all([
+      this.prisma.post.findMany({
+        where: { AND: [post, { authorId: { in: ids } }] },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: { id: true, content: true, createdAt: true, author: user },
+      }),
+      this.prisma.comment.findMany({
+        where: { AND: [v.commentWhere(viewerId), { authorId: { in: ids } }, { post }] },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: { id: true, content: true, createdAt: true, author: user, post: parent },
+      }),
+      this.prisma.like.findMany({
+        where: { AND: [{ postId: { not: null } }, { userId: { in: ids } }, { post }] },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: { id: true, createdAt: true, user, post: parent },
+      }),
+    ])
+    const cut = (text: string) => text.slice(0, 100)
+    return [
+      ...posts.map((p) => ({
+        type: 'POST' as const,
+        id: p.id,
+        actor: p.author,
+        postId: p.id,
+        postAuthor: { id: p.author.id, displayName: p.author.displayName },
+        text: cut(p.content),
+        createdAt: p.createdAt,
+      })),
+      ...comments.map((c) => ({
+        type: 'COMMENT' as const,
+        id: c.id,
+        actor: c.author,
+        postId: c.post.id,
+        postAuthor: c.post.author,
+        text: cut(c.content),
+        createdAt: c.createdAt,
+      })),
+      ...likes.map((l) => ({
+        type: 'LIKE' as const,
+        id: l.id,
+        actor: l.user,
+        postId: l.post!.id,
+        postAuthor: l.post!.author,
+        text: cut(l.post!.content),
+        createdAt: l.createdAt,
+      })),
+    ]
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || b.id - a.id)
+      .slice(0, limit)
+      .map((i) => ({ ...i, createdAt: i.createdAt.toISOString() }))
   }
 }
