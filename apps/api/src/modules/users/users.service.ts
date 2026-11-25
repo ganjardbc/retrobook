@@ -233,21 +233,25 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
     username: string,
     limit: number,
     cursor?: number,
-  ): Promise<Paged<ProfilePhoto>> {
+  ): Promise<Paged<ProfilePhoto> & { total: number }> {
     const u = await this.findProfileUser(viewerId, username)
-    const rows = await this.prisma.post.findMany({
-      where: {
-        AND: [
-          this.visibility.postWhere(viewerId),
-          { OR: [{ authorId: u.id }, { wallOwnerId: u.id }] },
-          { imageUrl: { not: null } },
-        ],
-      },
-      orderBy: { id: 'desc' },
-      take: limit + 1,
-      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-      select: { id: true, imageUrl: true, createdAt: true },
-    })
+    const where = {
+      AND: [
+        this.visibility.postWhere(viewerId),
+        { OR: [{ authorId: u.id }, { wallOwnerId: u.id }] },
+        { imageUrl: { not: null } },
+      ],
+    }
+    const [rows, total] = await Promise.all([
+      this.prisma.post.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        take: limit + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        select: { id: true, imageUrl: true, createdAt: true },
+      }),
+      this.prisma.post.count({ where }),
+    ])
     const page = rows.slice(0, limit)
     return {
       items: page.map((r) => ({
@@ -256,6 +260,7 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
         createdAt: r.createdAt.toISOString(),
       })),
       nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+      total,
     }
   }
 

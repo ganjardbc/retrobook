@@ -19,7 +19,9 @@ withDefaults(
 <template>
   <section class="pcard" :class="{ 'pcard--quiet': quiet }">
     <header class="pcard__head">
-      <component :is="heading" class="pcard__title">{{ title }}</component>
+      <slot name="title">
+        <component :is="heading" class="pcard__title">{{ title }}</component>
+      </slot>
       <div class="pcard__actions"><slot name="actions" /></div>
     </header>
     <div v-if="$slots.default" class="pcard__body" :class="{ 'pcard__body--flush': flush }">

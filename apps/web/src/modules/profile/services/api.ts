@@ -15,7 +15,7 @@ export const usersApi = {
       `/users/${encodeURIComponent(username)}/friends?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`,
     ),
   photos: (username: string, cursor?: number | null, limit = 12) =>
-    request<Paged<ProfilePhoto>>(
+    request<Paged<ProfilePhoto> & { total: number }>(
       `/users/${encodeURIComponent(username)}/photos?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`,
     ),
 }

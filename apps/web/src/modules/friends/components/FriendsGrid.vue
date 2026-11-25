@@ -4,6 +4,7 @@ import { t } from '@retrobook/shared/i18n'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
+import PageCard from '@/components/PageCard.vue'
 
 const props = defineProps<{ profile: Profile; friends: UserSummary[] }>()
 // PRF-04: grid enam teman (3 x 2); selengkapnya di tab Friends.
@@ -11,12 +12,16 @@ const shown = computed(() => props.friends.slice(0, 6))
 </script>
 
 <template>
-  <section v-if="shown.length" class="grid" :aria-label="t('profile.friends.title')">
-    <h2 class="grid__head">
-      <RouterLink :to="`/${profile.username}/friends`">{{ t('profile.friends.title') }}</RouterLink>
-      <span class="grid__count">{{ profile.friendCount }}</span>
-    </h2>
-    <ul class="grid__list">
+  <PageCard v-if="shown.length" :title="t('profile.friends.title')" heading="h2" flush>
+    <template #title>
+      <h2 class="pcard__title">
+        <RouterLink :to="`/${profile.username}/friends`">
+          {{ t('profile.friends.title') }}
+        </RouterLink>
+        <span class="grid__count">{{ profile.friendCount }}</span>
+      </h2>
+    </template>
+    <ul class="grid__list" :aria-label="t('profile.friends.title')">
       <li v-for="u in shown" :key="u.id" class="grid__item">
         <RouterLink :to="`/${u.username}`" class="grid__link">
           <Avatar :name="u.displayName" :src="u.avatarUrl" class="grid__avatar" />
@@ -24,26 +29,23 @@ const shown = computed(() => props.friends.slice(0, 6))
         </RouterLink>
       </li>
     </ul>
-  </section>
+  </PageCard>
 </template>
 
 <style scoped>
-.grid {
-  background: var(--c-card);
-  border: var(--card-border);
-  border-radius: var(--radius);
+.pcard__title a {
+  color: var(--c-brand);
+  text-decoration: none;
 }
-.grid__head {
+.pcard__title {
   margin: 0;
-  padding: var(--sp-2) var(--sp-3);
   font-size: var(--fs-base);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  font-weight: bold;
 }
 .grid__count {
   margin-left: var(--sp-1);
-  color: var(--c-text-muted);
   font-weight: normal;
+  color: var(--c-text-muted);
 }
 .grid__list {
   display: grid;

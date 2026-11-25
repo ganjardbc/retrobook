@@ -8,6 +8,7 @@ import ProfileNotes from '@/modules/profile/components/ProfileNotes.vue'
 import LifeEvents from '@/modules/profile/components/LifeEvents.vue'
 import InfoCards from '@/modules/profile/components/InfoCards.vue'
 import ProfileHeader from '@/modules/profile/components/ProfileHeader.vue'
+import ProfilePhotoPreview from '@/modules/profile/components/ProfilePhotoPreview.vue'
 import ProfileTabs from '@/modules/profile/components/ProfileTabs.vue'
 import { useProfileStore } from '@/modules/profile/stores'
 
@@ -49,6 +50,7 @@ watch(
           <!-- Tab About sudah menampilkan info yang sama; kartu ini untuk tab lain. -->
           <InfoCards v-if="route.name !== 'profile-about'" :profile="store.profile" />
           <FriendsGrid :profile="store.profile" :friends="store.friends.items" />
+          <ProfilePhotoPreview />
           <LifeEvents />
           <ProfileNotes />
         </aside>
