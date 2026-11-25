@@ -1,26 +1,48 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import Button from '@/components/Button.vue'
-import { ApiRequestError } from '@/plugins/http'
-import { groupsApi } from '../services/api'
 import type { GroupPrivacy, GroupSummary } from '@retrobook/shared'
+import { t } from '@retrobook/shared/i18n'
+import { onMounted, ref } from 'vue'
+import Avatar from '@/components/Avatar.vue'
+import Button from '@/components/Button.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import FormRow from '@/components/FormRow.vue'
+import IconSelect, { type IconOption } from '@/components/IconSelect.vue'
+import PageCard from '@/components/PageCard.vue'
+import { ApiRequestError } from '@/plugins/http'
+import { RouterLink } from 'vue-router'
+import { groupsApi } from '../services/api'
 
+const privacyOptions: IconOption[] = [
+  { value: 'PUBLIC', label: t('groups.privacy.PUBLIC'), icon: 'mdi:earth' },
+  { value: 'CLOSED', label: t('groups.privacy.CLOSED'), icon: 'mdi:lock' },
+]
 const groups = ref<GroupSummary[]>([])
 const suggested = ref<GroupSummary[]>([])
+const showForm = ref(false)
 const name = ref('')
 const description = ref('')
 const privacy = ref<GroupPrivacy>('PUBLIC')
 const error = ref('')
 const saving = ref(false)
+const loading = ref(true)
+
+const message = (cause: unknown, fallback: string) =>
+  cause instanceof ApiRequestError ? cause.messages.join(' ') : fallback
+
 async function load() {
   try {
     const data = await groupsApi.list()
     groups.value = data.items
     suggested.value = data.suggested
   } catch (cause) {
-    error.value = cause instanceof ApiRequestError ? cause.messages.join(' ') : 'Grup gagal dimuat.'
+    error.value = message(cause, t('groups.loadError'))
+  } finally {
+    loading.value = false
   }
+}
+function closeForm() {
+  showForm.value = false
+  name.value = description.value = ''
 }
 async function create() {
   error.value = ''
@@ -34,10 +56,9 @@ async function create() {
         privacy: privacy.value,
       }),
     )
-    name.value = ''
-    description.value = ''
+    closeForm()
   } catch (cause) {
-    error.value = cause instanceof ApiRequestError ? cause.messages.join(' ') : 'Grup gagal dibuat.'
+    error.value = message(cause, t('groups.createError'))
   } finally {
     saving.value = false
   }
@@ -47,104 +68,127 @@ async function join(group: GroupSummary) {
     groups.value.unshift(await groupsApi.join(group.id))
     suggested.value = suggested.value.filter((item) => item.id !== group.id)
   } catch (cause) {
-    error.value =
-      cause instanceof ApiRequestError ? cause.messages.join(' ') : 'Tidak bisa bergabung ke grup.'
+    error.value = message(cause, t('groups.joinError'))
   }
 }
 onMounted(() => void load())
 </script>
 
 <template>
-  <main class="groups">
-    <h1>Grup</h1>
-    <form class="groups__create" @submit.prevent="create">
-      <label>Nama grup <input v-model="name" maxlength="80" required /></label>
-      <label>Deskripsi <textarea v-model="description" maxlength="2000" rows="2" /></label>
-      <label
-        >Privasi
-        <select v-model="privacy">
-          <option value="PUBLIC">Publik</option>
-          <option value="CLOSED">Tertutup</option>
-        </select></label
-      >
-      <Button type="submit" :disabled="saving || !name.trim()">Buat grup</Button>
-    </form>
-    <p v-if="error" role="alert">{{ error }}</p>
-    <section>
-      <h2>Grup saya</h2>
-      <p v-if="!groups.length">Kamu belum bergabung ke grup.</p>
-      <ul>
-        <li v-for="group in groups" :key="group.id">
-          <RouterLink :to="`/groups/${group.id}`"
-            ><strong>{{ group.name }}</strong
-            ><span
-              >{{ group.memberCount }} anggota ·
-              {{ group.privacy === 'PUBLIC' ? 'Publik' : 'Tertutup' }}</span
-            ><small>{{ group.description }}</small></RouterLink
-          >
+  <div class="groups">
+    <PageCard :title="t('groups.mine')">
+      <template #actions>
+        <Button v-if="!showForm" @click="showForm = true">{{ t('groups.create') }}</Button>
+      </template>
+      <form v-if="showForm" class="form" @submit.prevent="create">
+        <FormRow :label="t('groups.name')" for-id="grp-name">
+          <input id="grp-name" v-model="name" maxlength="80" required />
+        </FormRow>
+        <FormRow :label="t('groups.description')" for-id="grp-desc">
+          <textarea id="grp-desc" v-model="description" maxlength="2000" rows="2" />
+        </FormRow>
+        <FormRow :label="t('groups.privacy')">
+          <IconSelect v-model="privacy" :options="privacyOptions" :label="t('groups.privacy')" />
+        </FormRow>
+        <div class="form__actions">
+          <Button type="submit" :disabled="saving || !name.trim()">{{ t('groups.save') }}</Button>
+          <Button variant="default" @click="closeForm">{{ t('page.cancel') }}</Button>
+        </div>
+      </form>
+      <p v-if="error" class="form-error" role="alert">{{ error }}</p>
+      <p v-if="loading" role="status">{{ t('page.loading') }}</p>
+      <ul v-if="groups.length" class="list">
+        <li v-for="group in groups" :key="group.id" class="item">
+          <Avatar :name="group.name" size="m" />
+          <div class="item__main">
+            <RouterLink class="item__name" :to="`/groups/${group.id}`">{{ group.name }}</RouterLink>
+            <span class="item__meta"
+              >{{ t('groups.members', { count: group.memberCount }) }} ·
+              {{ t(`groups.privacy.${group.privacy}`) }}</span
+            >
+            <span v-if="group.description" class="item__desc">{{ group.description }}</span>
+          </div>
         </li>
       </ul>
-    </section>
-    <section v-if="suggested.length">
-      <h2>Suggested groups</h2>
-      <ul>
-        <li v-for="group in suggested" :key="group.id">
-          <RouterLink :to="`/groups/${group.id}`"
-            ><strong>{{ group.name }}</strong
-            ><span>{{ group.memberCount }} anggota</span
-            ><small>{{ group.description }}</small></RouterLink
-          ><Button variant="default" @click="join(group)">Join</Button>
+      <EmptyState
+        v-else-if="!loading"
+        icon="mdi:account-group-outline"
+        :title="t('groups.empty')"
+        :hint="t('groups.emptyHint')"
+      />
+    </PageCard>
+
+    <PageCard v-if="suggested.length" :title="t('groups.discover')">
+      <ul class="list">
+        <li v-for="group in suggested" :key="group.id" class="item">
+          <Avatar :name="group.name" size="m" />
+          <div class="item__main">
+            <RouterLink class="item__name" :to="`/groups/${group.id}`">{{ group.name }}</RouterLink>
+            <span class="item__meta">{{ t('groups.members', { count: group.memberCount }) }}</span>
+            <span v-if="group.description" class="item__desc">{{ group.description }}</span>
+          </div>
+          <Button @click="join(group)">{{ t('groups.join') }}</Button>
         </li>
       </ul>
-    </section>
-  </main>
+    </PageCard>
+  </div>
 </template>
 
 <style scoped>
 .groups {
   display: grid;
   gap: var(--sp-3);
-  padding: var(--sp-4);
-  background: var(--c-card);
-  border: var(--card-border);
-  border-radius: var(--radius);
 }
-h1,
-h2 {
-  margin: 0;
-}
-.groups__create {
+.form {
   display: grid;
   gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
   padding: var(--sp-3);
   background: var(--c-card-subtle);
+  border: 1px solid var(--c-border-soft);
 }
-label {
-  display: grid;
-  gap: 4px;
-}
-ul {
-  display: grid;
+.form__actions {
+  display: flex;
   gap: var(--sp-2);
+  padding-left: 118px;
+}
+.list {
+  margin: 0;
   padding: 0;
   list-style: none;
 }
-li {
+.item {
   display: flex;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  align-items: center;
-  padding: var(--sp-2);
-  border: 1px solid var(--c-border-soft);
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
 }
-li a {
-  display: grid;
-  gap: 3px;
-  color: var(--c-text);
-  text-decoration: none;
+.item + .item {
+  border-top: 1px solid var(--c-border-soft);
 }
-li span,
-li small {
+.item:first-child {
+  padding-top: 0;
+}
+.item__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.item__name {
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+.item__meta,
+.item__desc {
   color: var(--c-text-muted);
+}
+.item__desc {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 560px) {
+  .form__actions {
+    padding-left: 0;
+  }
 }
 </style>

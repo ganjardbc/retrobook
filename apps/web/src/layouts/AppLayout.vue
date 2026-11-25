@@ -57,7 +57,7 @@ router.afterEach(() => (menuOpen.value = false))
           <SponsoredCard />
           <EventsTodayCard />
           <BirthdaysCard />
-          <SuggestedGroupsCard />
+          <SuggestedGroupsCard v-if="route.name !== 'groups'" />
           <PeopleYouMayKnow />
           <AppFooter class="layout__footer" />
         </aside>

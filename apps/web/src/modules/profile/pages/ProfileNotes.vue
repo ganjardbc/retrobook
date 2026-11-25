@@ -86,8 +86,7 @@ async function remove(note: NoteItem) {
       <div>
         <Button type="submit" :disabled="!title.trim() || !body.trim()">{{
           editingId ? 'Simpan perubahan' : 'Tulis note'
-        }}</Button
-        ><Button v-if="editingId" variant="default" @click="reset">Batal</Button>
+        }}</Button><Button v-if="editingId" variant="default" @click="reset">Batal</Button>
       </div>
     </form>
     <article v-for="note in items" :key="note.id" class="notes__item">

@@ -37,9 +37,9 @@ async function join(group: GroupSummary) {
       <li v-for="g in groups" :key="g.id" class="item">
         <span class="item__text">
           <RouterLink class="item__name" :to="`/groups/${g.id}`">{{ g.name }}</RouterLink>
-          <small>{{ t('suggestedGroups.members', { count: g.memberCount }) }}</small>
+          <small>{{ t('groups.members', { count: g.memberCount }) }}</small>
         </span>
-        <Button :disabled="busy === g.id" @click="join(g)">{{ t('suggestedGroups.join') }}</Button>
+        <Button :disabled="busy === g.id" @click="join(g)">{{ t('groups.join') }}</Button>
       </li>
     </ul>
   </section>

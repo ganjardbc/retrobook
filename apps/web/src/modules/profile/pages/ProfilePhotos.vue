@@ -31,7 +31,7 @@ watch(
       "
       class="photos__albums"
     >
-      <h3>Album foto</h3>
+      <h3>{{ t('albums.profile') }}</h3>
       <ul class="photos__album-grid">
         <li v-for="album in albums" :key="album.id">
           <RouterLink :to="`/albums/${album.id}`">
@@ -43,7 +43,7 @@ watch(
       <RouterLink
         v-if="auth.user?.username.toLowerCase() === store.profile?.username.toLowerCase()"
         to="/albums"
-        >Kelola album</RouterLink
+        >{{ t('albums.manage') }}</RouterLink
       >
     </div>
     <ul v-if="list.items.length" class="photos__grid">
