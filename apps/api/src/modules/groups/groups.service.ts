@@ -75,7 +75,14 @@ export class GroupsService {
   }
 
   async join(userId: number, groupId: number) {
-    const group = await this.prisma.group.findFirst({ where: { id: groupId } })
+    // Grup CLOSED tidak bisa dimasuki sendiri; 404 sama seperti non-anggota (tidak membocorkan keberadaan).
+    const group = await this.prisma.group.findFirst({
+      where: {
+        id: groupId,
+        privacy: 'PUBLIC',
+        creator: { deletedAt: null, status: { not: 'BANNED' } },
+      },
+    })
     if (!group) throw this.notFound()
     await this.prisma.groupMember.upsert({
       where: { groupId_userId: { groupId, userId } },
@@ -90,6 +97,18 @@ export class GroupsService {
       where: { groupId_userId: { groupId, userId } },
     })
     if (!member) throw this.notFound()
+    if (member.role === 'ADMIN') {
+      const others = await this.prisma.groupMember.findMany({
+        where: { groupId, userId: { not: userId } },
+        select: { role: true },
+      })
+      if (others.length > 0 && !others.some((m) => m.role === 'ADMIN'))
+        throw new AppException(
+          409,
+          'CONFLICT',
+          'Admin terakhir tidak bisa keluar selama masih ada anggota lain',
+        )
+    }
     await this.prisma.groupMember.delete({ where: { groupId_userId: { groupId, userId } } })
     return { left: true }
   }

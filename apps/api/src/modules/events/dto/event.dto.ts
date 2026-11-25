@@ -11,3 +11,8 @@ export class CreateEventDto {
 export class RsvpDto {
   @IsEnum(RsvpStatus) status!: RsvpStatus
 }
+
+export class EventRangeDto {
+  @IsOptional() @IsDateString() from?: string
+  @IsOptional() @IsDateString() to?: string
+}

@@ -237,7 +237,7 @@ Tampilan mengikuti empat tangkapan layar referensi (feed 2014, profil Maret 2015
 | UX-03 | Kartu putih datar dengan border tipis dan sudut hampir kotak | Tanpa bayangan tebal |
 | UX-04 | Aksi post berupa link teks Like dan Comment, berubah menjadi Unlike | Bukan tombol ikon besar |
 | UX-05 | Profil dengan cover, foto profil persegi menumpuk di kiri bawah, nama putih di atas cover, tab, kartu info, grid teman, dan scroller tahun | Referensi profil Maret 2015 |
-| UX-06 | Composer dengan tab Status, Photo / Video, Life Event | Life Event menunggu Fase 3 |
+| UX-06 | Composer dengan tab Status dan Photo / Video | Mengikuti ref-1; tab Life Event dihapus (keputusan Ganjar, 2026-11-25): Life Event dibuat dari profil (T-75) |
 | UX-07 | Daftar chat penuh tinggi dengan titik hijau dan label Web atau Mobile; dock chat di dasar layar | Maksimal tiga jendela |
 | UX-08 | Halaman login: header biru dengan kolom login, tagline berikon di kiri, formulir Sign Up dengan tombol hijau | Susunan saja; nama, logo, dan ikon buatan sendiri |
 | UX-09 | Semua warna, jarak, dan font dibaca dari satu set design token | Memungkinkan tema Time Travel |

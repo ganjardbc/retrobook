@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import { t } from '@retrobook/shared/i18n'
 import Button from '@/components/Button.vue'
 import { ApiRequestError } from '@/plugins/http'
 import { eventsApi, type EventItem, type RsvpStatus } from '../services/api'
@@ -52,8 +54,7 @@ async function setRsvp(event: EventItem, status: RsvpStatus) {
       cause instanceof ApiRequestError ? cause.messages.join(' ') : 'RSVP gagal disimpan.'
   }
 }
-const label = (status: RsvpStatus) =>
-  ({ GOING: 'Going', MAYBE: 'Maybe', DECLINED: "Can't go" })[status]
+const label = (status: RsvpStatus) => t(`event.rsvp.${status}`)
 const localDate = (value: string) => new Date(value).toLocaleString()
 onMounted(() => void load())
 </script>
@@ -70,12 +71,14 @@ onMounted(() => void load())
       ><Button type="submit" :disabled="saving">Buat event</Button>
     </form>
     <section v-for="event in events" :key="event.id" class="events__item">
-      <h2>{{ event.title }}</h2>
+      <h2>
+        <RouterLink :to="`/events/${event.id}`">{{ event.title }}</RouterLink>
+      </h2>
       <p>
         {{ localDate(event.startsAt) }}<span v-if="event.location"> · {{ event.location }}</span>
       </p>
       <p v-if="event.description">{{ event.description }}</p>
-      <p>{{ event.rsvpCount }} RSVP</p>
+      <p>{{ t('event.rsvpCount', { count: event.rsvpCount }) }}</p>
       <div class="events__actions">
         <Button
           v-for="status in ['GOING', 'MAYBE', 'DECLINED'] as RsvpStatus[]"

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
 import { UploadsService } from '../uploads/uploads.service'
+import { VisibilityService } from '../visibility/visibility.service'
 import type { CreateAlbumDto } from './dto/album.dto'
 
 @Injectable()
@@ -9,6 +10,7 @@ export class AlbumsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploads: UploadsService,
+    private readonly visibility: VisibilityService,
   ) {}
 
   async list(ownerId: number) {
@@ -24,42 +26,12 @@ export class AlbumsService {
 
   async listForProfile(viewerId: number, username: string) {
     const owner = await this.prisma.user.findFirst({
-      where: {
-        username,
-        deletedAt: null,
-        status: { not: 'BANNED' },
-        NOT: {
-          OR: [
-            { blocksMade: { some: { blockedId: viewerId } } },
-            { blocksReceived: { some: { blockerId: viewerId } } },
-          ],
-        },
-      },
-      select: {
-        id: true,
-        friendshipsSent: {
-          where: { addresseeId: viewerId, status: 'ACCEPTED' },
-          select: { id: true },
-        },
-        friendshipsReceived: {
-          where: { requesterId: viewerId, status: 'ACCEPTED' },
-          select: { id: true },
-        },
-      },
+      where: { username, ...this.visibility.userWhere(viewerId) },
+      select: { id: true },
     })
     if (!owner) throw new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemukan')
-    const isSelf = owner.id === viewerId
-    const isFriend = owner.friendshipsSent.length > 0 || owner.friendshipsReceived.length > 0
     return this.prisma.album.findMany({
-      where: {
-        ownerId: owner.id,
-        deletedAt: null,
-        ...(isSelf
-          ? {}
-          : {
-              OR: [{ privacy: 'PUBLIC' }, ...(isFriend ? [{ privacy: 'FRIENDS' as const }] : [])],
-            }),
-      },
+      where: { AND: [{ ownerId: owner.id }, this.visibility.albumWhere(viewerId)] },
       orderBy: { createdAt: 'desc' },
       include: {
         _count: { select: { photos: true } },
@@ -76,47 +48,11 @@ export class AlbumsService {
 
   async get(viewerId: number, albumId: number) {
     const album = await this.prisma.album.findFirst({
-      where: {
-        id: albumId,
-        deletedAt: null,
-        owner: {
-          deletedAt: null,
-          status: { not: 'BANNED' },
-          NOT: {
-            OR: [
-              { blocksMade: { some: { blockedId: viewerId } } },
-              { blocksReceived: { some: { blockerId: viewerId } } },
-            ],
-          },
-        },
-      },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            friendshipsSent: {
-              where: { addresseeId: viewerId, status: 'ACCEPTED' },
-              select: { id: true },
-            },
-            friendshipsReceived: {
-              where: { requesterId: viewerId, status: 'ACCEPTED' },
-              select: { id: true },
-            },
-          },
-        },
-        photos: { orderBy: { id: 'desc' } },
-      },
+      where: { AND: [{ id: albumId }, this.visibility.albumWhere(viewerId)] },
+      include: { photos: { orderBy: { id: 'desc' } } },
     })
     if (!album) throw new AppException(404, 'NOT_FOUND', 'Album tidak ditemukan')
-    const isFriend =
-      album.owner.friendshipsSent.length > 0 || album.owner.friendshipsReceived.length > 0
-    if (
-      (album.ownerId !== viewerId && album.privacy === 'ONLY_ME') ||
-      (album.ownerId !== viewerId && album.privacy === 'FRIENDS' && !isFriend)
-    )
-      throw new AppException(404, 'NOT_FOUND', 'Album tidak ditemukan')
-    const { owner, ...result } = album
-    return result
+    return album
   }
 
   async addPhotos(ownerId: number, albumId: number, files: Express.Multer.File[]) {

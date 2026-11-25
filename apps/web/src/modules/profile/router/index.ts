@@ -8,6 +8,12 @@ export default [
     meta: { app: true },
   },
   {
+    path: '/events/:id',
+    name: 'event-detail',
+    component: () => import('@/modules/events/pages/EventDetailView.vue'),
+    meta: { app: true },
+  },
+  {
     path: '/groups',
     name: 'groups',
     component: () => import('@/modules/groups/pages/GroupsView.vue'),

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, type ComponentPublicInstance } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
+import EventsTodayCard from '@/modules/events/components/EventsTodayCard.vue'
+import SuggestedGroupsCard from '@/modules/groups/components/SuggestedGroupsCard.vue'
 import BirthdaysCard from '@/modules/friends/components/BirthdaysCard.vue'
 import PeopleYouMayKnow from '@/modules/friends/components/PeopleYouMayKnow.vue'
 import ChatDock from '@/modules/chat/components/ChatDock.vue'
@@ -53,7 +55,9 @@ router.afterEach(() => (menuOpen.value = false))
         <aside v-if="!isProfile" :ref="sticky" class="layout__right">
           <TrendingCard />
           <SponsoredCard />
+          <EventsTodayCard />
           <BirthdaysCard />
+          <SuggestedGroupsCard />
           <PeopleYouMayKnow />
           <AppFooter class="layout__footer" />
         </aside>

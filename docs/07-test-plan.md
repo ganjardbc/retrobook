@@ -204,3 +204,5 @@ Karena target visual adalah era 2015, setiap fase diakhiri satu sesi pembandinga
 ## 10. Pipeline CI (usulan)
 
 Satu workflow: pasang PNPM, `prisma migrate deploy` ke MySQL layanan, `pnpm lint`, `pnpm -r test` (Jest dan Vitest), `pnpm build`, lalu Playwright terhadap compose uji. E2E dijalankan pada pull request ke `main` dan sebelum rilis; unit dan integrasi pada setiap push.
+
+Status album, grup, event: `albums.spec.ts`, `groups.spec.ts`, `events.spec.ts` (integrasi) menguji privasi album, blokir, IDOR unggah foto, post grup untuk anggota non-teman, grup CLOSED tidak bisa dimasuki sendiri, admin terakhir grup, dan RSVP.

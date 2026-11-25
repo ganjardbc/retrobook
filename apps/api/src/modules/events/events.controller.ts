@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common'
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common'
 import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
-import { CreateEventDto, RsvpDto } from './dto/event.dto'
+import { CreateEventDto, EventRangeDto, RsvpDto } from './dto/event.dto'
 import { EventsService } from './events.service'
 
 @Controller('events')
@@ -8,8 +8,13 @@ export class EventsController {
   constructor(private readonly events: EventsService) {}
 
   @Get()
-  list(@CurrentUser() user: AuthUser) {
-    return this.events.list(user.id)
+  list(@CurrentUser() user: AuthUser, @Query() q: EventRangeDto) {
+    return this.events.list(user.id, q.from, q.to)
+  }
+
+  @Get(':id')
+  get(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+    return this.events.get(user.id, id)
   }
 
   @Post()

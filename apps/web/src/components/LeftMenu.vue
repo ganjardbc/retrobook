@@ -9,6 +9,9 @@ const items: { label: MessageKey; to: string }[] = [
   { label: 'menu.newsFeed', to: '/' },
   { label: 'menu.friends', to: '/friends' },
   { label: 'menu.pokes', to: '/pokes' },
+  { label: 'menu.albums', to: '/albums' },
+  { label: 'menu.groups', to: '/groups' },
+  { label: 'menu.events', to: '/events' },
 ]
 const auth = useAuthStore()
 </script>
@@ -26,9 +29,6 @@ const auth = useAuthStore()
         </RouterLink>
       </li>
     </ul>
-    <RouterLink class="menu__row" to="/albums">Album Foto</RouterLink>
-    <RouterLink class="menu__row" to="/groups">Grup</RouterLink>
-    <RouterLink class="menu__row" to="/events">Events</RouterLink>
   </nav>
 </template>
 

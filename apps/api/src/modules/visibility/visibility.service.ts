@@ -64,6 +64,12 @@ export class VisibilityService {
           hidden: false,
           OR: [{ privacy: 'PUBLIC' }, { privacy: 'FRIENDS', author: this.friendOf(viewerId) }],
         },
+        // Post grup: semua anggota grup membaca, tanpa syarat berteman dengan penulis.
+        {
+          groupId: { not: null },
+          hidden: false,
+          group: { members: { some: { userId: viewerId } } },
+        },
         // BR-04: pemilik dinding dan teman dari kedua pihak dapat membaca; pemilik dinding
         // juga dapat membaca post pada dindingnya sendiri.
         {
@@ -84,6 +90,19 @@ export class VisibilityService {
             },
           ],
         },
+      ],
+    }
+  }
+
+  /** Album yang boleh dilihat: milik sendiri, PUBLIC, atau FRIENDS dari teman; pemilik tidak diblokir (ALB-01). */
+  albumWhere(viewerId: number): Prisma.AlbumWhereInput {
+    return {
+      deletedAt: null,
+      owner: this.userWhere(viewerId),
+      OR: [
+        { ownerId: viewerId },
+        { privacy: 'PUBLIC' },
+        { privacy: 'FRIENDS', owner: this.friendOf(viewerId) },
       ],
     }
   }

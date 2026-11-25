@@ -12,7 +12,13 @@ export type EventItem = {
 }
 
 export const eventsApi = {
-  list: () => request<{ items: EventItem[] }>('/events'),
+  list: (range?: { from: string; to: string }) =>
+    request<{ items: EventItem[] }>(
+      range
+        ? `/events?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`
+        : '/events',
+    ),
+  get: (id: number) => request<EventItem>(`/events/${id}`),
   create: (input: { title: string; description: string; location: string; startsAt: string }) =>
     request<EventItem>('/events', { method: 'POST', body: input }),
   rsvp: (id: number, status: RsvpStatus) =>

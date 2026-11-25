@@ -344,9 +344,10 @@ Presence: online bila minimal satu koneksi aktif; `users.last_seen_at` diperbaru
 | GET | `/groups` | `{ items, suggested }`: grup yang diikuti dan grup publik rekomendasi, urut anggota terbanyak | GRP-01 |
 | POST | `/groups` | Buat grup (`name`, `description`, `privacy` PUBLIC/CLOSED); pembuat otomatis menjadi ADMIN | GRP-01 |
 | GET | `/groups/:id` | Detail grup publik atau grup tertutup yang diikuti | GRP-01 |
-| POST | `/groups/:id/join`, `/groups/:id/leave` | Gabung dan keluar dari grup | GRP-01 |
+| POST | `/groups/:id/join`, `/groups/:id/leave` | Gabung dan keluar dari grup. Join hanya untuk grup PUBLIC (CLOSED: 404 yang sama dengan non-anggota); admin terakhir tidak bisa keluar selama masih ada anggota lain (409 `CONFLICT`) | GRP-01 |
 | GET/POST | `/groups/:id/posts` | Paginasi dan buat post grup; hanya anggota yang dapat membaca atau menulis | GRP-01 |
-| GET/POST | `/events` | Daftar event mendatang dan buat event | EVT-01 |
+| GET/POST | `/events` | Daftar event mendatang (opsional `?from&to` ISO untuk rentang, dipakai kartu Events today; pembuat yang diblokir atau BANNED disembunyikan, `rsvpCount` hanya menghitung GOING) dan buat event | EVT-01 |
+| GET | `/events/:id` | Detail event dengan `myRsvp` dan `rsvpCount`; pembuat yang diblokir menghasilkan 404 | EVT-01 |
 | PUT | `/events/:id/rsvp` | Upsert `{ status: 'GOING'|'MAYBE'|'DECLINED' }`; satu status per member | EVT-01 |
 | GET/POST | `/notes` | Daftar note sendiri dan buat note (`title`, `body`, `privacy`) | NOT-01 |
 | GET/PATCH/DELETE | `/notes/:id` | Baca note sesuai privasi, ubah, atau soft delete (pemilik saja untuk ubah/hapus) | NOT-01 |
