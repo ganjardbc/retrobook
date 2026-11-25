@@ -137,7 +137,7 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 | [x] T-66 | Bot AI sebagai teman (job, persona, kontrol admin). Teks dari templat; model bahasa menunggu D-7 | L | bonus |
 | [x] T-67 | Tema Time Travel (2010, 2015, 2020) lewat token | M | bonus |
 | [x] T-68 | Satu atau dua fitur Fase 3: block (FRD-06) dan activity log (ACT-01) selesai; album ditunda ke T-71 | L | bonus |
-| [ ] T-69 | Sponsored dan kelola trending | M | bonus |
+| [x] T-69 | Sponsored dan kelola trending | M | bonus |
 | [ ] T-70 | Reset password via email bila penyedia sudah dipilih | M | bonus |
 
 **Gerbang R4:** Test 8 terpenuhi; compose produksi berjalan dari nol; demo siap.

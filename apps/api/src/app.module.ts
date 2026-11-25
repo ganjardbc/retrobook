@@ -23,6 +23,7 @@ import { SettingsModule } from './modules/settings/settings.module'
 import { AnnouncementsModule } from './modules/announcements/announcements.module'
 import { BotsModule } from './modules/bots/bots.module'
 import { ActivityModule } from './modules/activity/activity.module'
+import { SponsoredModule } from './modules/sponsored/sponsored.module'
 import { AdminModule } from './modules/admin/admin.module'
 
 // Satu modul per domain di src/modules/*; tambahkan ke imports saat tugasnya dikerjakan.
@@ -40,6 +41,7 @@ import { AdminModule } from './modules/admin/admin.module'
     AnnouncementsModule,
     BotsModule,
     ActivityModule,
+    SponsoredModule,
     UploadsModule,
     VisibilityModule,
     PostsModule,

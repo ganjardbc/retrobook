@@ -5,6 +5,7 @@ export const en = {
   'footer.parody': 'Fun project / parody. Not an official product of anything.',
   'footer.privacy': 'Privacy',
   'theme.label': 'Time Travel',
+  'sponsored.title': 'Sponsored',
 
   'profile.action.block': 'Block',
   'profile.action.block.confirm': 'Block {name}? You will no longer see each other.',

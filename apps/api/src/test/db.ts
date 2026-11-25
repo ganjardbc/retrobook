@@ -6,6 +6,7 @@ export async function resetDb(prisma: PrismaClient) {
   await prisma.blockedWord.deleteMany()
   await prisma.setting.deleteMany()
   await prisma.botProfile.deleteMany()
+  await prisma.sponsored.deleteMany()
   await prisma.report.deleteMany()
   await prisma.notification.deleteMany()
   await prisma.announcement.deleteMany()

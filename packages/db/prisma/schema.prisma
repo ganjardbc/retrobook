@@ -107,6 +107,7 @@ model User {
   announcementsCreated Announcement[] @relation("AnnouncementCreator")
   blockedWordsCreated  BlockedWord[]  @relation("BlockedWordCreator")
   botProfile           BotProfile?
+  sponsoredCreated     Sponsored[]    @relation("SponsoredCreator")
 
   @@index([status, createdAt])
   @@index([username])
@@ -409,4 +410,22 @@ model BotProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("bot_profiles")
+}
+
+model Sponsored {
+  id        Int       @id @default(autoincrement())
+  title     String    @db.VarChar(120)
+  body      String    @db.Text
+  imageUrl  String?   @map("image_url") @db.VarChar(255)
+  linkUrl   String    @map("link_url") @db.VarChar(255)
+  active    Boolean   @default(true)
+  startsAt  DateTime? @map("starts_at")
+  endsAt    DateTime? @map("ends_at")
+  createdBy Int       @map("created_by")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  creator User @relation("SponsoredCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@index([active, startsAt, endsAt])
+  @@map("sponsored")
 }

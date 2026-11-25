@@ -23,11 +23,15 @@ import { AdminAuditLogsController } from './audit-logs/admin-audit-logs.controll
 import { AdminAuditLogsService } from './audit-logs/admin-audit-logs.service'
 import { AdminBotsController } from './bots/admin-bots.controller'
 import { AdminBotsService } from './bots/admin-bots.service'
+import { AdminSponsoredController } from './sponsored/admin-sponsored.controller'
+import { AdminSponsoredService } from './sponsored/admin-sponsored.service'
+import { AdminHashtagsController } from './hashtags/admin-hashtags.controller'
+import { AdminHashtagsService } from './hashtags/admin-hashtags.service'
 
 @Module({
   imports: [AuthModule, SettingsModule, NotificationsModule],
-  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController, AdminBlockedWordsController, AdminSettingsController, AdminAnnouncementsController, AdminAuditLogsController, AdminBotsController],
-  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, AdminBlockedWordsService, AdminSettingsService, AdminAnnouncementsService, AdminAuditLogsService, AdminBotsService, RolesGuard],
+  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController, AdminBlockedWordsController, AdminSettingsController, AdminAnnouncementsController, AdminAuditLogsController, AdminBotsController, AdminSponsoredController, AdminHashtagsController],
+  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, AdminBlockedWordsService, AdminSettingsService, AdminAnnouncementsService, AdminAuditLogsService, AdminBotsService, AdminSponsoredService, AdminHashtagsService, RolesGuard],
   exports: [AdminAuditService],
 })
 export class AdminModule {}

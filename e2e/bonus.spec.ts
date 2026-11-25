@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createPost, register } from './helpers'
+import { ADMIN_URL, createPost, loginAsNewAdmin, register } from './helpers'
 
 test('THM-01 Time Travel theme switches via tokens and persists after reload', async ({ page }) => {
   await register(page)
@@ -43,4 +43,46 @@ test('ACT-01 activity log lists own post and deleting it there removes it', asyn
   await expect(row).toHaveCount(0)
   await page.goto('/')
   await expect(page.locator('.post').filter({ hasText: content })).toHaveCount(0)
+})
+
+test('SPN-01 admin publishes a Sponsored card that members see, and removes it', async ({ browser, page }) => {
+  await register(page)
+  const title = `Promo ${Date.now()}`
+  const admin = await loginAsNewAdmin(browser)
+  admin.page.on('dialog', (dialog) => void dialog.accept())
+  await admin.page.goto(`${ADMIN_URL}/sponsored`)
+  await admin.page.getByLabel('Judul').fill(title)
+  await admin.page.getByLabel('Isi').fill('Teks promosi')
+  await admin.page.getByLabel('Tautan').fill('https://example.com/promo')
+  await admin.page.getByRole('button', { name: 'Buat promosi' }).click()
+  await expect(admin.page.getByText('Promosi dibuat.')).toBeVisible()
+
+  await page.goto('/')
+  await expect(page.locator('.card').filter({ hasText: title })).toBeVisible()
+  await expect(page.getByRole('link', { name: new RegExp(title) })).toHaveAttribute('href', 'https://example.com/promo')
+
+  await admin.page.locator('.announce-list li').filter({ hasText: title }).getByRole('button', { name: 'Hapus' }).click()
+  await expect(admin.page.locator('.announce-list li').filter({ hasText: title })).toHaveCount(0)
+  await page.reload()
+  await expect(page.locator('.card').filter({ hasText: title })).toHaveCount(0)
+  await admin.context.close()
+})
+
+test('ADM-17 hiding a hashtag removes it from trending', async ({ browser, page }) => {
+  await register(page)
+  const tag = `tag${Date.now()}`
+  await createPost(page, `Halo #${tag}`, 'PUBLIC')
+  await page.goto('/')
+  await expect(page.getByRole('link', { name: `#${tag}`, exact: true }).first()).toBeVisible()
+
+  const admin = await loginAsNewAdmin(browser)
+  await admin.page.goto(`${ADMIN_URL}/trending`)
+  await admin.page.getByLabel('Cari hashtag').fill(tag)
+  await admin.page.getByRole('button', { name: 'Cari' }).click()
+  await admin.page.locator('.announce-list li').filter({ hasText: `#${tag}` }).getByRole('button', { name: 'Sembunyikan' }).click()
+  await expect(admin.page.getByText('Disembunyikan dari trending')).toBeVisible()
+
+  await page.reload()
+  await expect(page.locator('.card').filter({ hasText: 'Trending' }).getByText(`#${tag}`)).toHaveCount(0)
+  await admin.context.close()
 })

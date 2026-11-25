@@ -6,6 +6,7 @@ import BirthdaysCard from '@/modules/friends/components/BirthdaysCard.vue'
 import PeopleYouMayKnow from '@/modules/friends/components/PeopleYouMayKnow.vue'
 import ChatDock from '@/modules/chat/components/ChatDock.vue'
 import ChatSidebar from '@/modules/chat/components/ChatSidebar.vue'
+import SponsoredCard from '@/modules/feed/components/SponsoredCard.vue'
 import TrendingCard from '@/modules/search/components/TrendingCard.vue'
 import { useChatStore } from '@/modules/chat/stores'
 import { disconnectRealtime } from '@/plugins/realtime'
@@ -44,6 +45,7 @@ async function logout() {
       <!-- Kartu di atas, chat di dasar kolom (UI spec 3). -->
       <aside class="layout__right">
         <TrendingCard />
+        <SponsoredCard />
         <BirthdaysCard />
         <PeopleYouMayKnow />
         <ChatSidebar />
