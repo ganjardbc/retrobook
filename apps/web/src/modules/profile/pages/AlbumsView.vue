@@ -9,14 +9,10 @@ import EmptyState from '@/components/EmptyState.vue'
 import FormRow from '@/components/FormRow.vue'
 import IconSelect, { type IconOption } from '@/components/IconSelect.vue'
 import PageCard from '@/components/PageCard.vue'
+import { PRIVACY_ICONS } from '@/helpers/privacy'
 import { ApiRequestError } from '@/plugins/http'
 import { albumsApi, type Album } from '../services/albums'
 
-const PRIVACY_ICONS = {
-  PUBLIC: 'mdi:earth',
-  FRIENDS: 'mdi:account-multiple',
-  ONLY_ME: 'mdi:lock',
-} as const
 const privacyOptions = computed<IconOption[]>(() =>
   PRIVACIES.map((p) => ({ value: p, label: t(`privacy.${p}`), icon: PRIVACY_ICONS[p] })),
 )

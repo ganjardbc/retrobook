@@ -17,12 +17,19 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-for="a in items.filter((i) => !dismissed.includes(i.id))" :key="a.id" class="banner" role="status">
+  <div
+    v-for="a in items.filter((i) => !dismissed.includes(i.id))"
+    :key="a.id"
+    class="banner"
+    role="status"
+  >
     <div>
       <strong>{{ a.title }}</strong>
       <p>{{ a.body }}</p>
     </div>
-    <button class="banner__close" type="button" aria-label="Dismiss" @click="dismissed.push(a.id)">×</button>
+    <button class="banner__close" type="button" aria-label="Dismiss" @click="dismissed.push(a.id)">
+      ×
+    </button>
   </div>
 </template>
 

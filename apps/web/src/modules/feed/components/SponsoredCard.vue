@@ -3,7 +3,13 @@ import { t } from '@retrobook/shared/i18n'
 import { onMounted, ref } from 'vue'
 import { request } from '@/plugins/http'
 
-type Sponsored = { id: number; title: string; body: string; imageUrl: string | null; linkUrl: string }
+type Sponsored = {
+  id: number
+  title: string
+  body: string
+  imageUrl: string | null
+  linkUrl: string
+}
 const item = ref<Sponsored | null>(null)
 // Tautan sudah divalidasi server (http, https, atau path internal); tetap hanya dirender sebagai href biasa.
 const external = (url: string) => /^https?:\/\//.test(url)

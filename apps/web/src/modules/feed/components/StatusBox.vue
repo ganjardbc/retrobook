@@ -14,6 +14,7 @@ import { ApiRequestError } from '@/plugins/http'
 import { postsApi } from '@/modules/posts/services/api'
 import { useFeedStore } from '@/modules/feed/stores'
 import { imageProblem } from '@/helpers/image'
+import { PRIVACY_ICONS } from '@/helpers/privacy'
 import Button from '@/components/Button.vue'
 import TagSuggestions from '@/modules/feed/components/TagSuggestions.vue'
 
@@ -21,12 +22,6 @@ import TagSuggestions from '@/modules/feed/components/TagSuggestions.vue'
 const props = defineProps<{ wallOwner?: Pick<UserSummary, 'username' | 'displayName'> }>()
 const emit = defineEmits<{ posted: [post: Post] }>()
 const MAX_TAGS = 10
-/** Ikon selektor privasi; tanpa pilihan, ikon mengikuti default umum (teman). */
-const PRIVACY_ICONS: Record<Privacy, string> = {
-  PUBLIC: 'mdi:earth',
-  FRIENDS: 'mdi:account-multiple',
-  ONLY_ME: 'mdi:lock',
-}
 const feed = useFeedStore()
 const content = ref('')
 const privacy = ref<Privacy | ''>('')
@@ -144,12 +139,7 @@ async function submit() {
 </script>
 
 <template>
-  <form
-    class="status"
-    @submit.prevent="submit"
-    @focusin="focused = true"
-    @focusout="onFocusout"
-  >
+  <form class="status" @submit.prevent="submit" @focusin="focused = true" @focusout="onFocusout">
     <div class="status__tabs">
       <span class="status__tab status__tab--active">
         <Icon icon="mdi:text-box-edit-outline" aria-hidden="true" />{{ t('statusBox.tab.status') }}

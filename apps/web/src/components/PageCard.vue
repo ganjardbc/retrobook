@@ -1,12 +1,12 @@
 <script setup lang="ts">
 /** Kartu halaman penuh: header abu dengan judul dan aksi, isi di bawahnya (pola sama dengan kartu kolom kanan). */
-defineProps<{ title: string }>()
+withDefaults(defineProps<{ title: string; heading?: 'h1' | 'h2' }>(), { heading: 'h1' })
 </script>
 
 <template>
   <section class="pcard">
     <header class="pcard__head">
-      <h1 class="pcard__title">{{ title }}</h1>
+      <component :is="heading" class="pcard__title">{{ title }}</component>
       <div class="pcard__actions"><slot name="actions" /></div>
     </header>
     <div class="pcard__body"><slot /></div>

@@ -66,14 +66,22 @@ describe('StatusBox', () => {
   })
 
   it('perasaan terpilih ikut dikirim dan kembali kosong setelah berhasil', async () => {
-    const create = vi.spyOn(postsApi, 'create').mockResolvedValue(mkPost({ feeling: 'feeling grateful' }))
+    const create = vi
+      .spyOn(postsApi, 'create')
+      .mockResolvedValue(mkPost({ feeling: 'feeling grateful' }))
     const w = mount(StatusBox)
     await w.find('textarea').setValue('syukur')
     await w.find('select[aria-label="Feeling or activity"]').setValue('feeling grateful')
     await w.find('form').trigger('submit')
     await flushPromises()
-    expect(create).toHaveBeenCalledWith({ content: 'syukur', feeling: 'feeling grateful', imageUrl: null })
-    expect((w.find('select[aria-label="Feeling or activity"]').element as HTMLSelectElement).value).toBe('')
+    expect(create).toHaveBeenCalledWith({
+      content: 'syukur',
+      feeling: 'feeling grateful',
+      imageUrl: null,
+    })
+    expect(
+      (w.find('select[aria-label="Feeling or activity"]').element as HTMLSelectElement).value,
+    ).toBe('')
   })
 
   it('galat server ditampilkan dan teks tidak hilang', async () => {
