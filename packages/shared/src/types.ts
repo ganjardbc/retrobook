@@ -52,10 +52,13 @@ export type GroupSummary = {
   name: string
   description: string
   privacy: GroupPrivacy
+  avatarUrl: string | null
   createdBy: number
   createdAt: string
   memberCount: number
   isMember: boolean
+  /** Viewer adalah admin grup (boleh edit dan ganti foto). */
+  isAdmin: boolean
 }
 
 export type Comment = {
