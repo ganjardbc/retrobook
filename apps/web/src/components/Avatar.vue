@@ -3,7 +3,7 @@ import { t } from '@retrobook/shared/i18n'
 import { computed } from 'vue'
 
 const props = withDefaults(
-  defineProps<{ name: string; src?: string | null; size?: 's' | 'm' | 'l' }>(),
+  defineProps<{ name: string; src?: string | null; size?: 's' | 'm' | 'ml' | 'l' }>(),
   { src: null, size: 's' },
 )
 
@@ -55,6 +55,11 @@ const initial = computed(() => props.name.trim().charAt(0).toUpperCase())
   width: var(--avatar-m);
   height: var(--avatar-m);
   font-size: var(--fs-title);
+}
+.avatar--ml {
+  width: var(--avatar-ml);
+  height: var(--avatar-ml);
+  font-size: var(--fs-name);
 }
 .avatar--l {
   width: var(--avatar-l);

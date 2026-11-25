@@ -69,7 +69,7 @@ onMounted(() => void load())
       </template>
       <p v-if="error" class="form-error" role="alert">{{ error }}</p>
       <div v-if="group" class="about">
-        <Avatar :name="group.name" size="l" />
+        <Avatar :name="group.name" size="ml" />
         <div class="about__text">
           <span class="about__meta"
             >{{

@@ -54,6 +54,7 @@
   --h-cover: 315px; /* ~ cover profil */
   --avatar-s: 32px; /* komentar dan chat (ukur) */
   --avatar-m: 40px; /* penulis post (ukur) */
+  --avatar-ml: 64px; /* kepala grup (bukan hasil ukur) */
   --avatar-l: 160px; /* foto profil, belum termasuk border putih (ukur) */
   --friend-tile: 105px; /* kotak grid teman (ukur: 106 x 103) */
 }
