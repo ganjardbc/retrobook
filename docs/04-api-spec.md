@@ -346,6 +346,7 @@ Presence: online bila minimal satu koneksi aktif; `users.last_seen_at` diperbaru
 | POST | `/groups` | Buat grup (`name`, `description`, `privacy` PUBLIC/CLOSED); pembuat otomatis menjadi ADMIN | GRP-01 |
 | GET | `/groups/:id` | Detail grup publik atau grup tertutup yang diikuti | GRP-01 |
 | POST | `/groups/:id/join`, `/groups/:id/leave` | Gabung dan keluar dari grup. Join hanya untuk grup PUBLIC (CLOSED: 404 yang sama dengan non-anggota); admin terakhir tidak bisa keluar selama masih ada anggota lain (409 `CONFLICT`) | GRP-01 |
+| POST | `/posts` dengan `groupId` | Alternatif membuat post grup dari StatusBox (anggota saja, selain itu 404; mendukung `feeling` dan `imageUrl`; `taggedUserIds` ditolak 400 karena tag bisa memberi tahu non-anggota) | GRP-01 |
 | GET/POST | `/groups/:id/posts` | Paginasi dan buat post grup; hanya anggota yang dapat membaca atau menulis | GRP-01 |
 | GET/POST | `/events` | Daftar event mendatang (opsional `?from&to` ISO untuk rentang, dipakai kartu Events today; pembuat yang diblokir atau BANNED disembunyikan, `rsvpCount` hanya menghitung GOING) dan buat event | EVT-01 |
 | GET | `/events/:id` | Detail event dengan `myRsvp` dan `rsvpCount`; pembuat yang diblokir menghasilkan 404 | EVT-01 |

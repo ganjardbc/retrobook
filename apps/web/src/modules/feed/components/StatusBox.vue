@@ -19,7 +19,11 @@ import Button from '@/components/Button.vue'
 import TagSuggestions from '@/modules/feed/components/TagSuggestions.vue'
 
 /** Bila diisi, post ditulis di dinding teman ini (WAL-01) dan privasi tidak dipilih (BR-04). */
-const props = defineProps<{ wallOwner?: Pick<UserSummary, 'username' | 'displayName'> }>()
+const props = defineProps<{
+  wallOwner?: Pick<UserSummary, 'username' | 'displayName'>
+  /** Post grup (GRP-01): privasi tidak dipilih dan teman tidak bisa di-tag. */
+  groupId?: number
+}>()
 const emit = defineEmits<{ posted: [post: Post] }>()
 const MAX_TAGS = 10
 const feed = useFeedStore()
@@ -45,7 +49,7 @@ let mentionStart = 0
 
 function detectMention() {
   const el = draftInput.value
-  if (!el) return
+  if (!el || props.groupId !== undefined) return
   const pos = el.selectionStart
   const m = /(^|\s)@([^\s@]{0,30})$/.exec(content.value.slice(0, pos))
   mention.value = m ? m[2]! : null
@@ -121,9 +125,13 @@ async function submit() {
       ...(feeling.value ? { feeling: feeling.value } : {}),
       imageUrl: imageUrl.value,
       ...(props.wallOwner ? { wallOwnerUsername: props.wallOwner.username } : {}),
+      ...(props.groupId !== undefined
+        ? { groupId: props.groupId, privacy: 'FRIENDS' as const }
+        : {}),
       ...(tagged.value.length ? { taggedUserIds: tagged.value.map((u) => u.id) } : {}),
     })
-    feed.prepend(post)
+    // Post grup tidak masuk feed utama.
+    if (props.groupId === undefined) feed.prepend(post)
     emit('posted', post)
     content.value = ''
     feeling.value = ''
@@ -166,16 +174,20 @@ async function submit() {
         :placeholder="
           wallOwner
             ? t('statusBox.wall.placeholder', { name: wallOwner.displayName })
-            : t('statusBox.placeholder')
+            : groupId !== undefined
+              ? t('groups.write')
+              : t('statusBox.placeholder')
         "
         :aria-label="
           wallOwner
             ? t('statusBox.wall.placeholder', { name: wallOwner.displayName })
-            : t('statusBox.placeholder')
+            : groupId !== undefined
+              ? t('groups.write')
+              : t('statusBox.placeholder')
         "
         :aria-expanded="mention !== null"
         aria-autocomplete="list"
-        :title="t('statusBox.tag.hint')"
+        :title="groupId === undefined ? t('statusBox.tag.hint') : undefined"
         @input="detectMention"
         @click="detectMention"
         @keyup.left.right="detectMention"
@@ -221,7 +233,7 @@ async function submit() {
         <option value="">{{ t('statusBox.feeling.none') }}</option>
         <option v-for="option in POST_FEELINGS" :key="option" :value="option">{{ option }}</option>
       </select>
-      <span v-if="!wallOwner" class="status__privacy-wrap">
+      <span v-if="!wallOwner && groupId === undefined" class="status__privacy-wrap">
         <Icon :icon="PRIVACY_ICONS[privacy || 'FRIENDS']" aria-hidden="true" />
         <select v-model="privacy" class="status__privacy" :aria-label="t('statusBox.privacy')">
           <option value="">{{ t('statusBox.privacy.default') }}</option>

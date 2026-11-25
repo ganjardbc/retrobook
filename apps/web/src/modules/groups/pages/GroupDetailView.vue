@@ -7,6 +7,7 @@ import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import PageCard from '@/components/PageCard.vue'
+import StatusBox from '@/modules/feed/components/StatusBox.vue'
 import PostCard from '@/modules/posts/components/PostCard.vue'
 import { ApiRequestError } from '@/plugins/http'
 import { groupsApi } from '../services/api'
@@ -14,7 +15,6 @@ import { groupsApi } from '../services/api'
 const route = useRoute()
 const group = ref<GroupSummary | null>(null)
 const posts = ref<Post[]>([])
-const content = ref('')
 const error = ref('')
 
 const message = (cause: unknown, fallback: string) =>
@@ -47,14 +47,8 @@ async function leave() {
     error.value = message(cause, t('groups.leaveError'))
   }
 }
-async function publish() {
-  if (!group.value || !content.value.trim()) return
-  try {
-    posts.value.unshift(await groupsApi.createPost(group.value.id, content.value.trim()))
-    content.value = ''
-  } catch (cause) {
-    error.value = message(cause, t('groups.postError'))
-  }
+function onPosted(post: Post) {
+  posts.value.unshift(post)
 }
 onMounted(() => void load())
 </script>
@@ -91,18 +85,7 @@ onMounted(() => void load())
     </PageCard>
 
     <template v-if="group">
-      <form v-if="group.isMember" class="composer" @submit.prevent="publish">
-        <textarea
-          v-model="content"
-          maxlength="5000"
-          rows="2"
-          :placeholder="t('groups.write')"
-          :aria-label="t('groups.write')"
-        />
-        <div class="composer__foot">
-          <Button type="submit" :disabled="!content.trim()">{{ t('groups.post') }}</Button>
-        </div>
-      </form>
+      <StatusBox v-if="group.isMember" :group-id="group.id" @posted="onPosted" />
       <EmptyState v-else icon="mdi:lock-outline" :title="t('groups.joinToSee')" class="locked" />
       <PostCard v-for="post in posts" :key="post.id" :post="post" />
       <EmptyState
@@ -134,30 +117,9 @@ onMounted(() => void load())
   margin: var(--sp-1) 0 0;
   overflow-wrap: anywhere;
 }
-.composer,
 .locked {
   background: var(--c-card);
   border: var(--card-border);
   border-radius: var(--radius);
-}
-.composer textarea {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 44px;
-  padding: var(--sp-3);
-  border: 0;
-  outline: 0;
-  resize: none;
-  background: none;
-  font: inherit;
-  font-size: var(--fs-post);
-}
-.composer__foot {
-  display: flex;
-  justify-content: flex-end;
-  padding: var(--sp-2) var(--sp-3);
-  background: var(--c-card-subtle);
-  border-top: 1px solid var(--c-border-soft);
 }
 </style>

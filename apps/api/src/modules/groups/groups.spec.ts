@@ -61,4 +61,25 @@ describe('Grup (integrasi)', () => {
     expect(res.status).toBe(409)
     expect((await h.as(member).post(`/groups/${group.id}/leave`)).status).toBe(201)
   })
+
+  it('POST /posts dengan groupId: anggota boleh (dengan perasaan), non-anggota 404, tag ditolak', async () => {
+    const admin = await h.mkUser('admin')
+    const outsider = await h.mkUser('outsider')
+    const friend = await h.mkUser('friend')
+    const group = (await h.as(admin).post('/groups').send({ name: 'Klub', privacy: 'PUBLIC' })).body
+    const ok = await h
+      .as(admin)
+      .post('/posts')
+      .send({ content: 'hai', groupId: group.id, privacy: 'FRIENDS', feeling: 'feeling happy' })
+    expect(ok.status).toBe(201)
+    expect(ok.body.groupId).toBe(group.id)
+    expect(
+      (await h.as(outsider).post('/posts').send({ content: 'x', groupId: group.id })).status,
+    ).toBe(404)
+    const tagged = await h
+      .as(admin)
+      .post('/posts')
+      .send({ content: 'x', groupId: group.id, taggedUserIds: [friend.id] })
+    expect(tagged.status).toBe(400)
+  })
 })

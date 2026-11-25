@@ -105,7 +105,9 @@ describe('Posts dan visibilitas (integrasi)', () => {
 
     it('menerima feeling dari daftar tetap dan menolak nilai lain', async () => {
       const alice = await mkUser('alice')
-      const created = await api(alice).post('/posts').send({ content: 'halo', feeling: 'feeling happy' })
+      const created = await api(alice)
+        .post('/posts')
+        .send({ content: 'halo', feeling: 'feeling happy' })
       expect(created.status).toBe(201)
       expect(created.body.feeling).toBe('feeling happy')
       const invalid = await api(alice).post('/posts').send({ content: 'halo', feeling: 'whatever' })

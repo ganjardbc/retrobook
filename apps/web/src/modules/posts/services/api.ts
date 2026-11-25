@@ -9,6 +9,8 @@ export const postsApi = {
     privacy?: Privacy
     imageUrl?: string | null
     feeling?: PostFeeling | null
+    /** Post grup (GRP-01): hanya anggota; tanpa tag. */
+    groupId?: number
     /** WAL-01: tulis di dinding teman. */
     wallOwnerUsername?: string
     /** WAL-02: id teman yang di-tag. */

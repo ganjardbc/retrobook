@@ -117,6 +117,22 @@ describe('StatusBox: dinding dan tag', () => {
     )
   })
 
+  it('di grup: placeholder grup, tanpa privasi, mengirim groupId, tidak masuk feed utama, @ tidak men-tag', async () => {
+    const create = vi.spyOn(postsApi, 'create').mockResolvedValue(mkPost({ id: 6 }))
+    const w = mount(StatusBox, { props: { groupId: 9 } })
+    expect(w.find('textarea').attributes('placeholder')).toBe('Write something to the group...')
+    expect(w.findAll('select')).toHaveLength(1) // hanya perasaan
+    await w.find('textarea').setValue('@bo')
+    expect(w.findComponent({ name: 'TagSuggestions' }).exists()).toBe(false)
+    await w.find('textarea').setValue('halo grup')
+    await w.find('form').trigger('submit')
+    await flushPromises()
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ content: 'halo grup', groupId: 9, privacy: 'FRIENDS' }),
+    )
+    expect(w.emitted('posted')).toHaveLength(1)
+  })
+
   describe('tag dengan @', () => {
     beforeEach(() => vi.useFakeTimers())
     afterEach(() => vi.useRealTimers())

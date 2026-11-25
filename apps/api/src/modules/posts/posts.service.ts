@@ -88,6 +88,10 @@ export class PostsService {
       )
     }
     if (dto.groupId) await this.assertGroupMember(viewerId, dto.groupId)
+    // Tag mengirim notifikasi ke orang yang bisa saja bukan anggota grup: tidak diizinkan di post grup.
+    if (dto.groupId && dto.taggedUserIds?.length) {
+      throw new AppException(400, 'VALIDATION_FAILED', 'Post grup tidak dapat men-tag teman')
+    }
     const wallOwner = dto.wallOwnerUsername
       ? await this.resolveWallOwner(viewerId, dto.wallOwnerUsername)
       : null
