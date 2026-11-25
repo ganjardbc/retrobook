@@ -227,14 +227,14 @@ async function saveEdit() {
     <p v-else-if="post.content" class="post__text" @click="openDetail">
       <HashtagText :text="post.content" />
     </p>
-    <img
-      v-if="post.imageUrl"
-      class="post__image"
-      :src="post.imageUrl"
-      :alt="t('post.image.alt', { name: post.author.displayName })"
-      loading="lazy"
-      @click="openDetail"
-    />
+    <div v-if="post.imageUrl" class="post__media" @click="openDetail">
+      <img
+        class="post__image"
+        :src="post.imageUrl"
+        :alt="t('post.image.alt', { name: post.author.displayName })"
+        loading="lazy"
+      />
+    </div>
 
     <SharedPostCard v-if="post.sharedFrom" :original="post.sharedFrom" />
 
@@ -303,7 +303,7 @@ async function saveEdit() {
   color: var(--c-text-muted);
 }
 .post__text,
-.post__image {
+.post__media {
   cursor: pointer;
 }
 .post__text {
@@ -355,6 +355,13 @@ async function saveEdit() {
   display: flex;
   gap: var(--sp-2);
   margin-left: auto;
+}
+/* Bingkai selebar kartu: foto potret berada di tengah dengan latar netral, foto kecil tidak diperbesar. */
+.post__media {
+  display: flex;
+  justify-content: center;
+  background: var(--c-card-subtle);
+  border-block: 1px solid var(--c-border-soft);
 }
 .post__image {
   display: block;
