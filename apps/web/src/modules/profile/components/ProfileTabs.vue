@@ -17,13 +17,6 @@ defineProps<{ profile: Profile }>()
     </RouterLink>
     <RouterLink
       class="tabs__tab"
-      :to="`/${profile.username}/notes`"
-      exact-active-class="tabs__tab--active"
-    >
-      Notes
-    </RouterLink>
-    <RouterLink
-      class="tabs__tab"
       :to="`/${profile.username}/about`"
       exact-active-class="tabs__tab--active"
     >

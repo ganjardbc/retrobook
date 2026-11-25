@@ -26,6 +26,13 @@ const body = ref('')
 const privacy = ref<NoteItem['privacy']>('FRIENDS')
 const editingId = ref<number | null>(null)
 const error = ref('')
+const expanded = ref(new Set<number>())
+const LONG_NOTE = 200
+function toggle(id: number) {
+  const next = new Set(expanded.value)
+  if (!next.delete(id)) next.add(id)
+  expanded.value = next
+}
 const isMine = computed(() => auth.user?.id === profile.profile?.id)
 
 const message = (cause: unknown, fallback: string) =>
@@ -90,13 +97,13 @@ async function remove(note: NoteItem) {
       <Button v-if="!showForm" @click="showForm = true">{{ t('notes.write') }}</Button>
     </template>
     <form v-if="showForm" class="form" @submit.prevent="save">
-      <FormRow :label="t('notes.name')" for-id="note-title">
+      <FormRow stacked :label="t('notes.name')" for-id="note-title">
         <input id="note-title" v-model="title" maxlength="120" required />
       </FormRow>
-      <FormRow :label="t('notes.body')" for-id="note-body">
-        <textarea id="note-body" v-model="body" maxlength="20000" rows="7" required />
+      <FormRow stacked :label="t('notes.body')" for-id="note-body">
+        <textarea id="note-body" v-model="body" maxlength="20000" rows="5" required />
       </FormRow>
-      <FormRow :label="t('notes.privacy')">
+      <FormRow stacked :label="t('notes.privacy')">
         <IconSelect v-model="privacy" :options="privacyOptions" :label="t('notes.privacy')" />
       </FormRow>
       <div class="form__actions">
@@ -122,7 +129,20 @@ async function remove(note: NoteItem) {
             }}</time>
           </span>
         </div>
-        <p class="item__body">{{ note.body }}</p>
+        <p
+          class="item__body"
+          :class="{ 'item__body--clamp': note.body.length > LONG_NOTE && !expanded.has(note.id) }"
+        >
+          {{ note.body }}
+        </p>
+        <button
+          v-if="note.body.length > LONG_NOTE"
+          type="button"
+          class="item__more"
+          @click="toggle(note.id)"
+        >
+          {{ expanded.has(note.id) ? t('notes.less') : t('notes.more') }}
+        </button>
         <div v-if="isMine" class="item__actions">
           <Button variant="default" @click="edit(note)">{{ t('notes.edit') }}</Button>
           <Button variant="default" @click="remove(note)">{{ t('notes.delete') }}</Button>
@@ -150,7 +170,6 @@ async function remove(note: NoteItem) {
 .form__actions {
   display: flex;
   gap: var(--sp-2);
-  padding-left: 118px;
 }
 .list {
   margin: 0;
@@ -187,13 +206,26 @@ async function remove(note: NoteItem) {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.item__body--clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.item__more {
+  margin: 0 0 var(--sp-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--c-link);
+  font: inherit;
+  cursor: pointer;
+}
+.item__more:hover {
+  text-decoration: underline;
+}
 .item__actions {
   display: flex;
   gap: var(--sp-2);
-}
-@media (max-width: 560px) {
-  .form__actions {
-    padding-left: 0;
-  }
 }
 </style>

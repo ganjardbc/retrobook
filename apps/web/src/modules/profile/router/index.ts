@@ -86,11 +86,6 @@ export default [
         name: 'profile-photos',
         component: () => import('@/modules/profile/pages/ProfilePhotos.vue'),
       },
-      {
-        path: 'notes',
-        name: 'profile-notes',
-        component: () => import('@/modules/profile/pages/ProfileNotes.vue'),
-      },
     ],
   },
 ]

@@ -4,6 +4,7 @@ import { watch } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import Button from '@/components/Button.vue'
 import FriendsGrid from '@/modules/friends/components/FriendsGrid.vue'
+import ProfileNotes from '@/modules/profile/components/ProfileNotes.vue'
 import LifeEvents from '@/modules/profile/components/LifeEvents.vue'
 import InfoCards from '@/modules/profile/components/InfoCards.vue'
 import ProfileHeader from '@/modules/profile/components/ProfileHeader.vue'
@@ -49,6 +50,7 @@ watch(
           <InfoCards v-if="route.name !== 'profile-about'" :profile="store.profile" />
           <FriendsGrid :profile="store.profile" :friends="store.friends.items" />
           <LifeEvents />
+          <ProfileNotes />
         </aside>
         <section class="profile__main"><RouterView /></section>
       </div>

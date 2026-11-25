@@ -353,6 +353,8 @@ export const en = {
   'notes.save': 'Save changes',
   'notes.edit': 'Edit',
   'notes.delete': 'Delete',
+  'notes.more': 'Show more',
+  'notes.less': 'Show less',
   'notes.empty': 'No notes yet.',
   'notes.emptyHint': 'Write longer thoughts that do not fit in a status.',
   'notes.loadError': 'Notes could not be loaded.',
