@@ -127,4 +127,17 @@ describe('http client', () => {
     fetchMock.mockResolvedValueOnce(json(204))
     expect(await request('/x', { method: 'POST' })).toBeUndefined()
   })
+
+  it('MAINTENANCE_MODE memicu hook onMaintenance tanpa mengakhiri sesi', async () => {
+    const onMaintenance = vi.fn()
+    setHttpHooks({ onSessionLost, onMaintenance })
+    session.set(tokens(1))
+    fetchMock.mockResolvedValueOnce(
+      json(403, { statusCode: 403, message: 'Sedang dalam pemeliharaan', code: 'MAINTENANCE_MODE' }),
+    )
+    await expect(request('/feed')).rejects.toMatchObject({ code: 'MAINTENANCE_MODE' })
+    expect(onMaintenance).toHaveBeenCalledOnce()
+    expect(onSessionLost).not.toHaveBeenCalled()
+    expect(session.accessToken).toBe('access-1')
+  })
 })

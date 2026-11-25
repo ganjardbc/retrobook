@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
 import { PrismaService } from '../../prisma/prisma.service'
 import { AppException } from '../../common/app-exception'
+import { SettingsService } from '../settings/settings.service'
 import { IS_PUBLIC } from './public.decorator'
 
 /**
@@ -15,6 +16,7 @@ export class JwtAuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly jwt: JwtService,
     private readonly prisma: PrismaService,
+    private readonly settings: SettingsService,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -49,6 +51,10 @@ export class JwtAuthGuard implements CanActivate {
     }
     if (user.status === 'BANNED') {
       throw new AppException(403, 'ACCOUNT_BANNED', 'Akun kamu diblokir')
+    }
+    // BR-12: saat maintenance hanya admin yang lolos; status akun diperiksa lebih dulu.
+    if (user.role !== 'ADMIN' && (await this.settings.get()).maintenanceMode) {
+      throw new AppException(403, 'MAINTENANCE_MODE', 'Sedang dalam pemeliharaan')
     }
     req.user = { id: user.id, role: user.role }
     return true

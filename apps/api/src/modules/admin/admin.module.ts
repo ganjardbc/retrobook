@@ -13,11 +13,14 @@ import { AdminReportsController } from './reports/admin-reports.controller'
 import { AdminReportsService } from './reports/admin-reports.service'
 import { AdminBlockedWordsController } from './blocked-words/admin-blocked-words.controller'
 import { AdminBlockedWordsService } from './blocked-words/admin-blocked-words.service'
+import { AdminSettingsController } from './settings/admin-settings.controller'
+import { AdminSettingsService } from './settings/admin-settings.service'
+import { SettingsModule } from '../settings/settings.module'
 
 @Module({
-  imports: [AuthModule],
-  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController, AdminBlockedWordsController],
-  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, AdminBlockedWordsService, RolesGuard],
+  imports: [AuthModule, SettingsModule],
+  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController, AdminBlockedWordsController, AdminSettingsController],
+  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, AdminBlockedWordsService, AdminSettingsService, RolesGuard],
   exports: [AdminAuditService],
 })
 export class AdminModule {}

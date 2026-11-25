@@ -20,8 +20,10 @@ type Hooks = {
   onSessionLost: (reason: 'expired' | 'ACCOUNT_SUSPENDED' | 'ACCOUNT_BANNED') => void
   /** Setelah refresh berhasil. */
   onRefreshed: (user: AuthSession['user']) => void
+  /** BR-12: server menolak non-admin karena maintenance mode. */
+  onMaintenance: () => void
 }
-let hooks: Hooks = { onSessionLost: () => {}, onRefreshed: () => {} }
+let hooks: Hooks = { onSessionLost: () => {}, onRefreshed: () => {}, onMaintenance: () => {} }
 export const setHttpHooks = (h: Partial<Hooks>) => (hooks = { ...hooks, ...h })
 
 async function toError(res: Response): Promise<ApiRequestError> {
@@ -95,6 +97,7 @@ export async function request<T>(path: string, opts: Options = {}): Promise<T> {
       session.clear()
       hooks.onSessionLost(err.code)
     }
+    if (err.code === 'MAINTENANCE_MODE') hooks.onMaintenance()
     throw err
   }
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T)

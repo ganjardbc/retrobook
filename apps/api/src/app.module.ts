@@ -19,6 +19,7 @@ import { SearchModule } from './modules/search/search.module'
 import { RateLimitModule } from './common/rate-limit'
 import { PokesModule } from './modules/pokes/pokes.module'
 import { RealtimeModule } from './modules/realtime/realtime.module'
+import { SettingsModule } from './modules/settings/settings.module'
 import { AdminModule } from './modules/admin/admin.module'
 
 // Satu modul per domain di src/modules/*; tambahkan ke imports saat tugasnya dikerjakan.
@@ -32,6 +33,7 @@ import { AdminModule } from './modules/admin/admin.module'
     PrismaModule,
     RateLimitModule,
     AuthModule,
+    SettingsModule,
     UploadsModule,
     VisibilityModule,
     PostsModule,

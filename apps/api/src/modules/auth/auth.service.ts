@@ -6,6 +6,7 @@ import * as argon2 from 'argon2'
 import { AppException } from '../../common/app-exception'
 import type { Env } from '../../config/env.validation'
 import { PrismaService } from '../../prisma/prisma.service'
+import { SettingsService } from '../settings/settings.service'
 import { LoginDto, RegisterDto } from './dto/auth.dto'
 import { hashToken, newRefreshToken, ttlToMs } from './token.util'
 
@@ -36,6 +37,8 @@ const INVALID_CREDENTIALS = () =>
 
 type TokenUser = Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl' | 'role'>
 
+const maintenance = () => new AppException(403, 'MAINTENANCE_MODE', 'Sedang dalam pemeliharaan')
+
 @Injectable()
 export class AuthService {
   // Hash palsu agar waktu respons login tidak membedakan akun yang ada dan tidak ada.
@@ -45,9 +48,15 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService<Env, true>,
+    private readonly settings: SettingsService,
   ) {}
 
   async register(dto: RegisterDto) {
+    const { maintenanceMode, registrationOpen } = await this.settings.get()
+    if (maintenanceMode) throw maintenance()
+    if (!registrationOpen) {
+      throw new AppException(403, 'REGISTRATION_CLOSED', 'Pendaftaran sedang ditutup')
+    }
     if (RESERVED_USERNAMES.has(dto.username.toLowerCase())) {
       throw new AppException(409, 'USERNAME_TAKEN', 'Username sudah dipakai')
     }
@@ -91,6 +100,7 @@ export class AuthService {
     if (requiredRole && user.role !== requiredRole) {
       throw new AppException(403, 'FORBIDDEN', 'Akses hanya untuk administrator')
     }
+    await this.assertNotInMaintenance(user)
     return this.issue(user)
   }
 
@@ -116,6 +126,7 @@ export class AuthService {
     if (requiredRole && row.user.role !== requiredRole) {
       throw new AppException(403, 'FORBIDDEN', 'Akses hanya untuk administrator')
     }
+    await this.assertNotInMaintenance(row.user)
 
     // Pencabutan bersyarat membuat dua refresh bersamaan tidak bisa sama-sama berhasil.
     const revoked = await this.prisma.refreshToken.updateMany({
@@ -139,6 +150,11 @@ export class AuthService {
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
     })
+  }
+
+  /** BR-12: maintenance mode hanya meloloskan admin. */
+  private async assertNotInMaintenance(user: Pick<User, 'role'>) {
+    if (user.role !== 'ADMIN' && (await this.settings.get()).maintenanceMode) throw maintenance()
   }
 
   private assertCanSignIn(user: Pick<User, 'status'>) {

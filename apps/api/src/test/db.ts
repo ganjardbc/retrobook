@@ -4,6 +4,7 @@ import type { PrismaClient } from '@prisma/client'
 export async function resetDb(prisma: PrismaClient) {
   await prisma.auditLog.deleteMany()
   await prisma.blockedWord.deleteMany()
+  await prisma.setting.deleteMany()
   await prisma.report.deleteMany()
   await prisma.notification.deleteMany()
   await prisma.postHashtag.deleteMany()
