@@ -21,11 +21,13 @@ import { AdminAnnouncementsService } from './announcements/admin-announcements.s
 import { NotificationsModule } from '../notifications/notifications.module'
 import { AdminAuditLogsController } from './audit-logs/admin-audit-logs.controller'
 import { AdminAuditLogsService } from './audit-logs/admin-audit-logs.service'
+import { AdminBotsController } from './bots/admin-bots.controller'
+import { AdminBotsService } from './bots/admin-bots.service'
 
 @Module({
   imports: [AuthModule, SettingsModule, NotificationsModule],
-  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController, AdminBlockedWordsController, AdminSettingsController, AdminAnnouncementsController, AdminAuditLogsController],
-  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, AdminBlockedWordsService, AdminSettingsService, AdminAnnouncementsService, AdminAuditLogsService, RolesGuard],
+  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController, AdminBlockedWordsController, AdminSettingsController, AdminAnnouncementsController, AdminAuditLogsController, AdminBotsController],
+  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, AdminBlockedWordsService, AdminSettingsService, AdminAnnouncementsService, AdminAuditLogsService, AdminBotsService, RolesGuard],
   exports: [AdminAuditService],
 })
 export class AdminModule {}

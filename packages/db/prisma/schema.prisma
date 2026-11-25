@@ -106,6 +106,7 @@ model User {
   settingsUpdated      Setting[]      @relation("SettingUpdater")
   announcementsCreated Announcement[] @relation("AnnouncementCreator")
   blockedWordsCreated  BlockedWord[]  @relation("BlockedWordCreator")
+  botProfile           BotProfile?
 
   @@index([status, createdAt])
   @@index([username])
@@ -394,4 +395,18 @@ model BlockedWord {
   creator User @relation("BlockedWordCreator", fields: [createdBy], references: [id], onDelete: Restrict)
 
   @@map("blocked_words")
+}
+
+model BotProfile {
+  userId      Int       @id @map("user_id")
+  persona     String    @db.Text
+  postsPerDay Int       @default(2) @map("posts_per_day")
+  active      Boolean   @default(true)
+  lastPostAt  DateTime? @map("last_post_at")
+  lastTickAt  DateTime? @map("last_tick_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("bot_profiles")
 }

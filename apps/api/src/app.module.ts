@@ -21,6 +21,7 @@ import { PokesModule } from './modules/pokes/pokes.module'
 import { RealtimeModule } from './modules/realtime/realtime.module'
 import { SettingsModule } from './modules/settings/settings.module'
 import { AnnouncementsModule } from './modules/announcements/announcements.module'
+import { BotsModule } from './modules/bots/bots.module'
 import { AdminModule } from './modules/admin/admin.module'
 
 // Satu modul per domain di src/modules/*; tambahkan ke imports saat tugasnya dikerjakan.
@@ -36,6 +37,7 @@ import { AdminModule } from './modules/admin/admin.module'
     AuthModule,
     SettingsModule,
     AnnouncementsModule,
+    BotsModule,
     UploadsModule,
     VisibilityModule,
     PostsModule,
