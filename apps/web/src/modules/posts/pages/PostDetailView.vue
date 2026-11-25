@@ -68,6 +68,7 @@ const onUpdated = (list: typeof main, post: Post) => list.replace(post)
         v-for="post in main.items.value"
         :key="post.id"
         :post="post"
+        detail
         @delete="onDelete"
         @toggle-like="(id) => onLike(main, id)"
         @comment-count="main.adjustComments"

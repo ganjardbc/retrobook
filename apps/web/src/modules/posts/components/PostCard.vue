@@ -27,7 +27,8 @@ import Button from '@/components/Button.vue'
 import IconSelect, { type IconOption } from '@/components/IconSelect.vue'
 import { PRIVACY_ICONS } from '@/helpers/privacy'
 
-const props = defineProps<{ post: Post }>()
+/** `detail`: tampilan halaman detail post (gambar fluid, teks lebih besar, aksen merek); kartu biasa di feed. */
+const props = defineProps<{ post: Post; detail?: boolean }>()
 const emit = defineEmits<{
   delete: [id: string]
   'toggle-like': [id: string]
@@ -122,7 +123,7 @@ async function saveEdit() {
 </script>
 
 <template>
-  <article class="post">
+  <article class="post" :class="{ 'post--detail': detail }">
     <header class="post__head">
       <Avatar :name="post.author.displayName" :src="post.author.avatarUrl" size="m" />
       <div class="post__who">
@@ -370,6 +371,26 @@ async function saveEdit() {
   height: auto;
   max-height: 520px;
   object-fit: contain;
+}
+/* Detail post: dibedakan dari kartu feed lewat garis aksen, teks lebih besar, dan gambar penuh tanpa batas tinggi. */
+.post--detail {
+  border-top: 3px solid var(--c-brand);
+}
+.post--detail .post__text {
+  padding-bottom: var(--sp-4);
+  font-size: calc(var(--fs-post) + 3px);
+  line-height: 1.5;
+  cursor: text;
+}
+.post--detail .post__media {
+  display: block;
+  background: none;
+  border-block: 0;
+  cursor: default;
+}
+.post--detail .post__image {
+  width: 100%;
+  max-height: none;
 }
 .post__menu {
   position: relative;
