@@ -55,7 +55,6 @@ const onUpdated = (list: typeof main, post: Post) => list.replace(post)
 
 <template>
   <div class="post-detail">
-    <PageCard :title="t('postDetail.title')" />
     <LoadingRows v-if="loading" />
     <EmptyState
       v-else-if="missing"

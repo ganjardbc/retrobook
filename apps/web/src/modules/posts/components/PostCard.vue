@@ -264,6 +264,7 @@ async function saveEdit() {
       :post-id="post.id"
       :post-author-id="post.author.id"
       :comment-count="post.commentCount"
+      :auto-open="detail"
       @count-change="(d) => emit('comment-count', post.id, d)"
     />
     <ReportDialog

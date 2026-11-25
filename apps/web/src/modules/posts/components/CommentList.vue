@@ -2,7 +2,7 @@
 import type { Comment } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ApiRequestError } from '@/plugins/http'
 import { commentsApi } from '@/modules/posts/services/comments'
@@ -14,7 +14,13 @@ import ReportDialog from '@/modules/posts/components/ReportDialog.vue'
 import { postsApi } from '@/modules/posts/services/api'
 import { imageProblem } from '@/helpers/image'
 
-const props = defineProps<{ postId: string; postAuthorId: string; commentCount: number }>()
+const props = defineProps<{
+  postId: string
+  postAuthorId: string
+  commentCount: number
+  /** Detail post: buka dan muat semua komentar otomatis. */
+  autoOpen?: boolean
+}>()
 const emit = defineEmits<{ 'count-change': [delta: number] }>()
 
 const auth = useAuthStore()
@@ -61,6 +67,15 @@ async function load(first: boolean) {
     loading.value = false
   }
 }
+
+/** Muat semua halaman (detail post). Berhenti bila gagal; batas halaman menjaga dari kursor yang tak habis. */
+async function loadAll() {
+  await load(true)
+  for (let page = 0; page < 100 && nextCursor.value && !error.value; page++) await load(false)
+}
+onMounted(() => {
+  if (props.autoOpen && props.commentCount > 0) void loadAll()
+})
 
 async function send() {
   const content = draft.value

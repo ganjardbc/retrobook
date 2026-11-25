@@ -72,6 +72,32 @@ describe('CommentList', () => {
     expect(w.text()).not.toContain('View 2 comments') // tautan hilang setelah dibuka
   })
 
+  it('autoOpen (detail post): semua halaman dimuat otomatis, tanpa tautan View', async () => {
+    const list = vi
+      .spyOn(commentsApi, 'list')
+      .mockResolvedValueOnce({ items: [mk('1'), mk('2')], nextCursor: '2' })
+      .mockResolvedValueOnce({ items: [mk('3')], nextCursor: null })
+    const w = mount(CommentList, {
+      props: { postId: '1', postAuthorId: '9', commentCount: 3, autoOpen: true },
+      global: { plugins: [router()] },
+    })
+    await flushPromises()
+    expect(list).toHaveBeenCalledTimes(2)
+    expect(list.mock.calls[1]![1]).toBe('2')
+    expect(w.findAll('.comment')).toHaveLength(3)
+    expect(w.text()).not.toContain('View')
+  })
+
+  it('autoOpen tanpa komentar: tidak memanggil server', async () => {
+    const list = vi.spyOn(commentsApi, 'list')
+    mount(CommentList, {
+      props: { postId: '1', postAuthorId: '9', commentCount: 0, autoOpen: true },
+      global: { plugins: [router()] },
+    })
+    await flushPromises()
+    expect(list).not.toHaveBeenCalled()
+  })
+
   it('"View more comments" memuat halaman berikutnya dengan kursor tanpa duplikat', async () => {
     const list = vi
       .spyOn(commentsApi, 'list')
