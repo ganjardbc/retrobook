@@ -129,7 +129,7 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 
 | ID | Tugas | Ukuran | Prioritas |
 |---|---|---|---|
-| [ ] T-61 | Hardening: daftar periksa keamanan Test 6; CORS, rahasia, log | M | wajib |
+| [x] T-61 | Hardening: daftar periksa keamanan Test 6; CORS, rahasia, log | M | wajib |
 | [ ] T-62 | Docker Compose produksi (web, admin, api, mysql), `.env.production.example`, volume uploads | M | wajib |
 | [ ] T-63 | Uji performa (p95 < 300 ms) dan perbaikan indeks | M | wajib |
 | [ ] T-64 | README akar, panduan menjalankan, label parodi, demo akhir | M | wajib |

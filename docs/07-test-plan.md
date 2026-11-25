@@ -171,6 +171,8 @@ Dijalankan pada Chromium; skenario realtime memakai dua konteks browser. Data di
 - Rahasia (JWT secret, kredensial DB) hanya dari variabel lingkungan; `.env` ada di `.gitignore`.
 - Token tidak ditulis ke log.
 
+Status T-61 (hardening): otomatis di `apps/api/src/modules/security.spec.ts` dan `config/env.validation.spec.ts`: header `nosniff`, `X-Frame-Options`, `Referrer-Policy`, tanpa `X-Powered-By`; hash password tidak ada di respons profil, pencarian, teman, feed, dan admin; `' OR 1=1 --` pada pencarian dan daftar admin hanya teks; konten `<script>` tersimpan sebagai teks mentah; IDOR ubah atau hapus post dan komentar orang lain ditolak. Sudah dicakup tugas lain: upload (T-11), rate limit (T-40), `v-html` dilarang ESLint (`vue/no-v-html`), IDOR pesan dan pertemanan di spec modulnya. Di production, API menolak boot bila `JWT_SECRET` kurang dari 32 karakter atau berupa placeholder, atau `CORS_ORIGINS` berisi `*`. Belum otomatis: tidak ada log request sehingga token tidak tertulis (diperiksa manual), CSP dan HSTS ada di proxy web saat T-62, dan pemeriksaan XSS visual di browser.
+
 ## 7. Pemeriksaan visual manual
 
 Karena target visual adalah era 2015, setiap fase diakhiri satu sesi pembandingan berdampingan dengan tangkapan layar referensi:
