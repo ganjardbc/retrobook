@@ -76,7 +76,7 @@ onBeforeUnmount(() => {
   background: none;
   /* Tanpa kabar: ikon gelap (referensi 2019); ada kabar: terang. */
   color: var(--c-brand-dark);
-  font-size: 20px;
+  font-size: 23px;
   cursor: pointer;
   transition: color 0.15s;
 }

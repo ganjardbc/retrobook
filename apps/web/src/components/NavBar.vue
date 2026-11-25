@@ -101,7 +101,7 @@ const auth = useAuthStore()
   color: var(--c-text-muted);
 }
 .navbar__brand :deep(.wordmark) {
-  font-size: 24px;
+  font-size: 27px;
 }
 .navbar__avatar {
   background: var(--c-brand-dark);
