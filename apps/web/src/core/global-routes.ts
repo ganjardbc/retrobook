@@ -38,7 +38,21 @@ export const routes: RouteRecordRaw[] = [
   ...ordered.filter((r) => !r.meta?.app),
 ]
 
-export const router = createRouter({ history: createWebHistory(), routes })
+/**
+ * Masuk ke detail post selalu mulai dari atas (juga saat pindah ke post lain lewat daftar related, yang
+ * memakai komponen yang sama). Back/Forward memulihkan posisi tersimpan; rute lain tidak diubah.
+ */
+export function scrollBehavior(
+  to: { name?: unknown; fullPath: string },
+  from: { fullPath: string },
+  saved: { left: number; top: number } | null,
+) {
+  if (saved) return saved
+  if (to.name === 'post-detail' && to.fullPath !== from.fullPath) return { top: 0 }
+  return undefined
+}
+
+export const router = createRouter({ history: createWebHistory(), routes, scrollBehavior })
 
 router.beforeEach((to) => {
   const auth = useAuthStore()
