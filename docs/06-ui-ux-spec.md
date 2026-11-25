@@ -172,6 +172,7 @@ Berkas ada di `assets/reference/` (hanya untuk pengukuran dan pembandingan priba
 |---|---|
 | `ref-1-feed-2014.png` | News feed 2014: navbar, tiga kolom, status box, kolom kanan, daftar chat |
 | `ref-2-profile-maret-2015.webp` | Profil Maret 2015: cover, tab, kartu info, grid teman, scroller tahun, Sponsored, wall post |
+| `ref-5-feed-2015.png` | News feed 2015 (1282 x 1235, dari pengguna): navbar dengan gradien dan border bawah gelap, composer tiga tab berikon, kartu post dengan baris cerita, kolom kiri berikon dan berkelompok, kartu kanan berjudul huruf besar abu-abu, strip chat dengan status waktu. Pengukuran navbar: gradien vertikal `#4e69a2` (atas) ke `#3b5998` (bawah), tinggi 42 px termasuk border bawah `#1b316c` 1 px, lalu garis bayangan abu `#abadb0` 1 px |
 | `ref-3-login.webp` | Halaman login dan Sign Up (hanya susunan yang dirujuk) |
 | `ref-4-profile-2019-pembanding.webp` | Profil gaya 2019, pembanding saja, bukan target |
 
