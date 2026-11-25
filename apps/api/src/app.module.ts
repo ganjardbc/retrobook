@@ -26,6 +26,7 @@ import { ActivityModule } from './modules/activity/activity.module'
 import { SponsoredModule } from './modules/sponsored/sponsored.module'
 import { MailModule } from './modules/mail/mail.module'
 import { AdminModule } from './modules/admin/admin.module'
+import { AlbumsModule } from './modules/albums/albums.module'
 
 // Satu modul per domain di src/modules/*; tambahkan ke imports saat tugasnya dikerjakan.
 @Module({
@@ -60,6 +61,7 @@ import { AdminModule } from './modules/admin/admin.module'
     MessagesModule,
     HealthModule,
     AdminModule,
+    AlbumsModule,
   ],
 })
 export class AppModule {}

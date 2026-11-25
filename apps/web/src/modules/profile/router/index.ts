@@ -2,6 +2,18 @@
 // global-routes menaruh rute dinamis di akhir, jadi urutan glob tidak berpengaruh.
 export default [
   {
+    path: '/albums',
+    name: 'albums',
+    component: () => import('@/modules/profile/pages/AlbumsView.vue'),
+    meta: { app: true },
+  },
+  {
+    path: '/albums/:id',
+    name: 'album-detail',
+    component: () => import('@/modules/profile/pages/AlbumDetailView.vue'),
+    meta: { app: true },
+  },
+  {
     path: '/me/edit',
     name: 'profile-edit',
     component: () => import('@/modules/profile/pages/EditProfileView.vue'),

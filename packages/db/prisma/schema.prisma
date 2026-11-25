@@ -109,6 +109,8 @@ model User {
   botProfile           BotProfile?
   sponsoredCreated     Sponsored[]    @relation("SponsoredCreator")
   passwordResetTokens  PasswordResetToken[]
+  albums               Album[]
+  photos               Photo[]
 
   @@index([status, createdAt])
   @@index([username])
@@ -443,4 +445,31 @@ model PasswordResetToken {
 
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+model Album {
+  id        Int       @id @default(autoincrement())
+  ownerId   Int       @map("owner_id")
+  name      String    @db.VarChar(80)
+  privacy   Privacy   @default(FRIENDS)
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  photos    Photo[]
+  @@index([ownerId, createdAt])
+  @@map("albums")
+}
+
+model Photo {
+  id        Int      @id @default(autoincrement())
+  albumId   Int      @map("album_id")
+  ownerId   Int      @map("owner_id")
+  url       String   @db.VarChar(255)
+  caption   String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  album     Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  @@index([albumId, id])
+  @@index([ownerId, createdAt])
+  @@map("photos")
 }

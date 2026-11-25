@@ -139,6 +139,7 @@ Status implementasi (T-22): `PATCH /me`, `POST /me/avatar`, dan `POST /me/cover`
 | GET | `/users/:username/posts` | Timeline profil (cursor); filter `?year=2014` untuk scroller tahun (PRF-05) |
 | GET | `/users/:username/friends` | Daftar teman (cursor), menyertakan `total` |
 | GET | `/users/:username/photos` | Foto dari post dan album (Fase 3) |
+| GET | `/users/:username/albums` | Album profil yang boleh dilihat berdasarkan privasi dan status pertemanan (ALB-01) |
 | POST | `/me/avatar` | Unggah foto profil, field `file` (PRF-03) |
 | POST | `/me/cover` | Unggah cover (PRF-03) |
 | GET | `/users/:username/years` | Daftar tahun yang punya post, untuk scroller tahun |
@@ -335,8 +336,9 @@ Presence: online bila minimal satu koneksi aktif; `users.last_seen_at` diperbaru
 
 | Method | Path | Fungsi | ID |
 |---|---|---|---|
-| GET/POST | `/albums` | Daftar dan buat album | ALB-01 |
-| POST | `/albums/:id/photos` | Unggah beberapa foto (`files[]`, maksimal 10) | ALB-01 |
+| GET/POST | `/albums` | Daftar album sendiri (beserta jumlah/cover foto) dan buat album (`name`, `privacy`; default FRIENDS) | ALB-01 |
+| GET | `/albums/:id` | Detail album dan foto; privasi album diterapkan, ID yang tidak terlihat menghasilkan 404 | ALB-01 |
+| POST | `/albums/:id/photos` | Unggah beberapa foto (`files`, maksimal 10; JPG/PNG/WebP, maksimal 5 MB per foto) | ALB-01 |
 | GET/POST | `/groups` | Daftar dan buat grup | GRP-01 |
 | POST | `/groups/:id/join`, `/groups/:id/leave` | Gabung dan keluar | GRP-01 |
 | GET/POST | `/groups/:id/posts` | Post di grup (anggota saja) | GRP-01 |

@@ -1,18 +1,51 @@
 <script setup lang="ts">
 import { t } from '@retrobook/shared/i18n'
-import { onMounted } from 'vue'
+import { onMounted, ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import Button from '@/components/Button.vue'
 import { useProfileStore } from '@/modules/profile/stores'
+import { useAuthStore } from '@/modules/auth/stores'
+import { albumsApi, type Album } from '@/modules/profile/services/albums'
 
 const store = useProfileStore()
 const list = store.photos
+const auth = useAuthStore()
+const albums = ref<Album[]>([])
 
 onMounted(() => void list.loadMore())
+watch(
+  () => store.profile?.username,
+  (owner) => {
+    if (owner) void albumsApi.forProfile(owner).then((items) => (albums.value = items))
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <section class="photos" :aria-label="t('profile.tab.photos')">
     <h2 class="photos__head">{{ t('profile.tab.photos') }}</h2>
+    <div
+      v-if="
+        albums.length || auth.user?.username.toLowerCase() === store.profile?.username.toLowerCase()
+      "
+      class="photos__albums"
+    >
+      <h3>Album foto</h3>
+      <ul class="photos__album-grid">
+        <li v-for="album in albums" :key="album.id">
+          <RouterLink :to="`/albums/${album.id}`">
+            <img v-if="album.photos?.[0]" :src="album.photos[0].url" alt="" />
+            <span>{{ album.name }}</span>
+          </RouterLink>
+        </li>
+      </ul>
+      <RouterLink
+        v-if="auth.user?.username.toLowerCase() === store.profile?.username.toLowerCase()"
+        to="/albums"
+        >Kelola album</RouterLink
+      >
+    </div>
     <ul v-if="list.items.length" class="photos__grid">
       <li v-for="p in list.items" :key="p.postId">
         <a :href="p.url" target="_blank" rel="noopener noreferrer" class="photos__link">
@@ -78,5 +111,28 @@ onMounted(() => void list.loadMore())
 .photos__more {
   padding: var(--sp-3);
   text-align: center;
+}
+.photos__albums {
+  padding: var(--sp-3);
+  border-bottom: 1px solid var(--c-border-soft);
+}
+.photos__album-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--sp-2);
+  padding: 0;
+  list-style: none;
+}
+.photos__album-grid a {
+  display: grid;
+  gap: var(--sp-1);
+  color: var(--c-text);
+  text-decoration: none;
+}
+.photos__album-grid img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--c-card-subtle);
 }
 </style>

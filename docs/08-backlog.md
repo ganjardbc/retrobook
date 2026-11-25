@@ -146,7 +146,7 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 
 | ID | Tugas | PRD |
 |---|---|---|
-| [ ] T-71 | Album foto dan halaman album | ALB-01 |
+| [x] T-71 | Album foto: buat album dengan privasi, unggah hingga 10 foto, daftar dan halaman album | ALB-01 |
 | [ ] T-72 | Grup sederhana dan post grup | GRP-01 |
 | [ ] T-73 | Event dan RSVP | EVT-01 |
 | [ ] T-74 | Notes | NOT-01 |
