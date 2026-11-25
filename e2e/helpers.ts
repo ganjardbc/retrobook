@@ -48,7 +48,7 @@ export async function makeFriends(browser: Browser, alicePage: Page, aliceDispla
 }
 
 // --- Fase 3 (admin) ---
-export const ADMIN_URL = 'http://127.0.0.1:5174'
+export const ADMIN_URL = `http://127.0.0.1:${process.env.E2E_ADMIN_PORT ?? '5184'}`
 const requireFromApi = createRequire(resolve('apps/api/package.json'))
 
 /** Klien Prisma ke database uji (skrip `test:e2e` mengisi DATABASE_URL). Hanya untuk menyiapkan data tes. */

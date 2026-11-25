@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto'
 import { expect, test } from '@playwright/test'
 import { ADMIN_URL, createPost, loginAsNewAdmin, register, userId } from './helpers'
 
-const apiLogin = `http://127.0.0.1:${process.env.API_PORT ?? '3030'}/api/auth/login`
+const apiLogin = `http://127.0.0.1:${process.env.E2E_API_PORT ?? '3031'}/api/auth/login`
 
 test('E2E-08 member reports a post; admin decides in two clicks; audit log records it', async ({ browser, page }) => {
   const author = await register(page)

@@ -8,6 +8,18 @@ export default [
     meta: { app: true },
   },
   {
+    path: '/me/blocked',
+    name: 'blocked-people',
+    component: () => import('@/modules/profile/pages/BlockedView.vue'),
+    meta: { app: true },
+  },
+  {
+    path: '/me/activity',
+    name: 'activity-log',
+    component: () => import('@/modules/profile/pages/ActivityLogView.vue'),
+    meta: { app: true },
+  },
+  {
     path: '/:username',
     component: () => import('@/modules/profile/pages/ProfileView.vue'),
     meta: { app: true, layout: 'profile' },

@@ -3,6 +3,8 @@ import type { Profile } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { blocksApi } from '@/modules/profile/services/blocks'
 import { useChatStore } from '@/modules/chat/stores'
 import { pokesApi } from '@/modules/pokes/services/api'
 import { useProfileStore } from '@/modules/profile/stores'
@@ -42,7 +44,16 @@ async function poke() {
     pokeFailed.value = true
   }
 }
-// View Activity Log (Fase 3) ditambahkan bersama fiturnya.
+const router = useRouter()
+async function block() {
+  if (!window.confirm(t('profile.action.block.confirm', { name: props.profile.displayName }))) return
+  try {
+    await blocksApi.block(props.profile.id)
+    await router.push('/')
+  } catch {
+    pokeFailed.value = true
+  }
+}
 </script>
 
 <template>
@@ -129,6 +140,17 @@ async function poke() {
       <Button v-if="profile.relationship !== 'SELF'" variant="default" @click="reporting = true">{{
         t('report.action')
       }}</Button>
+      <Button v-if="profile.relationship !== 'SELF'" variant="default" @click="block">{{
+        t('profile.action.block')
+      }}</Button>
+    </div>
+    <div v-if="profile.relationship === 'SELF'" class="header__links">
+      <RouterLink class="header__link" to="/me/activity">{{
+        t('profile.action.activity')
+      }}</RouterLink>
+      <RouterLink class="header__link" to="/me/blocked">{{
+        t('profile.action.blocked')
+      }}</RouterLink>
     </div>
     <ReportDialog
       v-if="reporting"
@@ -237,5 +259,15 @@ async function poke() {
   position: absolute;
   left: var(--sp-2);
   bottom: var(--sp-2);
+}
+.header__links {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-1) var(--sp-3);
+}
+.header__link {
+  align-self: center;
+  color: var(--c-link);
+  font-size: var(--fs-small);
 }
 </style>

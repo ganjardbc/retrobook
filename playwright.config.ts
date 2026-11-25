@@ -1,7 +1,9 @@
 import { defineConfig } from '@playwright/test'
 
-const apiPort = process.env.API_PORT ?? '3030'
-const webPort = '5173'
+// Port khusus e2e dan tanpa reuse: e2e tidak boleh menyentuh server dev (dan DB dev) yang sedang berjalan.
+const apiPort = process.env.E2E_API_PORT ?? '3031'
+const webPort = process.env.E2E_WEB_PORT ?? '5183'
+const adminPort = process.env.E2E_ADMIN_PORT ?? '5184'
 
 export default defineConfig({
   testDir: './e2e',
@@ -18,20 +20,22 @@ export default defineConfig({
     {
       command: 'pnpm --filter @retrobook/api dev',
       url: `http://127.0.0.1:${apiPort}/api/health`,
-      env: { RATE_LIMIT_DISABLED: 'true' },
-      reuseExistingServer: !process.env.CI,
+      env: { RATE_LIMIT_DISABLED: 'true', BOTS_DISABLED: 'true', API_PORT: apiPort },
+      reuseExistingServer: false,
       timeout: 120_000,
     },
     {
-      command: `pnpm --filter @retrobook/web dev --host 127.0.0.1 --port ${webPort}`,
+      command: `pnpm --filter @retrobook/web dev --host 127.0.0.1 --port ${webPort} --strictPort`,
       url: `http://127.0.0.1:${webPort}`,
-      reuseExistingServer: !process.env.CI,
+      env: { API_PORT: apiPort },
+      reuseExistingServer: false,
       timeout: 120_000,
     },
     {
-      command: 'pnpm --filter @retrobook/admin dev --host 127.0.0.1 --port 5174',
-      url: 'http://127.0.0.1:5174',
-      reuseExistingServer: !process.env.CI,
+      command: `pnpm --filter @retrobook/admin dev --host 127.0.0.1 --port ${adminPort} --strictPort`,
+      url: `http://127.0.0.1:${adminPort}`,
+      env: { API_PORT: apiPort },
+      reuseExistingServer: false,
       timeout: 120_000,
     },
   ],

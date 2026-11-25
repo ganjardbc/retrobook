@@ -180,10 +180,10 @@ describe('ProfileView', () => {
   })
 
   it.each([
-    ['NONE', ['Add Friend', 'Report']],
-    ['REQUEST_SENT', ['Cancel Request', 'Report']],
-    ['REQUEST_RECEIVED', ['Confirm', 'Delete Request', 'Report']],
-    ['FRIENDS', ['✓ Friends', 'Message', 'Poke', 'Report']],
+    ['NONE', ['Add Friend', 'Report', 'Block']],
+    ['REQUEST_SENT', ['Cancel Request', 'Report', 'Block']],
+    ['REQUEST_RECEIVED', ['Confirm', 'Delete Request', 'Report', 'Block']],
+    ['FRIENDS', ['✓ Friends', 'Message', 'Poke', 'Report', 'Block']],
   ] as const)('relationship %s menampilkan tombol yang sesuai', async (rel, labels) => {
     vi.spyOn(usersApi, 'profile').mockResolvedValue(profile({ relationship: rel }))
     const { w } = await mountAt('/siti')

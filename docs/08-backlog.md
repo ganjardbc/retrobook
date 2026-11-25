@@ -134,9 +134,9 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 | [x] T-63 | Uji performa (p95 < 300 ms) dan perbaikan indeks | M | wajib |
 | [x] T-64 | README akar, panduan menjalankan, label parodi, demo akhir. README selesai; rekaman demo akhir menunggu keputusan D-3 dan uji Docker | M | wajib |
 | [x] T-65 | Seeder lengkap (30 user, 200 post, 120 pertemanan, 300 pesan) | M | wajib |
-| [ ] T-66 | Bot AI sebagai teman (job, persona, kontrol admin) | L | bonus |
-| [ ] T-67 | Tema Time Travel (2010, 2015, 2020) lewat token | M | bonus |
-| [ ] T-68 | Satu atau dua fitur Fase 3: block (FRD-06) dan activity log (ACT-01) lebih dulu, lalu album | L | bonus |
+| [x] T-66 | Bot AI sebagai teman (job, persona, kontrol admin). Teks dari templat; model bahasa menunggu D-7 | L | bonus |
+| [x] T-67 | Tema Time Travel (2010, 2015, 2020) lewat token | M | bonus |
+| [x] T-68 | Satu atau dua fitur Fase 3: block (FRD-06) dan activity log (ACT-01) selesai; album ditunda ke T-71 | L | bonus |
 | [ ] T-69 | Sponsored dan kelola trending | M | bonus |
 | [ ] T-70 | Reset password via email bila penyedia sudah dipilih | M | bonus |
 
