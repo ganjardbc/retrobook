@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { UserSummary } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
+import { Icon } from '@iconify/vue'
 import { computed, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
@@ -95,23 +96,34 @@ watch(
 
 <template>
   <div ref="root" class="search" role="search">
-    <input
-      v-model="q"
-      class="search__input"
-      type="search"
-      role="combobox"
-      maxlength="80"
-      autocomplete="off"
-      aria-autocomplete="list"
-      :aria-expanded="showPanel"
-      :aria-controls="`${id}-list`"
-      :aria-activedescendant="showPanel && active >= 0 ? optionId(active) : undefined"
-      :placeholder="t('search.placeholder')"
-      :aria-label="t('search.placeholder')"
-      @input="onInput"
-      @focus="open = true"
-      @keydown="onKeydown"
-    />
+    <div class="search__field">
+      <input
+        v-model="q"
+        class="search__input"
+        type="search"
+        role="combobox"
+        maxlength="80"
+        autocomplete="off"
+        aria-autocomplete="list"
+        :aria-expanded="showPanel"
+        :aria-controls="`${id}-list`"
+        :aria-activedescendant="showPanel && active >= 0 ? optionId(active) : undefined"
+        :placeholder="t('search.placeholder')"
+        :aria-label="t('search.placeholder')"
+        @input="onInput"
+        @focus="open = true"
+        @keydown="onKeydown"
+      />
+      <button
+        class="search__btn"
+        type="button"
+        :aria-label="t('search.button')"
+        :title="t('search.button')"
+        @click="seeAll"
+      >
+        <Icon icon="mdi:magnify" aria-hidden="true" />
+      </button>
+    </div>
     <div v-if="showPanel" :id="`${id}-list`" class="search__panel" role="listbox">
       <div
         v-for="(u, i) in items"
@@ -143,19 +155,56 @@ watch(
 <style scoped>
 .search {
   position: relative;
-  flex: 1;
+  /* Lebar dasar 480 px (referensi: sekitar 470 sampai 520 px); menyusut bila navbar sempit. */
+  flex: 1 1 480px;
   min-width: 0;
-  max-width: 320px;
+  max-width: 480px;
+}
+/* Kotak putih dengan sudut 2 px dan segmen ikon kaca pembesar abu terang di kanan (ref-2). */
+.search__field {
+  display: flex;
+  height: 26px;
+  overflow: hidden;
+  background: var(--c-card);
+  border: 1px solid var(--c-brand-dark);
+  border-radius: 2px;
+}
+.search__field:focus-within {
+  outline: 2px solid var(--c-text-on-brand);
 }
 .search__input {
-  width: 100%;
-  height: 26px;
+  flex: 1;
+  min-width: 0;
   padding: 0 var(--sp-2);
-  border: 1px solid var(--c-brand-dark);
-  border-radius: 0;
-  background: var(--c-card);
+  border: 0;
+  outline: 0;
+  background: none;
   color: var(--c-text);
   font: inherit;
+  font-size: var(--fs-post);
+}
+.search__input::-webkit-search-cancel-button {
+  display: none;
+}
+.search__input::placeholder {
+  color: var(--c-text-muted);
+}
+.search__btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--c-border-soft);
+  background: var(--c-card-subtle);
+  color: #4b4f56;
+  font-size: 18px;
+  cursor: pointer;
+}
+.search__btn:hover {
+  color: var(--c-text);
 }
 .search__panel {
   position: absolute;
