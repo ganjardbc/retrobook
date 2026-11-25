@@ -164,7 +164,7 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 | [x] T-86 | Tes E2E `e2e/phase4.spec.ts`: SAV-01, OTD-01, YIR-01, SRC-05, INT-03, GRP-01, EVT-01, NOT-01, AUTH-06. Belum: album (T-71, butuh unggah foto), life event, privasi profil, foto komentar, feeling | test plan |
 | [x] T-87 | Audit privasi endpoint baru (album, grup, event, notes, life event, saved) | R-03 |
 | [x] T-88 | Performa feed dengan seeder besar (N+1, indeks) | NFR |
-| [ ] T-89 | Polish tampilan 2014: ikon sprite sendiri, favicon, loading state | UX |
+| [x] T-89 | Polish: favicon SVG sementara (huruf "r" putih di warna brand; ganti bersama logo, D-1), loading state sudah ada (`LoadingRows`) dan kini menghormati reduced-motion. Ikon sprite sendiri ditunda: ikon masih Iconify `mdi` dan menunggu keputusan logo | UX |
 | [ ] T-90 | Skrip dan video demo untuk konten Coderium | demo |
 
 ## Keputusan yang harus diambil (blokir)
