@@ -95,4 +95,20 @@ describe('Pencarian isi post (integrasi)', () => {
     expect(p2.body.items).toHaveLength(1)
     expect(p2.body.nextCursor).toBeNull()
   })
+
+  it('kecocokan tak terlihat yang banyak tidak menutupi hasil terlihat di batch berikutnya', async () => {
+    const alice = await h.mkUser('alice')
+    const bob = await h.mkUser('bob')
+    await post(alice.id, 'sandi lama terlihat') // id kecil: ada di batch kedua
+    await h.prisma.post.createMany({
+      data: Array.from({ length: 600 }, () => ({
+        authorId: bob.id,
+        content: 'sandi rahasia bob',
+        privacy: Privacy.ONLY_ME,
+      })),
+    })
+    const res = await h.as(alice).get('/search/posts?q=sandi&limit=10').expect(200)
+    expect(contents(res)).toEqual(['sandi lama terlihat'])
+    expect(res.body.nextCursor).toBeNull()
+  })
 })

@@ -113,6 +113,12 @@ try {
   const worst = Math.max(
     await measure('GET /feed?limit=10', () => '/api/feed?limit=10', tokens),
     await measure('GET /users/:u/posts', (i) => `/api/users/perf${i % N_USERS}/posts?limit=10`, tokens),
+    // T-88: endpoint pasca-R4 dan sort=top (agregat like, batas yang diketahui sejak T-63).
+    await measure('GET /feed?sort=top', () => '/api/feed?limit=10&sort=top', tokens),
+    await measure('GET /search/posts', () => '/api/search/posts?q=performa&limit=10', tokens),
+    await measure('GET /saved', () => '/api/saved?limit=10', tokens),
+    await measure('GET /on-this-day', () => '/api/on-this-day', tokens),
+    await measure('GET /year-in-review', () => '/api/year-in-review', tokens),
   )
   if (worst >= THRESHOLD_MS) process.exitCode = 1
 } finally {

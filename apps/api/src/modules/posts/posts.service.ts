@@ -53,6 +53,9 @@ type PostRow = Prisma.PostGetPayload<{ include: ReturnType<typeof postInclude> }
 
 const notFound = () => new AppException(404, 'NOT_FOUND', 'Post tidak ditemukan')
 const TRENDING_SIZE = 10
+const TOP_WINDOW = 2000
+const SEARCH_BATCH = 500
+const SEARCH_MAX_BATCHES = 10
 const TRENDING_WINDOW_MS = 24 * 60 * 60 * 1000
 // SRC-02 dan hashtag publik: hanya post publik biasa (bukan wall post) yang tidak disembunyikan admin.
 const publicPost: Prisma.PostWhereInput = { privacy: 'PUBLIC', wallOwnerId: null, hidden: false }
@@ -243,9 +246,8 @@ export class PostsService {
   }
 
   /**
-   * POST-09: `top` mengurutkan berdasarkan jumlah like, lalu terbaru. Kursor tetap id post (Prisma
-   * membandingkan nilai urutan baris kursor). shortcut: jumlah untuk urutan menghitung semua penyuka,
-   * sedangkan angka yang tampil menyaring penyuka BANNED/terhapus; selisihnya hanya menggeser peringkat.
+   * POST-09: `top` mengurutkan berdasarkan jumlah like, lalu terbaru, lalu id (lihat `topFeed`). Kursor
+   * tetap id post.
    */
   async feed(
     viewerId: number,
@@ -253,12 +255,11 @@ export class PostsService {
     cursor?: number,
     sort: FeedSort = 'recent',
   ): Promise<Paged<PostDto>> {
+    const where = this.visibility.feedWhere(viewerId, await this.friendIds(viewerId))
+    if (sort === 'top') return this.topFeed(viewerId, where, limit, cursor)
     const rows = await this.prisma.post.findMany({
-      where: this.visibility.feedWhere(viewerId, await this.friendIds(viewerId)),
-      orderBy:
-        sort === 'top'
-          ? [{ likes: { _count: 'desc' } }, { createdAt: 'desc' }, { id: 'desc' }]
-          : [{ createdAt: 'desc' }, { id: 'desc' }],
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: this.include(viewerId),
@@ -267,6 +268,55 @@ export class PostsService {
     return {
       items: await this.toDtos(viewerId, page),
       nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+    }
+  }
+
+  /**
+   * Top Stories (T-88): `orderBy likes._count` membuat MySQL menghitung agregat berkorelasi per baris
+   * (p95 326 ms pada 5.000 post). Sekarang: ambil id kandidat feed yang terlihat (TOP_WINDOW terbaru), hitung
+   * like dengan satu groupBy terindeks, urutkan di memori, lalu muat halaman yang diminta.
+   * shortcut: hanya TOP_WINDOW post terbaru yang ikut diperingkat, dan jumlah untuk urutan menghitung semua
+   * penyuka sedangkan angka yang tampil menyaring penyuka BANNED/terhapus (selisihnya hanya menggeser
+   * peringkat). Naikkan jendela atau simpan kolom like_count bila perlu.
+   */
+  private async topFeed(
+    viewerId: number,
+    where: Prisma.PostWhereInput,
+    limit: number,
+    cursor?: number,
+  ): Promise<Paged<PostDto>> {
+    const candidates = await this.prisma.post.findMany({
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: TOP_WINDOW,
+      select: { id: true, createdAt: true },
+    })
+    const counts = new Map(
+      (
+        await this.prisma.like.groupBy({
+          by: ['postId'],
+          where: { postId: { in: candidates.map((c) => c.id) } },
+          _count: { _all: true },
+        })
+      ).map((g) => [g.postId, g._count._all]),
+    )
+    const sorted = candidates
+      .map((c) => ({ ...c, likes: counts.get(c.id) ?? 0 }))
+      .sort((x, y) => y.likes - x.likes || +y.createdAt - +x.createdAt || y.id - x.id)
+    const start = cursor === undefined ? 0 : sorted.findIndex((c) => c.id === cursor) + 1
+    // Kursor yang tidak ada lagi (dihapus atau di luar jendela): halaman kosong, seperti kursor Prisma.
+    if (cursor !== undefined && start === 0) return { items: [], nextCursor: null }
+    const slice = sorted.slice(start, start + limit + 1)
+    const ids = slice.slice(0, limit).map((c) => c.id)
+    const rows = await this.prisma.post.findMany({
+      where: { id: { in: ids } },
+      include: this.include(viewerId),
+    })
+    const byId = new Map(rows.map((r) => [r.id, r]))
+    const page = ids.map((id) => byId.get(id)).filter((r): r is PostRow => r !== undefined)
+    return {
+      items: await this.toDtos(viewerId, page),
+      nextCursor: slice.length > limit ? ids[ids.length - 1]! : null,
     }
   }
 
@@ -325,7 +375,11 @@ export class PostsService {
   /**
    * SRC-05: cari isi post (mengandung kata kunci, tanpa membedakan huruf besar kecil). Himpunan post
    * tetap `postWhere` (privasi, blokir, BANNED, hidden, grup), jadi hasil tidak pernah lebih luas dari yang
-   * boleh dibaca pembaca. shortcut: LIKE '%q%' tanpa indeks; ganti ke FULLTEXT bila tabel besar.
+   * boleh dibaca pembaca. Dua tahap (T-88): kandidat id lewat LIKE murah, lalu `postWhere` hanya pada
+   * kandidat; menggabungkan keduanya membuat MySQL menjalankan subquery visibilitas pada setiap baris
+   * (p95 1,4 detik pada 5.000 post). Urut id terbaru dulu; kursor = id.
+   * shortcut: LIKE '%q%' tanpa indeks dan pemindaian dibatasi SEARCH_MAX_BATCHES x SEARCH_BATCH kandidat
+   * per permintaan; ganti ke FULLTEXT bila tabel besar.
    */
   async search(
     viewerId: number,
@@ -333,20 +387,45 @@ export class PostsService {
     limit: number,
     cursor?: number,
   ): Promise<Paged<PostDto>> {
-    const rows = await this.prisma.post.findMany({
-      where: {
-        AND: [this.visibility.postWhere(viewerId, true), { content: { contains: escapeLike(q) } }],
-      },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      take: limit + 1,
-      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-      include: this.include(viewerId),
-    })
-    const page = rows.slice(0, limit)
-    return {
-      items: await this.toDtos(viewerId, page),
-      nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+    const visible = this.visibility.postWhere(viewerId, true)
+    const like = escapeLike(q)
+    const found: PostRow[] = []
+    let before = cursor
+    let scanned = false
+    for (let batch = 0; batch < SEARCH_MAX_BATCHES; batch++) {
+      const candidates = await this.prisma.post.findMany({
+        where: {
+          content: { contains: like },
+          deletedAt: null,
+          ...(before ? { id: { lt: before } } : {}),
+        },
+        orderBy: { id: 'desc' },
+        take: SEARCH_BATCH,
+        select: { id: true },
+      })
+      if (candidates.length === 0) {
+        scanned = true
+        break
+      }
+      before = candidates[candidates.length - 1]!.id
+      const rows = await this.prisma.post.findMany({
+        where: { AND: [{ id: { in: candidates.map((c) => c.id) } }, visible] },
+        orderBy: { id: 'desc' },
+        take: limit + 1 - found.length,
+        include: this.include(viewerId),
+      })
+      found.push(...rows)
+      if (found.length > limit || candidates.length < SEARCH_BATCH) {
+        scanned = candidates.length < SEARCH_BATCH && found.length <= limit
+        break
+      }
     }
+    const page = found.slice(0, limit)
+    // Lebih dari satu halaman: lanjut dari post terakhir. Batas pindai tercapai tanpa cukup hasil: lanjut dari
+    // kandidat terakhir yang diperiksa (bukan dari hasil) supaya klien bisa meminta halaman berikutnya.
+    const nextCursor =
+      found.length > limit ? page[page.length - 1]!.id : scanned ? null : (before ?? null)
+    return { items: await this.toDtos(viewerId, page), nextCursor }
   }
 
   /** SAV-01: simpan post (idempoten). Post harus terlihat bagi pembaca; selain itu 404 yang sama. */
