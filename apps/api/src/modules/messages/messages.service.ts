@@ -180,7 +180,7 @@ export class MessagesService {
       where: { AND: [this.visibility.userWhere(viewerId), this.visibility.friendOf(viewerId)] },
       orderBy: { displayName: 'asc' },
       take: 200,
-      select: userSummary,
+      select: { ...userSummary, lastSeenAt: true },
     })
     if (users.length === 0) return { items: [] }
     const ids = users.map((u) => u.id)
@@ -193,9 +193,11 @@ export class MessagesService {
       }),
     ])
     const unreadBy = new Map(unread.map((u) => [u.senderId, u._count._all]))
-    const items = users.map((user) => ({
+    const items = users.map(({ lastSeenAt, ...user }) => ({
       user,
       online: online.has(user.id),
+      // Hanya teman ACCEPTED yang sampai sini (visibilitas pusat); dipakai label "24m" di sidebar.
+      lastSeenAt: lastSeenAt?.toISOString() ?? null,
       client: online.get(user.id) ?? null,
       unreadCount: unreadBy.get(user.id) ?? 0,
     }))

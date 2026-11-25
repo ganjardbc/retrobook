@@ -25,7 +25,10 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
     // Tes dan e2e tidak memakai pewaktu; set BOTS_DISABLED=true untuk mematikan di lingkungan lain.
     if (process.env.NODE_ENV === 'test' || process.env.BOTS_DISABLED === 'true') return
     const seconds = Number(process.env.BOT_TICK_SECONDS) || 60
-    this.timer = setInterval(() => void this.tick().catch((e) => this.log.warn(`tick gagal: ${String(e)}`)), seconds * 1000)
+    this.timer = setInterval(
+      () => void this.tick().catch((e) => this.log.warn(`tick gagal: ${String(e)}`)),
+      seconds * 1000,
+    )
     this.timer.unref()
   }
 
@@ -43,34 +46,61 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
       total.accepted += await this.acceptRequests(bot.userId)
       total.replies += await this.replyToComments(bot, now)
       total.posts += await this.postIfDue(bot, now)
-      await this.prisma.botProfile.update({ where: { userId: bot.userId }, data: { lastTickAt: now } })
+      await this.prisma.botProfile.update({
+        where: { userId: bot.userId },
+        data: { lastTickAt: now },
+      })
     }
     return total
   }
 
   private async acceptRequests(botId: number): Promise<number> {
-    const pending = await this.prisma.friendship.findMany({ where: { addresseeId: botId, status: 'PENDING' } })
+    const pending = await this.prisma.friendship.findMany({
+      where: { addresseeId: botId, status: 'PENDING' },
+    })
     for (const f of pending) {
       const { count } = await this.prisma.friendship.updateMany({
         where: { id: f.id, status: 'PENDING' },
         data: { status: 'ACCEPTED', respondedAt: new Date() },
       })
-      if (count) await this.notifications.notify({ userId: f.requesterId, actorId: botId, type: 'FRIEND_ACCEPT' })
+      if (count)
+        await this.notifications.notify({
+          userId: f.requesterId,
+          actorId: botId,
+          type: 'FRIEND_ACCEPT',
+        })
     }
     return pending.length
   }
 
-  private async postIfDue(bot: { userId: number; persona: string; postsPerDay: number; lastPostAt: Date | null; createdAt: Date }, now: Date): Promise<number> {
+  private async postIfDue(
+    bot: {
+      userId: number
+      persona: string
+      postsPerDay: number
+      lastPostAt: Date | null
+      createdAt: Date
+    },
+    now: Date,
+  ): Promise<number> {
     const interval = DAY_MS / Math.max(1, bot.postsPerDay)
     const last = bot.lastPostAt ?? bot.createdAt
     if (now.getTime() - last.getTime() < interval) return 0
     const content = await this.text.post(bot.persona)
-    await this.prisma.post.create({ data: { authorId: bot.userId, content, privacy: 'PUBLIC', createdAt: now } })
-    await this.prisma.botProfile.update({ where: { userId: bot.userId }, data: { lastPostAt: now } })
+    await this.prisma.post.create({
+      data: { authorId: bot.userId, content, privacy: 'PUBLIC', createdAt: now },
+    })
+    await this.prisma.botProfile.update({
+      where: { userId: bot.userId },
+      data: { lastPostAt: now },
+    })
     return 1
   }
 
-  private async replyToComments(bot: { userId: number; persona: string; lastTickAt: Date | null; createdAt: Date }, now: Date): Promise<number> {
+  private async replyToComments(
+    bot: { userId: number; persona: string; lastTickAt: Date | null; createdAt: Date },
+    now: Date,
+  ): Promise<number> {
     const since = bot.lastTickAt ?? bot.createdAt
     const comments = await this.prisma.comment.findMany({
       where: {
@@ -86,9 +116,19 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
     })
     for (const c of comments) {
       const reply = await this.prisma.comment.create({
-        data: { postId: c.postId, authorId: bot.userId, content: await this.text.reply(bot.persona, c.content) },
+        data: {
+          postId: c.postId,
+          authorId: bot.userId,
+          content: await this.text.reply(bot.persona, c.content),
+        },
       })
-      await this.notifications.notify({ userId: c.authorId, actorId: bot.userId, type: 'COMMENT', postId: c.postId, commentId: reply.id })
+      await this.notifications.notify({
+        userId: c.authorId,
+        actorId: bot.userId,
+        type: 'COMMENT',
+        postId: c.postId,
+        commentId: reply.id,
+      })
     }
     return comments.length
   }

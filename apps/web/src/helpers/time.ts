@@ -25,3 +25,11 @@ export function formatTime(iso: string, now: Date = new Date()): string {
   const time = then.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
   return t('time.at', { date, time })
 }
+
+/** Label singkat terakhir aktif untuk sidebar chat: "5m", "2h", "3d" (minimal 1m). */
+export function formatShortAgo(iso: string, now: Date = new Date()): string {
+  const diff = Math.max(0, now.getTime() - new Date(iso).getTime())
+  if (diff < HOUR) return `${Math.max(1, Math.floor(diff / MIN))}m`
+  if (diff < 24 * HOUR) return `${Math.floor(diff / HOUR)}h`
+  return `${Math.floor(diff / (24 * HOUR))}d`
+}

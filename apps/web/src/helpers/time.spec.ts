@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatTime } from '@/helpers/time'
+import { formatShortAgo, formatTime } from '@/helpers/time'
 
 const now = new Date('2026-11-24T12:00:00.000Z')
 const ago = (ms: number) => new Date(now.getTime() - ms).toISOString()
@@ -19,5 +19,18 @@ describe('formatTime', () => {
   it('lebih dari sehari: tanggal dan jam; tahun hanya bila beda tahun', () => {
     expect(formatTime(ago(3 * 86_400_000), now)).toMatch(/^November \d+ at /)
     expect(formatTime('2024-03-07T10:00:00.000Z', now)).toMatch(/^March 7, 2024 at /)
+  })
+})
+
+describe('formatShortAgo', () => {
+  const now = new Date('2026-01-10T12:00:00Z')
+  it.each([
+    ['2026-01-10T11:59:59Z', '1m'],
+    ['2026-01-10T11:35:00Z', '25m'],
+    ['2026-01-10T10:00:00Z', '2h'],
+    ['2026-01-07T12:00:00Z', '3d'],
+    ['2026-01-10T12:05:00Z', '1m'],
+  ])('%s -> %s', (iso, label) => {
+    expect(formatShortAgo(iso, now)).toBe(label)
   })
 })

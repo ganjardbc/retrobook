@@ -135,9 +135,9 @@ Setiap komponen jadi satu Vue SFC: komponen global di `apps/web/src/components/`
 | `Jewel` | Ikon 16 px putih, badge merah `--c-danger` berisi angka di kanan atas, klik membuka dropdown 330 px dengan daftar dan tautan "See All". Badge memakai `--c-badge`, tampil "99+" bila lebih dari 99 dan "N+" bila daftar belum termuat penuh. Dropdown tertutup oleh klik di luar dan Escape. Status T-33: jewel teman (daftar permintaan, Confirm dan Delete Request, See All ke `/friends`) dan notifikasi (membuka dropdown menandai terbaca; baris yang belum dibaca disorot sampai ditutup) aktif dan realtime; jewel pesan hanya menampilkan keadaan kosong sampai chat (T-36). Notifikasi bertipe post membawa ke profil aktor karena halaman `/posts/:id` belum ada di web |
 | `SearchBox` | Kotak putih lebar dasar 480 px (ref-2: sekitar 520 px) setinggi 26 px, sudut 2 px, teks 14 px, placeholder "Search for people", segmen ikon kaca pembesar abu terang di kanan (klik sama dengan Enter, membuka `/search?q=`). Dropdown hasil maksimal 8 user dengan avatar 32 px dan nama, navigasi panah keyboard (SRC-01). Status T-39: di tengah navbar, mulai mencari pada 2 karakter dengan jeda 250 ms; baris terakhir "See all results for ..." dan Enter tanpa pilihan membuka `/search?q=`; Escape dan klik di luar menutup; pola combobox ARIA; di bawah 640 px tautan Home disembunyikan supaya kotak cari muat |
 | `LeftMenu` | Foto 32 px dan nama di atas; daftar tautan dengan ikon kecil, hover `--c-hover-bg`; kelompok "Favorites", "Apps" (Events, Groups, Notes, Photos) |
-| `StatusBox` | Kartu putih; tab teks berikon "Update Status" dan "Add Photo" (tanpa Life Event, mengikuti ref-1); `textarea` 2 baris tanpa resize; footer (perasaan, privasi, tombol Post biru) baru tampil saat kotak difokus atau berisi; selektor privasi dengan ikon (bola dunia, dua orang, gembok) di sebelah `select`; di detail grup (prop `groupId`) komponen yang sama dipakai tanpa selektor privasi dan tanpa tag @, dan post tidak masuk feed utama |
+| `StatusBox` | Kartu putih bersudut 3 px dengan bayangan tipis; tiga tab berikon warna dipisah garis vertikal ("Update Status" aktif hitam dengan segitiga kecil, "Add Photo", "Create Photo Album" ke `/albums`); garis di bawah tab tidak selebar kartu; `textarea` 2 baris tanpa resize dengan placeholder 16 px (`--fs-composer`); footer (perasaan, privasi berikon, tombol Post) baru tampil saat fokus atau berisi; di detail grup (prop `groupId`) tanpa tab album, privasi, dan tag @, dan post tidak masuk feed utama (ref-5) |
 | `PostCard` | Kartu putih, border `--c-border`, radius `--radius`, jarak antar kartu `--sp-3`. Header: avatar `--avatar-m` (40 px, terukur), nama (`--c-link`, tebal), "Nama ▸ Nama" bila wall post, waktu `--c-text-muted`, ikon privasi, menu "…" (edit, hapus, report). Isi `--fs-post`. Gambar selebar kartu. |
-| `PostActions` | Baris tautan teks: "Like · Comment · Share". Saat sudah like, "Like" berubah menjadi "Unlike" (UX-04). Bukan tombol ikon besar |
+| `PostActions` | Baris tautan teks dengan titik tengah: "Like · Comment · Share". Saat sudah like, "Like" berubah menjadi "Unlike" (UX-04). Bukan tombol ikon besar |
 | `LikeSummary` | Ikon jempol kecil + "Sari, Budi, and 3 others like this." Nama adalah tautan |
 | `CommentList` | Avatar 32 px kiri, nama tebal + teks `--fs-base`, di bawahnya "Like · 2 hrs"; tautan "View more comments" di atas bila ada lebih banyak; kotak input "Write a comment..." dengan ikon kamera (INT-05) |
 | `ProfileHeader` | Cover `--h-cover`; foto profil 160 px menumpuk di kiri bawah dengan border putih 1 px; nama putih di atas cover dengan bayangan teks tipis; tombol di kanan bawah cover: Add Friend, Message, atau Update Info dan View Activity Log bila profil sendiri |
@@ -246,3 +246,14 @@ Selisih yang tercatat (bukan diperbaiki diam-diam, sesuai test plan bagian 7):
 2. Chat di ref-1 berupa strip penuh tinggi di tepi kanan layar; di retrobook berupa modul di kolom kanan dan jendela chat melayang di atas feed.
 3. Kolom kanan ref-1 punya kartu berita/grup dan ticker aktivitas; retrobook belum (di luar scope).
 4. Foto profil seed hanya satu; avatar lain inisial.
+
+### Hasil penyelarasan dengan ref-5 (feed 2015)
+
+- Navbar: gradien `--c-brand-top` ke `--c-brand`, border bawah `--c-brand-edge`, garis bayangan 1 px; tinggi tetap 42 px. Wordmark 27 px, ikon jewel 23 px, kotak cari 480 px.
+- Kartu kolom kanan (`PageCard quiet`): judul huruf besar abu-abu kecil tanpa bar latar; Trending berikon tren.
+- Menu kiri: foto, nama, tautan "Edit Profile"; item berikon kotak warna (`--c-icon-*`) dengan hitungan (permintaan teman, poke); kelompok "Apps" berjudul huruf besar.
+- Kartu post: menu berupa chevron; foto memakai ukuran natural (maksimal 520 px tinggi); komentar menampilkan "waktu · Like · 👍 n".
+- Urutan feed berupa tautan kecil "Sort ▾".
+- Strip chat: teman offline menampilkan waktu terakhir aktif ("5m", "2h", "3d") dari `lastSeenAt`.
+- Footer: "English (US) · Privacy", label parodi, dan "retrobook © 2015".
+- Tidak diadopsi dari ref-5 karena tidak ada fiturnya atau akan berupa tautan mati: tombol emoji di komentar, "Group conversations" dan "More friends" di chat, baris cerita "X commented on this", tautan Terms/Cookies/Advertising.

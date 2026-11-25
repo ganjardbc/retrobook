@@ -1,9 +1,20 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common'
 import { AppException } from '../../common/app-exception'
-import { FORGOT_PASSWORD_PER_IP, LOGIN_PER_IP, REGISTER_PER_IP, RateLimit } from '../../common/rate-limit'
+import {
+  FORGOT_PASSWORD_PER_IP,
+  LOGIN_PER_IP,
+  REGISTER_PER_IP,
+  RateLimit,
+} from '../../common/rate-limit'
 import { AuthService } from './auth.service'
 import { AuthUser, CurrentUser } from './current-user.decorator'
-import { ForgotPasswordDto, LoginDto, RefreshDto, RegisterDto, ResetPasswordDto } from './dto/auth.dto'
+import {
+  ForgotPasswordDto,
+  LoginDto,
+  RefreshDto,
+  RegisterDto,
+  ResetPasswordDto,
+} from './dto/auth.dto'
 import { LoginLockout } from './login-lockout'
 import { Public } from './public.decorator'
 

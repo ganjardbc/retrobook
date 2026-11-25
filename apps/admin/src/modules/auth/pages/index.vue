@@ -21,28 +21,61 @@ async function submit() {
     await auth.login(identifier.value.trim(), password.value)
     await router.replace(safeAdminRedirect(route.query.redirect))
   } catch (cause) {
-    error.value = cause instanceof AdminApiError ? cause.message : cause instanceof Error ? cause.message : 'Tidak dapat masuk. Coba lagi.'
-  } finally { busy.value = false }
+    error.value =
+      cause instanceof AdminApiError
+        ? cause.message
+        : cause instanceof Error
+          ? cause.message
+          : 'Tidak dapat masuk. Coba lagi.'
+  } finally {
+    busy.value = false
+  }
 }
 </script>
 
 <template>
   <main class="login-page">
     <section class="login-card">
-      <div class="brand-lockup"><span class="brand-mark">r</span><span>retrobook <small>ADMIN</small></span></div>
+      <div class="brand-lockup">
+        <span class="brand-mark">r</span><span>retrobook <small>ADMIN</small></span>
+      </div>
       <p class="eyebrow">RUANG KERJA INTERNAL</p>
       <h1>Selamat datang kembali</h1>
       <p class="login-copy">Masuk dengan akun administrator untuk mengelola komunitas.</p>
       <form class="login-form" @submit.prevent="submit">
         <label for="identifier">Email atau username</label>
-        <input id="identifier" v-model="identifier" name="identifier" autocomplete="username" required autofocus />
+        <input
+          id="identifier"
+          v-model="identifier"
+          name="identifier"
+          autocomplete="username"
+          required
+          autofocus
+        />
         <div class="password-label"><label for="password">Kata sandi</label></div>
-        <input id="password" v-model="password" name="password" type="password" autocomplete="current-password" required />
+        <input
+          id="password"
+          v-model="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
         <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-        <button class="button button--primary login-submit" type="submit" :disabled="busy">{{ busy ? 'Memeriksa…' : 'Masuk ke admin' }} <span aria-hidden="true">→</span></button>
+        <button class="button button--primary login-submit" type="submit" :disabled="busy">
+          {{ busy ? 'Memeriksa…' : 'Masuk ke admin' }} <span aria-hidden="true">→</span>
+        </button>
       </form>
       <p class="login-foot">Akses terbatas untuk administrator Retrobook.</p>
     </section>
-    <div class="login-aside"><div class="aside-orbit orbit-one"/><div class="aside-orbit orbit-two"/><div class="aside-content"><span class="eyebrow">RETROBOOK / MODERATION</span><p>Komunitas yang sehat dimulai dari ruang yang terjaga.</p><span class="aside-caption">PANEL ADMINISTRASI · 2015—SEKARANG</span></div></div>
+    <div class="login-aside">
+      <div class="aside-orbit orbit-one" />
+      <div class="aside-orbit orbit-two" />
+      <div class="aside-content">
+        <span class="eyebrow">RETROBOOK / MODERATION</span>
+        <p>Komunitas yang sehat dimulai dari ruang yang terjaga.</p>
+        <span class="aside-caption">PANEL ADMINISTRASI · 2015—SEKARANG</span>
+      </div>
+    </div>
   </main>
 </template>

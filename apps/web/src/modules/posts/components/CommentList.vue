@@ -162,12 +162,24 @@ defineExpose({ focusInput: () => input.value?.focus() })
             }}</RouterLink>
             {{ c.content }}
           </p>
-          <img v-if="c.imageUrl" class="comment__image" :src="c.imageUrl" alt="Foto di komentar" />
+          <img
+            v-if="c.imageUrl"
+            class="comment__image"
+            :src="c.imageUrl"
+            :alt="t('comments.photoAlt')"
+          />
           <div class="comment__meta">
             <span>{{ formatTime(c.createdAt) }}</span>
+            <span aria-hidden="true">·</span>
             <button type="button" class="comments__link" @click="toggleLike(c)">
-              {{ c.likedByMe ? 'Unlike' : 'Like' }} · {{ c.likeCount }}
+              {{ c.likedByMe ? t('like.unlike') : t('like.action') }}
             </button>
+            <template v-if="c.likeCount > 0">
+              <span aria-hidden="true">·</span>
+              <span class="comment__likes" :title="t('like.action')">
+                <Icon icon="mdi:thumb-up-outline" aria-hidden="true" />{{ c.likeCount }}
+              </span>
+            </template>
             <button
               v-if="canDelete(c)"
               class="comments__link comments__delete"
@@ -285,9 +297,16 @@ defineExpose({ focusInput: () => input.value?.focus() })
 .comment__name {
   font-weight: bold;
 }
+.comment__likes {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--c-link);
+}
 .comment__meta {
   display: flex;
-  gap: var(--sp-2);
+  align-items: center;
+  gap: var(--sp-1);
   color: var(--c-text-muted);
   font-size: var(--fs-small);
 }

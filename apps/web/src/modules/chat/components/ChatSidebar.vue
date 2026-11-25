@@ -10,6 +10,7 @@ const shown = computed(() => {
   const q = query.value.trim().toLowerCase()
   return q ? chat.friends.filter((f) => f.user.displayName.toLowerCase().includes(q)) : chat.friends
 })
+import { formatShortAgo } from '@/helpers/time'
 </script>
 
 <template>
@@ -44,6 +45,9 @@ const shown = computed(() => {
               aria-hidden="true"
             />
           </template>
+          <span v-else-if="f.lastSeenAt" class="chat__seen" :title="t('chat.lastSeen')">{{
+            formatShortAgo(f.lastSeenAt)
+          }}</span>
         </button>
       </li>
     </ul>
@@ -127,6 +131,10 @@ const shown = computed(() => {
   white-space: nowrap;
 }
 .chat__client {
+  color: var(--c-text-muted);
+  font-size: var(--fs-small);
+}
+.chat__seen {
   color: var(--c-text-muted);
   font-size: var(--fs-small);
 }

@@ -23,25 +23,31 @@ if (ADMIN_PASSWORD.length < 12 || ADMIN_PASSWORD.length > 128) {
 const prisma = new PrismaClient()
 try {
   const passwordHash = await argon2.hash(ADMIN_PASSWORD)
-  const admin = await prisma.$transaction(async (tx) => {
-    const existingAdmin = await tx.user.findFirst({
-      where: { role: 'ADMIN', deletedAt: null },
-      select: { id: true },
-    })
-    if (existingAdmin) throw new Error('An active admin already exists; refusing to create another via the bootstrap command.')
+  const admin = await prisma.$transaction(
+    async (tx) => {
+      const existingAdmin = await tx.user.findFirst({
+        where: { role: 'ADMIN', deletedAt: null },
+        select: { id: true },
+      })
+      if (existingAdmin)
+        throw new Error(
+          'An active admin already exists; refusing to create another via the bootstrap command.',
+        )
 
-    return tx.user.create({
-      data: {
-        email: ADMIN_EMAIL.toLowerCase(),
-        username: ADMIN_USERNAME,
-        displayName: ADMIN_DISPLAY_NAME.trim(),
-        passwordHash,
-        role: 'ADMIN',
-        status: 'ACTIVE',
-      },
-      select: { id: true, username: true },
-    })
-  }, { isolationLevel: 'Serializable' })
+      return tx.user.create({
+        data: {
+          email: ADMIN_EMAIL.toLowerCase(),
+          username: ADMIN_USERNAME,
+          displayName: ADMIN_DISPLAY_NAME.trim(),
+          passwordHash,
+          role: 'ADMIN',
+          status: 'ACTIVE',
+        },
+        select: { id: true, username: true },
+      })
+    },
+    { isolationLevel: 'Serializable' },
+  )
   console.info(`Created initial administrator ${admin.username} (id ${admin.id}).`)
 } finally {
   await prisma.$disconnect()

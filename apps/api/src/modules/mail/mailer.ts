@@ -29,6 +29,9 @@ export class OutboxMailer extends Mailer {
     }
     const dir = join(process.cwd(), 'outbox')
     await mkdir(dir, { recursive: true })
-    await writeFile(join(dir, `${Date.now()}-${randomBytes(3).toString('hex')}.txt`), `To: ${mail.to}\nSubject: ${mail.subject}\n\n${mail.text}\n`)
+    await writeFile(
+      join(dir, `${Date.now()}-${randomBytes(3).toString('hex')}.txt`),
+      `To: ${mail.to}\nSubject: ${mail.subject}\n\n${mail.text}\n`,
+    )
   }
 }

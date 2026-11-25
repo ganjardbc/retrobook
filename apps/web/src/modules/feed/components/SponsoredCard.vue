@@ -26,7 +26,7 @@ import PageCard from '@/components/PageCard.vue'
 </script>
 
 <template>
-  <PageCard v-if="item" class="sponsored" :title="t('sponsored.title')" heading="h2" flush>
+  <PageCard v-if="item" class="sponsored" quiet :title="t('sponsored.title')" heading="h2" flush>
     <a
       class="card__body"
       :href="item.linkUrl"

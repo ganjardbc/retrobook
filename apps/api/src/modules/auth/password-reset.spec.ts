@@ -40,9 +40,13 @@ describe('Reset password (integrasi)', () => {
 
   const tokenFrom = (mail: Mail) => /token=([\w-]+)/.exec(mail.text)![1]!
   const mkUser = async (name = 'budi') =>
-    h.mkUser(name, { email: `${name}@example.com`, passwordHash: await argon2.hash('password-lama-1') })
+    h.mkUser(name, {
+      email: `${name}@example.com`,
+      passwordHash: await argon2.hash('password-lama-1'),
+    })
   const forgot = (email: string) => http().post('/api/auth/forgot-password').send({ email })
-  const reset = (token: string, password: string) => http().post('/api/auth/reset-password').send({ token, password })
+  const reset = (token: string, password: string) =>
+    http().post('/api/auth/reset-password').send({ token, password })
 
   it('forgot: 202 sama untuk email terdaftar dan tidak; email hanya terkirim ke yang terdaftar; token hanya hash di DB', async () => {
     await mkUser()
@@ -61,15 +65,32 @@ describe('Reset password (integrasi)', () => {
 
   it('reset: mengganti password, mencabut sesi, login baru berhasil dan lama gagal; token sekali pakai', async () => {
     const user = await mkUser()
-    const login = await http().post('/api/auth/login').send({ identifier: 'budi@example.com', password: 'password-lama-1' })
+    const login = await http()
+      .post('/api/auth/login')
+      .send({ identifier: 'budi@example.com', password: 'password-lama-1' })
     expect(login.status).toBe(200)
     await forgot(user.email)
     const token = tokenFrom(sent[0]!)
     expect((await reset(token, 'pendek')).status).toBe(400)
     expect((await reset(token, 'password-baru-22')).status).toBe(204)
-    expect((await http().post('/api/auth/login').send({ identifier: user.email, password: 'password-baru-22' })).status).toBe(200)
-    expect((await http().post('/api/auth/login').send({ identifier: user.email, password: 'password-lama-1' })).status).toBe(401)
-    expect((await http().post('/api/auth/refresh').send({ refreshToken: login.body.refreshToken })).status).toBe(401)
+    expect(
+      (
+        await http()
+          .post('/api/auth/login')
+          .send({ identifier: user.email, password: 'password-baru-22' })
+      ).status,
+    ).toBe(200)
+    expect(
+      (
+        await http()
+          .post('/api/auth/login')
+          .send({ identifier: user.email, password: 'password-lama-1' })
+      ).status,
+    ).toBe(401)
+    expect(
+      (await http().post('/api/auth/refresh').send({ refreshToken: login.body.refreshToken }))
+        .status,
+    ).toBe(401)
     expect((await reset(token, 'password-lain-333')).status).toBe(400)
   })
 
@@ -81,9 +102,13 @@ describe('Reset password (integrasi)', () => {
     await forgot(user.email)
     expect((await reset(old, 'password-baru-22')).status).toBe(400)
     const fresh = tokenFrom(sent[1]!)
-    await h.prisma.passwordResetToken.updateMany({ data: { expiresAt: new Date(Date.now() - 1000) } })
+    await h.prisma.passwordResetToken.updateMany({
+      data: { expiresAt: new Date(Date.now() - 1000) },
+    })
     expect((await reset(fresh, 'password-baru-22')).status).toBe(400)
-    expect((await h.prisma.user.findUniqueOrThrow({ where: { id: user.id } })).passwordHash).toBe(user.passwordHash)
+    expect((await h.prisma.user.findUniqueOrThrow({ where: { id: user.id } })).passwordHash).toBe(
+      user.passwordHash,
+    )
   })
 
   it('bot dan akun terhapus tidak menerima email; dua reset bersamaan: tepat satu berhasil', async () => {
@@ -95,7 +120,10 @@ describe('Reset password (integrasi)', () => {
     const user = await mkUser('siti')
     await forgot(user.email)
     const token = tokenFrom(sent[0]!)
-    const results = await Promise.all([reset(token, 'password-baru-aa1'), reset(token, 'password-baru-bb2')])
+    const results = await Promise.all([
+      reset(token, 'password-baru-aa1'),
+      reset(token, 'password-baru-bb2'),
+    ])
     expect(results.map((r) => r.status).sort()).toEqual([204, 400])
   })
 })

@@ -58,20 +58,56 @@ async function logout() {
 <template>
   <div class="admin-shell">
     <aside class="sidebar" :class="{ 'sidebar--open': mobileNavOpen }">
-      <RouterLink class="brand-lockup sidebar-brand" to="/"><span class="brand-mark">r</span><span>retrobook <small>ADMIN</small></span></RouterLink>
+      <RouterLink class="brand-lockup sidebar-brand" to="/"
+        ><span class="brand-mark">r</span><span>retrobook <small>ADMIN</small></span></RouterLink
+      >
       <nav class="side-nav" aria-label="Navigasi admin">
         <section v-for="group in groups" :key="group.label" class="nav-group">
           <div class="workspace-label">{{ group.label }}</div>
-          <RouterLink v-for="item in group.items" :key="item.to" class="nav-link" :class="{ 'nav-link--active': isActive(item.to) }" :to="item.to"><span class="nav-icon">{{ item.icon }}</span> {{ item.label }}</RouterLink>
+          <RouterLink
+            v-for="item in group.items"
+            :key="item.to"
+            class="nav-link"
+            :class="{ 'nav-link--active': isActive(item.to) }"
+            :to="item.to"
+            ><span class="nav-icon">{{ item.icon }}</span> {{ item.label }}</RouterLink
+          >
         </section>
       </nav>
-      <div class="sidebar-bottom"><div class="sidebar-note"><span class="status-dot"/> Semua sistem beroperasi</div></div>
+      <div class="sidebar-bottom">
+        <div class="sidebar-note"><span class="status-dot" /> Semua sistem beroperasi</div>
+      </div>
     </aside>
-    <div v-if="mobileNavOpen" class="mobile-scrim" @click="mobileNavOpen = false"/>
+    <div v-if="mobileNavOpen" class="mobile-scrim" @click="mobileNavOpen = false" />
     <section class="shell-main">
-      <header class="topbar"><button class="mobile-menu" aria-label="Buka navigasi" @click="mobileNavOpen = !mobileNavOpen">☰</button><div class="breadcrumbs"><span>Workspace</span><span class="crumb-sep">/</span><strong>{{ currentLabel }}</strong></div><div class="topbar-right"><span class="environment-tag"><i/> INTERNAL</span><div class="profile-chip"><span class="avatar">{{ initials }}</span><span class="profile-name">{{ auth.user?.displayName ?? 'Administrator' }}<small>Administrator</small></span></div><button class="logout-button" title="Keluar" aria-label="Keluar" @click="logout">↗</button></div></header>
-      <main class="page-content"><RouterView/></main>
-      <footer class="admin-footer"><span>RETROBOOK ADMIN</span><span>Ruang aman untuk komunitas.</span></footer>
+      <header class="topbar">
+        <button
+          class="mobile-menu"
+          aria-label="Buka navigasi"
+          @click="mobileNavOpen = !mobileNavOpen"
+        >
+          ☰
+        </button>
+        <div class="breadcrumbs">
+          <span>Workspace</span><span class="crumb-sep">/</span><strong>{{ currentLabel }}</strong>
+        </div>
+        <div class="topbar-right">
+          <span class="environment-tag"><i /> INTERNAL</span>
+          <div class="profile-chip">
+            <span class="avatar">{{ initials }}</span
+            ><span class="profile-name"
+              >{{ auth.user?.displayName ?? 'Administrator' }}<small>Administrator</small></span
+            >
+          </div>
+          <button class="logout-button" title="Keluar" aria-label="Keluar" @click="logout">
+            ↗
+          </button>
+        </div>
+      </header>
+      <main class="page-content"><RouterView /></main>
+      <footer class="admin-footer">
+        <span>RETROBOOK ADMIN</span><span>Ruang aman untuk komunitas.</span>
+      </footer>
     </section>
   </div>
 </template>

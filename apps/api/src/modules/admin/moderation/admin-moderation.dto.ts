@@ -1,5 +1,20 @@
 import { Type } from 'class-transformer'
-import { IsArray, IsBoolean, IsDateString, IsEnum, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength, ArrayMaxSize, ArrayMinSize, ArrayUnique } from 'class-validator'
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+  ArrayMaxSize,
+  ArrayMinSize,
+  ArrayUnique,
+} from 'class-validator'
 
 export enum AdminModerationFilter {
   HIDDEN = 'hidden',

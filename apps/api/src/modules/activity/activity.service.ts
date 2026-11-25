@@ -23,7 +23,11 @@ export class ActivityService {
   ) {}
 
   // shortcut: kursor berupa waktu ISO item terakhir; dua item dengan milidetik sama di batas halaman bisa terlewat.
-  async list(userId: number, limit: number, cursor?: string): Promise<{ items: ActivityItem[]; nextCursor: string | null }> {
+  async list(
+    userId: number,
+    limit: number,
+    cursor?: string,
+  ): Promise<{ items: ActivityItem[]; nextCursor: string | null }> {
     const before = cursor ? { lt: new Date(cursor) } : undefined
     const createdAt = before ? { createdAt: before } : {}
     const visiblePost = { post: this.visibility.postWhere(userId) }
@@ -48,9 +52,30 @@ export class ActivityService {
       }),
     ])
     const all: (ActivityItem & { at: number })[] = [
-      ...posts.map((p) => ({ type: 'POST' as const, id: p.id, postId: p.id, text: p.content, createdAt: p.createdAt.toISOString(), at: p.createdAt.getTime() })),
-      ...comments.map((c) => ({ type: 'COMMENT' as const, id: c.id, postId: c.postId, text: c.content, createdAt: c.createdAt.toISOString(), at: c.createdAt.getTime() })),
-      ...likes.map((l) => ({ type: 'LIKE' as const, id: l.id, postId: l.postId!, text: l.post?.content ?? '', createdAt: l.createdAt.toISOString(), at: l.createdAt.getTime() })),
+      ...posts.map((p) => ({
+        type: 'POST' as const,
+        id: p.id,
+        postId: p.id,
+        text: p.content,
+        createdAt: p.createdAt.toISOString(),
+        at: p.createdAt.getTime(),
+      })),
+      ...comments.map((c) => ({
+        type: 'COMMENT' as const,
+        id: c.id,
+        postId: c.postId,
+        text: c.content,
+        createdAt: c.createdAt.toISOString(),
+        at: c.createdAt.getTime(),
+      })),
+      ...likes.map((l) => ({
+        type: 'LIKE' as const,
+        id: l.id,
+        postId: l.postId!,
+        text: l.post?.content ?? '',
+        createdAt: l.createdAt.toISOString(),
+        at: l.createdAt.getTime(),
+      })),
     ].sort((a, b) => b.at - a.at || b.id - a.id)
     const page = all.slice(0, limit)
     return {

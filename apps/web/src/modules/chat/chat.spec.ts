@@ -49,6 +49,7 @@ const friend = (id: number, name: string, over: Partial<ChatFriend> = {}): ChatF
   user: user(id, name),
   online: false,
   client: null,
+  lastSeenAt: null,
   unreadCount: 0,
   ...over,
 })
@@ -73,7 +74,7 @@ beforeEach(() => {
     items: [
       friend(2, 'Bob', { online: true, client: 'WEB' }),
       friend(3, 'Carol', { online: true, client: 'MOBILE', unreadCount: 2 }),
-      friend(4, 'Dave'),
+      friend(4, 'Dave', { lastSeenAt: new Date(Date.now() - 2 * 3_600_000).toISOString() }),
       friend(5, 'Erin'),
     ],
   })
@@ -416,6 +417,9 @@ describe('ChatSidebar', () => {
     expect(rows[1]!.find('.chat__client').text()).toBe('Mobile')
     expect(rows[1]!.find('.chat__unread').text()).toBe('2')
     expect(rows[2]!.find('.chat__dot').exists()).toBe(false)
+    expect(rows[2]!.find('.chat__seen').text()).toBe('2h') // offline: terakhir aktif
+    expect(rows[3]!.find('.chat__seen').exists()).toBe(false) // belum pernah terlihat
+    expect(rows[0]!.find('.chat__seen').exists()).toBe(false) // online: label klien
     expect(rows[0]!.find('.chat__dot--stale').exists()).toBe(false)
   })
 

@@ -1,5 +1,15 @@
 import { Transform } from 'class-transformer'
-import { IsBoolean, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength } from 'class-validator'
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator'
 
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value)
 

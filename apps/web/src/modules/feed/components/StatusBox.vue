@@ -9,7 +9,8 @@ import {
 } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
-import { computed, nextTick, ref } from 'vue'
+import { computed, inject, nextTick, ref } from 'vue'
+import { routerKey } from 'vue-router'
 import { ApiRequestError } from '@/plugins/http'
 import { postsApi } from '@/modules/posts/services/api'
 import { useFeedStore } from '@/modules/feed/stores'
@@ -25,6 +26,8 @@ const props = defineProps<{
   groupId?: number
 }>()
 const emit = defineEmits<{ posted: [post: Post] }>()
+// Router opsional: komponen ini juga dipakai di tes tanpa router.
+const router = inject(routerKey, null)
 const MAX_TAGS = 10
 const feed = useFeedStore()
 const content = ref('')
@@ -150,11 +153,25 @@ async function submit() {
   <form class="status" @submit.prevent="submit" @focusin="focused = true" @focusout="onFocusout">
     <div class="status__tabs">
       <span class="status__tab status__tab--active">
-        <Icon icon="mdi:text-box-edit-outline" aria-hidden="true" />{{ t('statusBox.tab.status') }}
+        <span class="status__ico status__ico--blue"
+          ><Icon icon="mdi:pencil" aria-hidden="true" /></span
+        >{{ t('statusBox.tab.status') }}
       </span>
       <button class="status__tab" type="button" @click="fileInput?.click()">
-        <Icon icon="mdi:image-multiple-outline" aria-hidden="true" />{{ t('statusBox.tab.photo') }}
+        <span class="status__ico status__ico--orange"
+          ><Icon icon="mdi:image-outline" aria-hidden="true" /></span
+        >{{ t('statusBox.tab.photo') }}
       </button>
+      <a
+        v-if="!wallOwner && groupId === undefined"
+        class="status__tab"
+        href="/albums"
+        @click.prevent="router?.push('/albums')"
+      >
+        <span class="status__ico status__ico--blue"
+          ><Icon icon="mdi:image-multiple-outline" aria-hidden="true" /></span
+        >{{ t('statusBox.tab.album') }}
+      </a>
       <input
         ref="fileInput"
         class="status__file"
@@ -249,26 +266,35 @@ async function submit() {
 .status {
   background: var(--c-card);
   border: var(--card-border);
-  border-radius: var(--radius);
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 }
+/* Tiga tab berikon, dipisah garis vertikal; garis di bawahnya tidak selebar kartu (ref-5). */
 .status__tabs {
+  position: relative;
   display: flex;
-  gap: var(--sp-4);
-  padding: var(--sp-2) var(--sp-3);
-  background: var(--c-card-subtle);
+  align-items: center;
+  margin: 0 var(--sp-3);
+  padding: var(--sp-3) 0 var(--sp-2);
   border-bottom: 1px solid var(--c-border-soft);
 }
 .status__tab {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: var(--sp-1);
-  padding: 0;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
   border: 0;
+  border-left: 1px solid var(--c-border-soft);
   background: none;
-  color: var(--c-text);
+  color: var(--c-link);
   font: inherit;
   font-weight: bold;
   cursor: pointer;
+}
+.status__tab:first-child {
+  padding-left: 0;
+  border-left: 0;
 }
 .status__tab:hover:not(:disabled) {
   text-decoration: underline;
@@ -278,7 +304,40 @@ async function submit() {
   cursor: default;
 }
 .status__tab--active {
+  color: var(--c-text);
   cursor: default;
+}
+.status__tab--active:hover {
+  text-decoration: none;
+}
+/* Segitiga kecil di bawah tab aktif yang menunjuk ke kotak tulis. */
+.status__tab--active::after {
+  content: '';
+  position: absolute;
+  bottom: calc(-1 * var(--sp-2) - 5px);
+  left: 8px;
+  width: 8px;
+  height: 8px;
+  background: var(--c-card);
+  border-top: 1px solid var(--c-border-soft);
+  border-left: 1px solid var(--c-border-soft);
+  transform: rotate(45deg);
+}
+.status__ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  color: var(--c-text-on-brand);
+  font-size: 14px;
+}
+.status__ico--blue {
+  background: var(--c-icon-blue);
+}
+.status__ico--orange {
+  background: var(--c-icon-orange);
 }
 .status__file {
   display: none;
@@ -295,7 +354,7 @@ async function submit() {
   outline: 0;
   resize: none;
   font: inherit;
-  font-size: var(--fs-post);
+  font-size: var(--fs-composer);
   color: var(--c-text);
   background: none;
 }
@@ -329,7 +388,6 @@ async function submit() {
   justify-content: flex-end;
   gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-3);
-  background: var(--c-card-subtle);
   border-top: 1px solid var(--c-border-soft);
 }
 .status__privacy-wrap {

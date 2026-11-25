@@ -23,12 +23,25 @@ export class AdminAnnouncementsService {
   /** ADM-13: pengumuman, notifikasi ANNOUNCEMENT ke semua user aktif, dan audit dalam satu transaksi; push realtime setelah commit. */
   async create(adminId: number, dto: CreateAnnouncementDto, ip?: string) {
     const created = await this.audit.execute(
-      { adminId, action: 'ANNOUNCEMENT_CREATE', targetType: 'ANNOUNCEMENT', detail: { title: dto.title }, ip },
+      {
+        adminId,
+        action: 'ANNOUNCEMENT_CREATE',
+        targetType: 'ANNOUNCEMENT',
+        detail: { title: dto.title },
+        ip,
+      },
       async (tx) => {
         const row = await tx.announcement.create({ data: { ...dto, createdBy: adminId }, select })
-        const users = await tx.user.findMany({ where: { status: 'ACTIVE', deletedAt: null, isBot: false }, select: { id: true } })
+        const users = await tx.user.findMany({
+          where: { status: 'ACTIVE', deletedAt: null, isBot: false },
+          select: { id: true },
+        })
         await tx.notification.createMany({
-          data: users.map((u) => ({ userId: u.id, type: 'ANNOUNCEMENT' as const, announcementId: row.id })),
+          data: users.map((u) => ({
+            userId: u.id,
+            type: 'ANNOUNCEMENT' as const,
+            announcementId: row.id,
+          })),
         })
         return { ...row, notified: users.length }
       },
@@ -39,7 +52,14 @@ export class AdminAnnouncementsService {
 
   update(adminId: number, id: number, dto: UpdateAnnouncementDto, ip?: string) {
     return this.audit.execute(
-      { adminId, action: 'ANNOUNCEMENT_UPDATE', targetType: 'ANNOUNCEMENT', targetId: id, detail: { ...dto }, ip },
+      {
+        adminId,
+        action: 'ANNOUNCEMENT_UPDATE',
+        targetType: 'ANNOUNCEMENT',
+        targetId: id,
+        detail: { ...dto },
+        ip,
+      },
       async (tx) => {
         const updated = await tx.announcement.updateMany({ where: { id }, data: dto })
         if (!updated.count) throw notFound()

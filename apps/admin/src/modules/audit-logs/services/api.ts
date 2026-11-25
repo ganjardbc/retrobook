@@ -1,7 +1,13 @@
 import { adminHttp } from '@/plugins/admin-http'
 
 export type AuditLog = {
-  id: number; action: string; targetType: string | null; targetId: number | null; detail: unknown; ip: string | null; createdAt: string
+  id: number
+  action: string
+  targetType: string | null
+  targetId: number | null
+  detail: unknown
+  ip: string | null
+  createdAt: string
   admin: { id: number; username: string; displayName: string }
 }
 export type AuditFilters = { adminId: string; action: string; from: string; to: string }
@@ -13,6 +19,8 @@ export const adminAuditLogsApi = {
     if (f.from) params.set('from', f.from)
     if (f.to) params.set('to', f.to)
     if (cursor) params.set('cursor', String(cursor))
-    return adminHttp.get<{ items: AuditLog[]; total: number; nextCursor: number | null }>(`/admin/audit-logs?${params}`)
+    return adminHttp.get<{ items: AuditLog[]; total: number; nextCursor: number | null }>(
+      `/admin/audit-logs?${params}`,
+    )
   },
 }

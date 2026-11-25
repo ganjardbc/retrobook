@@ -6,7 +6,10 @@ import type { AdminHashtagsQuery } from './admin-hashtags.dto'
 
 @Injectable()
 export class AdminHashtagsService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AdminAuditService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AdminAuditService,
+  ) {}
 
   /** ADM-17: daftar hashtag (terbanyak dipakai dulu) beserta status tersembunyi dari trending. */
   async list(query: AdminHashtagsQuery) {
@@ -18,15 +21,26 @@ export class AdminHashtagsService {
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
       select: { id: true, tag: true, hidden: true, _count: { select: { posts: true } } },
     })
-    const items = rows.slice(0, query.limit).map(({ _count, ...h }) => ({ ...h, uses: _count.posts }))
+    const items = rows
+      .slice(0, query.limit)
+      .map(({ _count, ...h }) => ({ ...h, uses: _count.posts }))
     return { items, nextCursor: rows.length > query.limit ? items.at(-1)!.id : null }
   }
 
   setHidden(adminId: number, id: number, hidden: boolean, ip?: string) {
-    return this.audit.execute({ adminId, action: `HASHTAG_${hidden ? 'HIDE' : 'SHOW'}`, targetType: 'HASHTAG', targetId: id, ip }, async (tx) => {
-      const updated = await tx.hashtag.updateMany({ where: { id }, data: { hidden } })
-      if (!updated.count) throw new AppException(404, 'NOT_FOUND', 'Hashtag tidak ditemukan')
-      return { id, hidden }
-    })
+    return this.audit.execute(
+      {
+        adminId,
+        action: `HASHTAG_${hidden ? 'HIDE' : 'SHOW'}`,
+        targetType: 'HASHTAG',
+        targetId: id,
+        ip,
+      },
+      async (tx) => {
+        const updated = await tx.hashtag.updateMany({ where: { id }, data: { hidden } })
+        if (!updated.count) throw new AppException(404, 'NOT_FOUND', 'Hashtag tidak ditemukan')
+        return { id, hidden }
+      },
+    )
   }
 }

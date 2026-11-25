@@ -4,6 +4,7 @@ export const en = {
   'common.loading': 'Loading…',
   'footer.parody': 'Fun project / parody. Not an official product of anything.',
   'footer.privacy': 'Privacy',
+  'footer.language': 'English (US)',
   'theme.label': 'Time Travel',
   'sponsored.title': 'Sponsored',
 
@@ -192,6 +193,7 @@ export const en = {
   'account.delete.confirm':
     'Delete account? Your account and content will be hidden now, and your identity anonymized after 30 days.',
   'account.delete.error': 'Account could not be deleted.',
+  'comments.photoAlt': 'Photo in comment',
   'comments.send': 'Post comment',
   'lightbox.close': 'Close',
   'lightbox.prev': 'Previous photo',
@@ -225,6 +227,7 @@ export const en = {
   'chat.title': 'Chat',
   'chat.empty': 'Add friends to start chatting.',
   'chat.search': 'Search',
+  'chat.lastSeen': 'Last active',
   'chat.client.WEB': 'Web',
   'chat.client.MOBILE': 'Mobile',
   'chat.unread': '{n} unread',
@@ -243,6 +246,8 @@ export const en = {
   'profile.action.message': 'Message',
   'jewel.error': 'Could not load. Please try again.',
   'jewel.loading': 'Loading…',
+  'menu.editProfile': 'Edit Profile',
+  'menu.apps': 'Apps',
   'menu.newsFeed': 'News Feed',
   'menu.friends': 'Friends',
   'menu.pokes': 'Pokes',
@@ -261,6 +266,7 @@ export const en = {
 
   'statusBox.tab.status': 'Update Status',
   'statusBox.tab.photo': 'Add Photo',
+  'statusBox.tab.album': 'Create Photo Album',
   'statusBox.placeholder': "What's on your mind?",
   'statusBox.post': 'Post',
   'statusBox.privacy': 'Who can see this post?',

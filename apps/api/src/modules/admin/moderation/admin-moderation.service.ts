@@ -3,23 +3,44 @@ import { Prisma, ReportTargetType } from '@prisma/client'
 import { AppException } from '../../../common/app-exception'
 import { PrismaService } from '../../../prisma/prisma.service'
 import { AdminAuditService } from '../admin-audit.service'
-import { AdminModerationBulkAction, AdminModerationFilter, type AdminModerationQuery } from './admin-moderation.dto'
+import {
+  AdminModerationBulkAction,
+  AdminModerationFilter,
+  type AdminModerationQuery,
+} from './admin-moderation.dto'
 
 const notFound = (kind: string) => new AppException(404, 'NOT_FOUND', `${kind} tidak ditemukan`)
 const postSelect = {
-  id: true, content: true, imageUrl: true, hidden: true, flagged: true, createdAt: true, deletedAt: true,
+  id: true,
+  content: true,
+  imageUrl: true,
+  hidden: true,
+  flagged: true,
+  createdAt: true,
+  deletedAt: true,
   author: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
   _count: { select: { comments: { where: { deletedAt: null } } } },
 } satisfies Prisma.PostSelect
 const commentSelect = {
-  id: true, content: true, imageUrl: true, hidden: true, flagged: true, createdAt: true, deletedAt: true,
+  id: true,
+  content: true,
+  imageUrl: true,
+  hidden: true,
+  flagged: true,
+  createdAt: true,
+  deletedAt: true,
   author: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
-  post: { select: { id: true, content: true, author: { select: { username: true, displayName: true } } } },
+  post: {
+    select: { id: true, content: true, author: { select: { username: true, displayName: true } } },
+  },
 } satisfies Prisma.CommentSelect
 
 @Injectable()
 export class AdminModerationService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AdminAuditService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AdminAuditService,
+  ) {}
 
   listPosts(query: AdminModerationQuery) {
     return this.list('POST', query)
@@ -45,21 +66,40 @@ export class AdminModerationService {
     return this.deleteOne(adminId, 'COMMENT', id, ip)
   }
 
-  async bulkPosts(adminId: number, ids: number[], action: AdminModerationBulkAction, reason?: string, ip?: string) {
+  async bulkPosts(
+    adminId: number,
+    ids: number[],
+    action: AdminModerationBulkAction,
+    reason?: string,
+    ip?: string,
+  ) {
     return this.bulk(adminId, 'POST', ids, action, reason, ip)
   }
 
-  async bulkComments(adminId: number, ids: number[], action: AdminModerationBulkAction, reason?: string, ip?: string) {
+  async bulkComments(
+    adminId: number,
+    ids: number[],
+    action: AdminModerationBulkAction,
+    reason?: string,
+    ip?: string,
+  ) {
     return this.bulk(adminId, 'COMMENT', ids, action, reason, ip)
   }
 
   private async list(kind: 'POST' | 'COMMENT', query: AdminModerationQuery) {
-    const reportedIds = query.filter === AdminModerationFilter.REPORTED
-      ? (await this.prisma.report.findMany({
-          where: { targetType: kind === 'POST' ? ReportTargetType.POST : ReportTargetType.COMMENT, status: 'PENDING' },
-          select: { targetId: true }, distinct: ['targetId'],
-        })).map(({ targetId }) => targetId)
-      : null
+    const reportedIds =
+      query.filter === AdminModerationFilter.REPORTED
+        ? (
+            await this.prisma.report.findMany({
+              where: {
+                targetType: kind === 'POST' ? ReportTargetType.POST : ReportTargetType.COMMENT,
+                status: 'PENDING',
+              },
+              select: { targetId: true },
+              distinct: ['targetId'],
+            })
+          ).map(({ targetId }) => targetId)
+        : null
     const createdAt: Prisma.DateTimeFilter = {
       ...(query.from ? { gte: new Date(query.from) } : {}),
       ...(query.to ? { lt: new Date(new Date(query.to).getTime() + 24 * 60 * 60 * 1000) } : {}),
@@ -68,40 +108,60 @@ export class AdminModerationService {
     const base = {
       ...(query.filter === AdminModerationFilter.HIDDEN ? { hidden: true } : {}),
       ...(query.filter === AdminModerationFilter.FLAGGED ? { flagged: true } : {}),
-      ...(query.filter === AdminModerationFilter.DELETED ? { deletedAt: { not: null } } : { deletedAt: null }),
+      ...(query.filter === AdminModerationFilter.DELETED
+        ? { deletedAt: { not: null } }
+        : { deletedAt: null }),
       ...(query.filter === AdminModerationFilter.REPORTED ? { id: { in: reportedIds ?? [] } } : {}),
       ...(query.from || query.to ? { createdAt } : {}),
     }
     const postWhere: Prisma.PostWhereInput = {
       ...base,
-      ...(authorSearch ? { OR: [
-        { content: { contains: authorSearch } },
-        { author: { username: { contains: authorSearch } } },
-        { author: { displayName: { contains: authorSearch } } },
-      ] } : {}),
+      ...(authorSearch
+        ? {
+            OR: [
+              { content: { contains: authorSearch } },
+              { author: { username: { contains: authorSearch } } },
+              { author: { displayName: { contains: authorSearch } } },
+            ],
+          }
+        : {}),
     }
     const commentWhere: Prisma.CommentWhereInput = {
       ...base,
-      ...(authorSearch ? { OR: [
-        { content: { contains: authorSearch } },
-        { author: { username: { contains: authorSearch } } },
-        { author: { displayName: { contains: authorSearch } } },
-      ] } : {}),
+      ...(authorSearch
+        ? {
+            OR: [
+              { content: { contains: authorSearch } },
+              { author: { username: { contains: authorSearch } } },
+              { author: { displayName: { contains: authorSearch } } },
+            ],
+          }
+        : {}),
     }
     const pagination = {
       orderBy: [{ createdAt: 'desc' as const }, { id: 'desc' as const }],
       take: query.limit + 1,
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     }
-    const rows = kind === 'POST'
-      ? await this.prisma.post.findMany({ ...pagination, where: postWhere, select: postSelect })
-      : await this.prisma.comment.findMany({ ...pagination, where: commentWhere, select: commentSelect })
+    const rows =
+      kind === 'POST'
+        ? await this.prisma.post.findMany({ ...pagination, where: postWhere, select: postSelect })
+        : await this.prisma.comment.findMany({
+            ...pagination,
+            where: commentWhere,
+            select: commentSelect,
+          })
     const items = rows.slice(0, query.limit)
     const targetIds = items.map((item) => item.id)
-    const reports = targetIds.length ? await this.prisma.report.findMany({
-      where: { targetType: kind === 'POST' ? ReportTargetType.POST : ReportTargetType.COMMENT, targetId: { in: targetIds } },
-      select: { targetId: true, status: true },
-    }) : []
+    const reports = targetIds.length
+      ? await this.prisma.report.findMany({
+          where: {
+            targetType: kind === 'POST' ? ReportTargetType.POST : ReportTargetType.COMMENT,
+            targetId: { in: targetIds },
+          },
+          select: { targetId: true, status: true },
+        })
+      : []
     const reportCounts = new Map<number, { total: number; pending: number }>()
     for (const report of reports) {
       const count = reportCounts.get(report.targetId) ?? { total: 0, pending: 0 }
@@ -109,56 +169,100 @@ export class AdminModerationService {
       if (report.status === 'PENDING') count.pending += 1
       reportCounts.set(report.targetId, count)
     }
-    const total = kind === 'POST' ? await this.prisma.post.count({ where: postWhere }) : await this.prisma.comment.count({ where: commentWhere })
+    const total =
+      kind === 'POST'
+        ? await this.prisma.post.count({ where: postWhere })
+        : await this.prisma.comment.count({ where: commentWhere })
     return {
-      items: items.map((item) => ({ ...item, reports: reportCounts.get(item.id) ?? { total: 0, pending: 0 } })),
+      items: items.map((item) => ({
+        ...item,
+        reports: reportCounts.get(item.id) ?? { total: 0, pending: 0 },
+      })),
       total,
-      nextCursor: rows.length > query.limit ? items.at(-1)?.id ?? null : null,
+      nextCursor: rows.length > query.limit ? (items.at(-1)?.id ?? null) : null,
     }
   }
 
-  private setHidden(adminId: number, kind: 'POST' | 'COMMENT', id: number, hidden: boolean, ip?: string) {
-    return this.audit.execute({
-      adminId, action: `${kind}_MODERATION_${hidden ? 'HIDE' : 'SHOW'}`, targetType: kind, targetId: id, detail: { hidden }, ip,
-    }, async (tx) => {
-      const where = { id, deletedAt: null }
-      const updated = kind === 'POST'
-        ? await tx.post.updateMany({ where, data: { hidden } })
-        : await tx.comment.updateMany({ where, data: { hidden } })
-      if (!updated.count) throw notFound(kind === 'POST' ? 'Post' : 'Komentar')
-      return { id, hidden }
-    })
+  private setHidden(
+    adminId: number,
+    kind: 'POST' | 'COMMENT',
+    id: number,
+    hidden: boolean,
+    ip?: string,
+  ) {
+    return this.audit.execute(
+      {
+        adminId,
+        action: `${kind}_MODERATION_${hidden ? 'HIDE' : 'SHOW'}`,
+        targetType: kind,
+        targetId: id,
+        detail: { hidden },
+        ip,
+      },
+      async (tx) => {
+        const where = { id, deletedAt: null }
+        const updated =
+          kind === 'POST'
+            ? await tx.post.updateMany({ where, data: { hidden } })
+            : await tx.comment.updateMany({ where, data: { hidden } })
+        if (!updated.count) throw notFound(kind === 'POST' ? 'Post' : 'Komentar')
+        return { id, hidden }
+      },
+    )
   }
 
   private deleteOne(adminId: number, kind: 'POST' | 'COMMENT', id: number, ip?: string) {
-    return this.audit.execute({
-      adminId, action: `${kind}_MODERATION_DELETE`, targetType: kind, targetId: id, detail: { method: 'SOFT_DELETE' }, ip,
-    }, async (tx) => {
-      const deletedAt = new Date()
-      const where = { id, deletedAt: null }
-      const updated = kind === 'POST'
-        ? await tx.post.updateMany({ where, data: { deletedAt } })
-        : await tx.comment.updateMany({ where, data: { deletedAt } })
-      if (!updated.count) throw notFound(kind === 'POST' ? 'Post' : 'Komentar')
-      return { id, deletedAt: deletedAt.toISOString() }
-    })
+    return this.audit.execute(
+      {
+        adminId,
+        action: `${kind}_MODERATION_DELETE`,
+        targetType: kind,
+        targetId: id,
+        detail: { method: 'SOFT_DELETE' },
+        ip,
+      },
+      async (tx) => {
+        const deletedAt = new Date()
+        const where = { id, deletedAt: null }
+        const updated =
+          kind === 'POST'
+            ? await tx.post.updateMany({ where, data: { deletedAt } })
+            : await tx.comment.updateMany({ where, data: { deletedAt } })
+        if (!updated.count) throw notFound(kind === 'POST' ? 'Post' : 'Komentar')
+        return { id, deletedAt: deletedAt.toISOString() }
+      },
+    )
   }
 
-  private bulk(adminId: number, kind: 'POST' | 'COMMENT', ids: number[], action: AdminModerationBulkAction, reason?: string, ip?: string) {
-    return this.audit.execute({
-      adminId,
-      action: `${kind}_MODERATION_BULK_${action.toUpperCase()}`,
-      targetType: kind,
-      detail: { ids, ...(reason ? { reason } : {}) },
-      ip,
-    }, async (tx) => {
-      const where = { id: { in: ids }, deletedAt: null }
-      const data = action === AdminModerationBulkAction.DELETE ? { deletedAt: new Date() } : { hidden: action === AdminModerationBulkAction.HIDE }
-      const updated = kind === 'POST'
-        ? await tx.post.updateMany({ where, data })
-        : await tx.comment.updateMany({ where, data })
-      if (updated.count !== ids.length) throw notFound(kind === 'POST' ? 'Post' : 'Komentar')
-      return { affected: updated.count, action }
-    })
+  private bulk(
+    adminId: number,
+    kind: 'POST' | 'COMMENT',
+    ids: number[],
+    action: AdminModerationBulkAction,
+    reason?: string,
+    ip?: string,
+  ) {
+    return this.audit.execute(
+      {
+        adminId,
+        action: `${kind}_MODERATION_BULK_${action.toUpperCase()}`,
+        targetType: kind,
+        detail: { ids, ...(reason ? { reason } : {}) },
+        ip,
+      },
+      async (tx) => {
+        const where = { id: { in: ids }, deletedAt: null }
+        const data =
+          action === AdminModerationBulkAction.DELETE
+            ? { deletedAt: new Date() }
+            : { hidden: action === AdminModerationBulkAction.HIDE }
+        const updated =
+          kind === 'POST'
+            ? await tx.post.updateMany({ where, data })
+            : await tx.comment.updateMany({ where, data })
+        if (updated.count !== ids.length) throw notFound(kind === 'POST' ? 'Post' : 'Komentar')
+        return { affected: updated.count, action }
+      },
+    )
   }
 }

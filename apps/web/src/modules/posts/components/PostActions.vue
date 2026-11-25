@@ -17,9 +17,11 @@ defineEmits<{ 'toggle-like': []; comment: []; share: [] }>()
     >
       {{ liked ? t('like.unlike') : t('like.action') }}
     </button>
+    <span class="actions__dot" aria-hidden="true">·</span>
     <button class="actions__link" type="button" @click="$emit('comment')">
       {{ t('comment.action') }}
     </button>
+    <span class="actions__dot" aria-hidden="true">·</span>
     <button class="actions__link" type="button" @click="$emit('share')">
       {{ t('share.action') }}
     </button>
@@ -29,8 +31,11 @@ defineEmits<{ 'toggle-like': []; comment: []; share: [] }>()
 <style scoped>
 .actions {
   display: flex;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
   padding: var(--sp-2) var(--sp-3);
+}
+.actions__dot {
+  color: var(--c-text-muted);
 }
 .actions__link {
   padding: 0;

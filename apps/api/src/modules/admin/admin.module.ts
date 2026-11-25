@@ -30,8 +30,35 @@ import { AdminHashtagsService } from './hashtags/admin-hashtags.service'
 
 @Module({
   imports: [AuthModule, SettingsModule, NotificationsModule],
-  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController, AdminBlockedWordsController, AdminSettingsController, AdminAnnouncementsController, AdminAuditLogsController, AdminBotsController, AdminSponsoredController, AdminHashtagsController],
-  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, AdminBlockedWordsService, AdminSettingsService, AdminAnnouncementsService, AdminAuditLogsService, AdminBotsService, AdminSponsoredService, AdminHashtagsService, RolesGuard],
+  controllers: [
+    AdminAuthController,
+    AdminDashboardController,
+    AdminUsersController,
+    AdminModerationController,
+    AdminReportsController,
+    AdminBlockedWordsController,
+    AdminSettingsController,
+    AdminAnnouncementsController,
+    AdminAuditLogsController,
+    AdminBotsController,
+    AdminSponsoredController,
+    AdminHashtagsController,
+  ],
+  providers: [
+    AdminAuditService,
+    AdminDashboardService,
+    AdminUsersService,
+    AdminModerationService,
+    AdminReportsService,
+    AdminBlockedWordsService,
+    AdminSettingsService,
+    AdminAnnouncementsService,
+    AdminAuditLogsService,
+    AdminBotsService,
+    AdminSponsoredService,
+    AdminHashtagsService,
+    RolesGuard,
+  ],
   exports: [AdminAuditService],
 })
 export class AdminModule {}

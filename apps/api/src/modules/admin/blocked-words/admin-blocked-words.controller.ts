@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Req, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common'
 import { Role } from '@prisma/client'
 import type { Request } from 'express'
 import { AuthUser, CurrentUser } from '../../auth/current-user.decorator'
@@ -14,15 +24,25 @@ export class AdminBlockedWordsController {
   constructor(private readonly words: AdminBlockedWordsService) {}
 
   @Get()
-  list() { return this.words.list() }
+  list() {
+    return this.words.list()
+  }
 
   @Post()
-  create(@CurrentUser() admin: AuthUser, @Body() dto: CreateBlockedWordDto, @Req() request: Request) {
+  create(
+    @CurrentUser() admin: AuthUser,
+    @Body() dto: CreateBlockedWordDto,
+    @Req() request: Request,
+  ) {
     return this.words.create(admin.id, dto.word, request.ip)
   }
 
   @Delete(':id')
-  remove(@CurrentUser() admin: AuthUser, @Param('id', ParseIntPipe) id: number, @Req() request: Request) {
+  remove(
+    @CurrentUser() admin: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Req() request: Request,
+  ) {
     return this.words.remove(admin.id, id, request.ip)
   }
 }

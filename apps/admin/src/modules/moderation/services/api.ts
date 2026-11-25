@@ -1,7 +1,9 @@
 import { adminHttp } from '@/plugins/admin-http'
 import type { ModerationAction, ModerationPage, ModerationQuery, ModerationResource } from './types'
 
-function path(resource: ModerationResource) { return `/admin/${resource}` }
+function path(resource: ModerationResource) {
+  return `/admin/${resource}`
+}
 export const adminModerationApi = {
   list: (query: ModerationQuery) => {
     const params = new URLSearchParams({ limit: '20' })
@@ -14,7 +16,12 @@ export const adminModerationApi = {
   },
   setHidden: (resource: ModerationResource, id: number, hidden: boolean) =>
     adminHttp.patch<{ id: number; hidden: boolean }>(`${path(resource)}/${id}`, { hidden }),
-  remove: (resource: ModerationResource, id: number) => adminHttp.delete<{ id: number; deletedAt: string }>(`${path(resource)}/${id}`),
+  remove: (resource: ModerationResource, id: number) =>
+    adminHttp.delete<{ id: number; deletedAt: string }>(`${path(resource)}/${id}`),
   bulk: (resource: ModerationResource, ids: number[], action: ModerationAction, reason?: string) =>
-    adminHttp.post<{ affected: number; action: ModerationAction }>(`${path(resource)}/bulk`, { ids, action, reason }),
+    adminHttp.post<{ affected: number; action: ModerationAction }>(`${path(resource)}/bulk`, {
+      ids,
+      action,
+      reason,
+    }),
 }

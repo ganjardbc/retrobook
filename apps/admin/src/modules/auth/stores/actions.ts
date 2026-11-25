@@ -1,5 +1,10 @@
 import { adminSession } from '@/helpers/session'
-import { adminAuthApi, AdminApiError, type Admin, type AdminSession } from '@/modules/auth/services/api'
+import {
+  adminAuthApi,
+  AdminApiError,
+  type Admin,
+  type AdminSession,
+} from '@/modules/auth/services/api'
 
 type AuthStoreContext = {
   user: Admin | null
@@ -16,8 +21,9 @@ export const actions = {
   async init(this: AuthStoreContext) {
     const token = adminSession.refreshToken
     if (!token) return
-    try { this.start(await adminAuthApi.refresh(token)) }
-    catch (error) {
+    try {
+      this.start(await adminAuthApi.refresh(token))
+    } catch (error) {
       if (error instanceof AdminApiError && error.status < 500) adminSession.clear()
     }
   },
@@ -26,8 +32,11 @@ export const actions = {
   },
   async logout(this: AuthStoreContext) {
     const token = adminSession.refreshToken
-    try { if (token) await adminAuthApi.logout(token) }
-    finally { this.clear() }
+    try {
+      if (token) await adminAuthApi.logout(token)
+    } finally {
+      this.clear()
+    }
   },
   clear(this: AuthStoreContext) {
     adminSession.clear()

@@ -23,9 +23,15 @@ type UserStoreContext = {
 }
 
 export const actions = {
-  setUsers(this: UserStoreContext, users: AdminUser[]) { this.users = users },
-  setSearch(this: UserStoreContext, search: string) { this.search = search },
-  setFilters(this: UserStoreContext, filters: UserListFilters) { this.filters = filters },
+  setUsers(this: UserStoreContext, users: AdminUser[]) {
+    this.users = users
+  },
+  setSearch(this: UserStoreContext, search: string) {
+    this.search = search
+  },
+  setFilters(this: UserStoreContext, filters: UserListFilters) {
+    this.filters = filters
+  },
   async fetchUsers(this: UserStoreContext) {
     const requestVersion = ++this.fetchVersion
     this.loading = true
@@ -53,10 +59,14 @@ export const actions = {
     this.detailLoading = true
     this.detailError = ''
     this.currentUser = null
-    try { this.currentUser = await adminUsersApi.detail(id) }
-    catch (error) {
-      this.detailError = error instanceof AdminApiError ? error.message : 'Gagal memuat detail pengguna.'
-    } finally { this.detailLoading = false }
+    try {
+      this.currentUser = await adminUsersApi.detail(id)
+    } catch (error) {
+      this.detailError =
+        error instanceof AdminApiError ? error.message : 'Gagal memuat detail pengguna.'
+    } finally {
+      this.detailLoading = false
+    }
   },
   resetPagination(this: UserStoreContext) {
     this.cursorStack = [null]

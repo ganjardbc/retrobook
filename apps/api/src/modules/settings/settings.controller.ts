@@ -8,5 +8,7 @@ export class SettingsController {
 
   @Public()
   @Get('public')
-  publicSettings() { return this.settings.get() }
+  publicSettings() {
+    return this.settings.get()
+  }
 }

@@ -12,7 +12,10 @@ export class SponsoredController {
     const item = await this.prisma.sponsored.findFirst({
       where: {
         active: true,
-        AND: [{ OR: [{ startsAt: null }, { startsAt: { lte: now } }] }, { OR: [{ endsAt: null }, { endsAt: { gt: now } }] }],
+        AND: [
+          { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+          { OR: [{ endsAt: null }, { endsAt: { gt: now } }] },
+        ],
       },
       orderBy: { id: 'desc' },
       select: { id: true, title: true, body: true, imageUrl: true, linkUrl: true },

@@ -37,26 +37,45 @@ describe('Kata terlarang (integrasi)', () => {
     expect((await h.as(admin).get('/admin/blocked-words')).body.items).toHaveLength(1)
     expect((await h.as(admin).del(`/admin/blocked-words/${add.body.id}`)).status).toBe(200)
     expect((await h.as(admin).del(`/admin/blocked-words/${add.body.id}`)).status).toBe(404)
-    expect((await h.prisma.auditLog.findMany()).map((a) => a.action)).toEqual(['BLOCKED_WORD_ADD', 'BLOCKED_WORD_REMOVE'])
+    expect((await h.prisma.auditLog.findMany()).map((a) => a.action)).toEqual([
+      'BLOCKED_WORD_ADD',
+      'BLOCKED_WORD_REMOVE',
+    ])
   })
 
   it('tulis: post dan komentar memuat kata tetap tersimpan (201) tetapi ditandai; yang bersih tidak', async () => {
     const [admin, user] = await Promise.all([h.mkUser('admin', { role: 'ADMIN' }), h.mkUser('u')])
     await h.as(admin).post('/admin/blocked-words').send({ word: 'judi' })
-    const bad = await h.as(user).post('/posts').send({ content: 'Main JUDI yuk', privacy: 'PUBLIC' })
+    const bad = await h
+      .as(user)
+      .post('/posts')
+      .send({ content: 'Main JUDI yuk', privacy: 'PUBLIC' })
     const ok = await h.as(user).post('/posts').send({ content: 'halo', privacy: 'PUBLIC' })
     expect([bad.status, ok.status]).toEqual([201, 201])
-    const c = await h.as(user).post(`/posts/${ok.body.id}/comments`).send({ content: 'ada judi online' })
+    const c = await h
+      .as(user)
+      .post(`/posts/${ok.body.id}/comments`)
+      .send({ content: 'ada judi online' })
     expect(c.status).toBe(201)
-    expect((await h.prisma.post.findUniqueOrThrow({ where: { id: bad.body.id } })).flagged).toBe(true)
-    expect((await h.prisma.post.findUniqueOrThrow({ where: { id: ok.body.id } })).flagged).toBe(false)
-    expect((await h.prisma.comment.findUniqueOrThrow({ where: { id: c.body.id } })).flagged).toBe(true)
+    expect((await h.prisma.post.findUniqueOrThrow({ where: { id: bad.body.id } })).flagged).toBe(
+      true,
+    )
+    expect((await h.prisma.post.findUniqueOrThrow({ where: { id: ok.body.id } })).flagged).toBe(
+      false,
+    )
+    expect((await h.prisma.comment.findUniqueOrThrow({ where: { id: c.body.id } })).flagged).toBe(
+      true,
+    )
   })
 
   it('menambah kata menandai konten lama; filter flagged di moderasi menampilkannya', async () => {
     const [admin, user] = await Promise.all([h.mkUser('admin', { role: 'ADMIN' }), h.mkUser('u')])
-    const old = await h.prisma.post.create({ data: { authorId: user.id, content: 'Beli Obat murah', privacy: 'PUBLIC' } })
-    await h.prisma.post.create({ data: { authorId: user.id, content: 'netral', privacy: 'PUBLIC' } })
+    const old = await h.prisma.post.create({
+      data: { authorId: user.id, content: 'Beli Obat murah', privacy: 'PUBLIC' },
+    })
+    await h.prisma.post.create({
+      data: { authorId: user.id, content: 'netral', privacy: 'PUBLIC' },
+    })
     const add = await h.as(admin).post('/admin/blocked-words').send({ word: 'obat' })
     expect([add.body.flaggedPosts, add.body.flaggedComments]).toEqual([1, 0])
     const list = await h.as(admin).get('/admin/posts?filter=flagged')

@@ -14,11 +14,25 @@ const POSTS = [
   'Today is a good day for {t}. #{t}',
   'Hot take: {t} is underrated.',
 ]
-const REPLIES = ['Thanks for the comment!', 'Great point, thanks for sharing.', 'Love hearing that :)', 'Totally, {t} is the best.', 'Appreciate it!']
+const REPLIES = [
+  'Thanks for the comment!',
+  'Great point, thanks for sharing.',
+  'Love hearing that :)',
+  'Totally, {t} is the best.',
+  'Appreciate it!',
+]
 
 /** `persona` berisi topik dipisah koma, mis. "coffee, music, travel". */
 export const topicsOf = (persona: string) => {
-  const topics = persona.split(',').map((t) => t.trim().toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean)
+  const topics = persona
+    .split(',')
+    .map((t) =>
+      t
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, ''),
+    )
+    .filter(Boolean)
   return topics.length ? topics : ['life']
 }
 

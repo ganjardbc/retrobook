@@ -13,5 +13,7 @@ export class AdminAuditLogsController {
   constructor(private readonly logs: AdminAuditLogsService) {}
 
   @Get()
-  list(@Query() query: AdminAuditLogsQuery) { return this.logs.list(query) }
+  list(@Query() query: AdminAuditLogsQuery) {
+    return this.logs.list(query)
+  }
 }

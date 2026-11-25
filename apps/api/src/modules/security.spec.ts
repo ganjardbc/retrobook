@@ -44,8 +44,14 @@ describe('Daftar periksa keamanan (integrasi)', () => {
     ])
     await h.prisma.post.create({ data: { authorId: other.id, content: 'halo', privacy: 'PUBLIC' } })
     const paths = [
-      ['me', '/users/me'], ['me', `/users/${other.username}`], ['me', '/search?q=o'], ['me', '/friends'],
-      ['me', '/feed'], ['admin', '/admin/users'], ['admin', `/admin/users/${other.id}`], ['admin', '/admin/posts'],
+      ['me', '/users/me'],
+      ['me', `/users/${other.username}`],
+      ['me', '/search?q=o'],
+      ['me', '/friends'],
+      ['me', '/feed'],
+      ['admin', '/admin/users'],
+      ['admin', `/admin/users/${other.id}`],
+      ['admin', '/admin/posts'],
     ] as const
     for (const [who, path] of paths) {
       const res = await h.as(who === 'admin' ? admin : me).get(path)
@@ -77,8 +83,12 @@ describe('Daftar periksa keamanan (integrasi)', () => {
 
   it('IDOR: mengubah atau menghapus post dan komentar milik orang lain ditolak, data tidak berubah', async () => {
     const [owner, intruder] = await Promise.all([h.mkUser('owner'), h.mkUser('intruder')])
-    const post = await h.prisma.post.create({ data: { authorId: owner.id, content: 'asli', privacy: 'PUBLIC' } })
-    const comment = await h.prisma.comment.create({ data: { postId: post.id, authorId: owner.id, content: 'kom' } })
+    const post = await h.prisma.post.create({
+      data: { authorId: owner.id, content: 'asli', privacy: 'PUBLIC' },
+    })
+    const comment = await h.prisma.comment.create({
+      data: { postId: post.id, authorId: owner.id, content: 'kom' },
+    })
     const results = [
       await h.as(intruder).patch(`/posts/${post.id}`).send({ content: 'diubah' }),
       await h.as(intruder).del(`/posts/${post.id}`),
@@ -87,11 +97,15 @@ describe('Daftar periksa keamanan (integrasi)', () => {
     for (const r of results) expect([403, 404]).toContain(r.status)
     expect((await h.prisma.post.findUniqueOrThrow({ where: { id: post.id } })).content).toBe('asli')
     expect((await h.prisma.post.findUniqueOrThrow({ where: { id: post.id } })).deletedAt).toBeNull()
-    expect((await h.prisma.comment.findUniqueOrThrow({ where: { id: comment.id } })).deletedAt).toBeNull()
+    expect(
+      (await h.prisma.comment.findUniqueOrThrow({ where: { id: comment.id } })).deletedAt,
+    ).toBeNull()
   })
 
   it('error tak terduga tidak membocorkan detail dan token tidak ikut respons error', async () => {
-    const res = await request(app.getHttpServer()).get('/api/feed').set('Authorization', 'Bearer abc.def.ghi')
+    const res = await request(app.getHttpServer())
+      .get('/api/feed')
+      .set('Authorization', 'Bearer abc.def.ghi')
     expect(res.status).toBe(401)
     expect(JSON.stringify(res.body)).not.toContain('abc.def.ghi')
   })

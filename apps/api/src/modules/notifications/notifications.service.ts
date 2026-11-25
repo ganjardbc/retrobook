@@ -111,7 +111,10 @@ export class NotificationsService {
   /** ADM-13: kirim `notification:new` untuk semua notifikasi satu pengumuman (setelah commit). Gagal kirim tidak melempar. */
   async pushAnnouncement(announcementId: number): Promise<void> {
     try {
-      const rows = await this.prisma.notification.findMany({ where: { announcementId }, select: { ...select, userId: true } })
+      const rows = await this.prisma.notification.findMany({
+        where: { announcementId },
+        select: { ...select, userId: true },
+      })
       for (const { userId, ...row } of rows) this.push(userId, this.toDto(row))
     } catch (e) {
       this.log.warn(`push pengumuman ${announcementId} gagal: ${String(e)}`)
@@ -173,7 +176,8 @@ export class NotificationsService {
       postId: row.postId,
       commentId: row.commentId,
       announcementId: row.announcementId,
-      text: row.announcement?.title ?? TEXT[row.type].replace('{name}', row.actor?.displayName ?? ''),
+      text:
+        row.announcement?.title ?? TEXT[row.type].replace('{name}', row.actor?.displayName ?? ''),
       readAt: row.readAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
     }

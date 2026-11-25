@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Req, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common'
 import { Role } from '@prisma/client'
 import type { Request } from 'express'
 import { AuthUser, CurrentUser } from '../../auth/current-user.decorator'
@@ -14,7 +25,9 @@ export class AdminSponsoredController {
   constructor(private readonly sponsored: AdminSponsoredService) {}
 
   @Get()
-  list() { return this.sponsored.list() }
+  list() {
+    return this.sponsored.list()
+  }
 
   @Post()
   create(@CurrentUser() admin: AuthUser, @Body() dto: CreateSponsoredDto, @Req() request: Request) {
@@ -22,12 +35,21 @@ export class AdminSponsoredController {
   }
 
   @Patch(':id')
-  update(@CurrentUser() admin: AuthUser, @Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSponsoredDto, @Req() request: Request) {
+  update(
+    @CurrentUser() admin: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSponsoredDto,
+    @Req() request: Request,
+  ) {
     return this.sponsored.update(admin.id, id, dto, request.ip)
   }
 
   @Delete(':id')
-  remove(@CurrentUser() admin: AuthUser, @Param('id', ParseIntPipe) id: number, @Req() request: Request) {
+  remove(
+    @CurrentUser() admin: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Req() request: Request,
+  ) {
     return this.sponsored.remove(admin.id, id, request.ip)
   }
 }

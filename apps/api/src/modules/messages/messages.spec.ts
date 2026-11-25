@@ -326,6 +326,21 @@ describe('Pesan (integrasi)', () => {
       expect(await items(a)).toEqual([])
     })
 
+    it('menyertakan lastSeenAt teman (ISO atau null)', async () => {
+      const me = await h.mkUser('me')
+      const seen = await h.mkUser('seen')
+      const never = await h.mkUser('never')
+      await h.befriend(me, seen)
+      await h.befriend(me, never)
+      const at = new Date('2026-01-02T03:04:05.000Z')
+      await h.prisma.user.update({ where: { id: seen.id }, data: { lastSeenAt: at } })
+      const byId = new Map(
+        (await items(me)).map((i: { user: User; lastSeenAt: string | null }) => [i.user.id, i]),
+      )
+      expect((byId.get(seen.id) as { lastSeenAt: string }).lastSeenAt).toBe(at.toISOString())
+      expect((byId.get(never.id) as { lastSeenAt: null }).lastSeenAt).toBeNull()
+    })
+
     it('hanya teman ACCEPTED yang terlihat; PENDING, orang asing, diblokir, BANNED tidak', async () => {
       const me = await h.mkUser('me')
       const ok = await h.mkUser('ok')

@@ -1,4 +1,8 @@
-import type { ModerationFilter, ModerationItem, ModerationResource } from '@/modules/moderation/services/types'
+import type {
+  ModerationFilter,
+  ModerationItem,
+  ModerationResource,
+} from '@/modules/moderation/services/types'
 
 export const state = () => ({
   resource: 'posts' as ModerationResource,

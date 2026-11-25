@@ -2,7 +2,12 @@ import { Transform, Type } from 'class-transformer'
 import { IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator'
 
 export class AdminHashtagsQuery {
-  @IsOptional() @Transform(({ value }) => (typeof value === 'string' ? value.trim().replace(/^#/, '').toLowerCase() : value)) @IsString() @MaxLength(50)
+  @IsOptional()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().replace(/^#/, '').toLowerCase() : value,
+  )
+  @IsString()
+  @MaxLength(50)
   q?: string
 
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) cursor?: number

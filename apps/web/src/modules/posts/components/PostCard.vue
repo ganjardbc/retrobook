@@ -7,6 +7,7 @@ import {
   type Privacy,
 } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
+import { Icon } from '@iconify/vue'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ApiRequestError } from '@/plugins/http'
@@ -139,7 +140,7 @@ async function saveEdit() {
           :aria-expanded="menuOpen"
           @click="menuOpen = !menuOpen"
         >
-          …
+          <Icon icon="mdi:chevron-down" aria-hidden="true" />
         </button>
         <div v-if="menuOpen" class="post__dropdown">
           <button v-if="isMine" type="button" class="post__item" @click="startEdit">
@@ -179,8 +180,8 @@ async function saveEdit() {
           {{ t(`privacy.${privacy}`) }}
         </option>
       </select>
-      <select v-model="editFeeling" class="post__edit-privacy" aria-label="Perasaan atau aktivitas">
-        <option value="">Tanpa perasaan</option>
+      <select v-model="editFeeling" class="post__edit-privacy" :aria-label="t('statusBox.feeling')">
+        <option value="">{{ t('statusBox.feeling.none') }}</option>
         <option v-for="option in POST_FEELINGS" :key="option" :value="option">{{ option }}</option>
       </select>
       <p v-if="editError" class="form-error" role="alert">{{ editError }}</p>
@@ -295,8 +296,11 @@ async function saveEdit() {
 }
 .post__image {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
+  max-height: 520px;
+  object-fit: contain;
 }
 .post__menu {
   position: relative;
@@ -306,9 +310,12 @@ async function saveEdit() {
   border: 0;
   background: none;
   color: var(--c-text-muted);
-  font-size: var(--fs-title);
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
+}
+.post__dots:hover {
+  color: var(--c-text);
 }
 .post__dropdown {
   position: absolute;

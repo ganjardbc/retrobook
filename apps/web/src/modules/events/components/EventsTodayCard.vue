@@ -22,7 +22,14 @@ import PageCard from '@/components/PageCard.vue'
 </script>
 
 <template>
-  <PageCard v-if="events.length" class="etoday" :title="t('eventsToday.title')" heading="h2" flush>
+  <PageCard
+    v-if="events.length"
+    class="etoday"
+    quiet
+    :title="t('eventsToday.title')"
+    heading="h2"
+    flush
+  >
     <ul class="list">
       <li v-for="e in events" :key="e.id" class="item">
         <Icon icon="mdi:calendar" class="item__icon" aria-hidden="true" />

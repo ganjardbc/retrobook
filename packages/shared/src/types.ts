@@ -129,6 +129,8 @@ export type ChatFriend = {
   user: UserSummary
   online: boolean
   client: 'WEB' | 'MOBILE' | null
+  /** Terakhir terlihat (ISO); dipakai untuk label "24m" pada teman offline. */
+  lastSeenAt: string | null
   unreadCount: number
 }
 

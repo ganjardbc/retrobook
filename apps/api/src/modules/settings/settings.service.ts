@@ -16,6 +16,9 @@ export class SettingsService {
       const raw = rows.find((r) => r.key === key)?.value
       return typeof raw === 'boolean' ? raw : fallback
     }
-    return { maintenanceMode: value('maintenance_mode', false), registrationOpen: value('registration_open', true) }
+    return {
+      maintenanceMode: value('maintenance_mode', false),
+      registrationOpen: value('registration_open', true),
+    }
   }
 }

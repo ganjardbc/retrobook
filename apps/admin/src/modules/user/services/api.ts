@@ -1,5 +1,12 @@
 import { adminHttp } from '@/plugins/admin-http'
-import type { AdminUser, AdminUserDetail, AdminUsersPage, UserListFilters, UserRole, UserStatus } from './types'
+import type {
+  AdminUser,
+  AdminUserDetail,
+  AdminUsersPage,
+  UserListFilters,
+  UserRole,
+  UserStatus,
+} from './types'
 
 export type AdminUserMutation = AdminUser & { revokedSessions?: number }
 
@@ -27,8 +34,13 @@ export const adminUsersApi = {
   updateRole: (id: number, role: UserRole) =>
     adminHttp.patch<AdminUserMutation>(`/admin/users/${id}/role`, { role }),
   resetPassword: (id: number) =>
-    adminHttp.post<{ temporaryPassword: string; revokedSessions: number }>(`/admin/users/${id}/reset-password`),
-  remove: (id: number) => adminHttp.delete<{ id: number; deletedAt: string; revokedSessions: number }>(`/admin/users/${id}`),
+    adminHttp.post<{ temporaryPassword: string; revokedSessions: number }>(
+      `/admin/users/${id}/reset-password`,
+    ),
+  remove: (id: number) =>
+    adminHttp.delete<{ id: number; deletedAt: string; revokedSessions: number }>(
+      `/admin/users/${id}`,
+    ),
 }
 
 export const emptyUserFilters = (): UserListFilters => ({ status: '', role: '' })

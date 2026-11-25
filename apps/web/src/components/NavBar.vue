@@ -55,8 +55,9 @@ const auth = useAuthStore()
   top: 0;
   z-index: 10;
   height: var(--h-navbar);
-  background: var(--c-brand);
-  border-bottom: 1px solid var(--c-brand-dark);
+  background: linear-gradient(var(--c-brand-top), var(--c-brand));
+  border-bottom: 1px solid var(--c-brand-edge);
+  box-shadow: 0 1px 0 var(--c-border);
 }
 .navbar__inner {
   display: flex;

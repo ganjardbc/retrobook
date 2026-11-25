@@ -53,7 +53,7 @@ const mutual = (n: number) => (n === 1 ? t('pymk.mutual.one') : t('pymk.mutual.m
 </script>
 
 <template>
-  <PageCard v-if="rows.length" class="pymk" :title="t('pymk.title')" heading="h2" flush>
+  <PageCard v-if="rows.length" class="pymk" quiet :title="t('pymk.title')" heading="h2" flush>
     <p v-if="failed" class="form-error pymk__error" role="alert">{{ t('friends.error.action') }}</p>
     <ul class="pymk__list">
       <FriendRow

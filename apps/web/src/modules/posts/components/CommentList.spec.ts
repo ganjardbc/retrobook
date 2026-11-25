@@ -132,7 +132,8 @@ describe('CommentList', () => {
       .find((button) => button.text().includes('Like'))!
     await likeButton.trigger('click')
     await flushPromises()
-    expect(w.find('.comment__meta').text()).toContain('Unlike · 1')
+    expect(w.find('.comment__meta button').text()).toBe('Unlike')
+    expect(w.find('.comment__likes').text()).toBe('1')
   })
 
   it('kosong atau spasi saja tidak dikirim', async () => {

@@ -1,13 +1,23 @@
 <script setup lang="ts">
 /** Kartu halaman penuh: header abu dengan judul dan aksi, isi di bawahnya (pola sama dengan kartu kolom kanan). */
-withDefaults(defineProps<{ title: string; heading?: 'h1' | 'h2'; flush?: boolean }>(), {
-  heading: 'h1',
-  flush: false,
-})
+withDefaults(
+  defineProps<{
+    title: string
+    heading?: 'h1' | 'h2'
+    flush?: boolean
+    /** Gaya kartu kolom samping (ref-5): judul huruf besar abu-abu kecil tanpa bar latar. */
+    quiet?: boolean
+  }>(),
+  {
+    heading: 'h1',
+    flush: false,
+    quiet: false,
+  },
+)
 </script>
 
 <template>
-  <section class="pcard">
+  <section class="pcard" :class="{ 'pcard--quiet': quiet }">
     <header class="pcard__head">
       <component :is="heading" class="pcard__title">{{ title }}</component>
       <div class="pcard__actions"><slot name="actions" /></div>
@@ -43,6 +53,18 @@ withDefaults(defineProps<{ title: string; heading?: 'h1' | 'h2'; flush?: boolean
   display: flex;
   align-items: center;
   gap: var(--sp-2);
+}
+.pcard--quiet .pcard__head {
+  min-height: 0;
+  padding: var(--sp-3) var(--sp-3) var(--sp-1);
+  background: none;
+  border-bottom: 0;
+}
+.pcard--quiet .pcard__title {
+  color: var(--c-text-muted);
+  font-size: var(--fs-small);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 .pcard__body {
   padding: var(--sp-3);

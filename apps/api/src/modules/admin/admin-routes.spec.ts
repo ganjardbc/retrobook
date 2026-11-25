@@ -22,7 +22,12 @@ const METHODS: Record<number, AdminRoute['method'] | undefined> = {
   [RequestMethod.PATCH]: 'patch',
   [RequestMethod.DELETE]: 'delete',
 }
-const join = (...parts: string[]) => '/' + parts.map((p) => p.replace(/^\/|\/$/g, '')).filter(Boolean).join('/')
+const join = (...parts: string[]) =>
+  '/' +
+  parts
+    .map((p) => p.replace(/^\/|\/$/g, ''))
+    .filter(Boolean)
+    .join('/')
 
 function discoverAdminRoutes(app: INestApplication): AdminRoute[] {
   const routes: AdminRoute[] = []
@@ -34,7 +39,13 @@ function discoverAdminRoutes(app: INestApplication): AdminRoute[] {
       const handler = metatype.prototype[name]
       const method = METHODS[Reflect.getMetadata('method', handler) as number]
       if (!method || Reflect.getMetadata(IS_PUBLIC, handler)) continue
-      routes.push({ method, path: join('/api', base, String(Reflect.getMetadata('path', handler) ?? '')).replace(/:\w+/g, '1') })
+      routes.push({
+        method,
+        path: join('/api', base, String(Reflect.getMetadata('path', handler) ?? '')).replace(
+          /:\w+/g,
+          '1',
+        ),
+      })
     }
   }
   return routes
@@ -61,7 +72,17 @@ describe('Semua rute admin menolak non-admin (ADM-01)', () => {
 
   it('menemukan rute admin dari setiap area (jaring pengaman agar tes tidak kosong)', () => {
     expect(routes.length).toBeGreaterThanOrEqual(25)
-    for (const area of ['stats', 'users', 'posts', 'comments', 'reports', 'blocked-words', 'settings', 'announcements', 'audit-logs']) {
+    for (const area of [
+      'stats',
+      'users',
+      'posts',
+      'comments',
+      'reports',
+      'blocked-words',
+      'settings',
+      'announcements',
+      'audit-logs',
+    ]) {
       expect(routes.some((r) => r.path.includes(`/admin/${area}`))).toBe(true)
     }
   })
@@ -70,7 +91,10 @@ describe('Semua rute admin menolak non-admin (ADM-01)', () => {
     const user = await h.mkUser('biasa')
     const bad: string[] = []
     for (const { method, path } of routes) {
-      const asUser = await request(app.getHttpServer())[method](path).set('Authorization', `Bearer ${h.tokenOf(user)}`).send({})
+      const asUser = await request(app.getHttpServer())
+        [method](path)
+        .set('Authorization', `Bearer ${h.tokenOf(user)}`)
+        .send({})
       const anon = await request(app.getHttpServer())[method](path).send({})
       if (asUser.status !== 403) bad.push(`${method.toUpperCase()} ${path} user=${asUser.status}`)
       if (anon.status !== 401) bad.push(`${method.toUpperCase()} ${path} anon=${anon.status}`)

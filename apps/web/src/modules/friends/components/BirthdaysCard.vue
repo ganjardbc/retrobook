@@ -20,7 +20,14 @@ import PageCard from '@/components/PageCard.vue'
 </script>
 
 <template>
-  <PageCard v-if="people.length" class="bday" :title="t('birthdays.title')" heading="h2" flush>
+  <PageCard
+    v-if="people.length"
+    class="bday"
+    quiet
+    :title="t('birthdays.title')"
+    heading="h2"
+    flush
+  >
     <ul class="list">
       <li v-for="p in people" :key="p.id" class="item">
         <Icon icon="mdi:cake-variant" class="item__icon" aria-hidden="true" />

@@ -1,10 +1,26 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, Req, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common'
 import { Role } from '@prisma/client'
 import type { Request } from 'express'
 import { AuthUser, CurrentUser } from '../../auth/current-user.decorator'
 import { Roles } from '../roles.decorator'
 import { RolesGuard } from '../roles.guard'
-import { AdminUsersQuery, UpdateAdminUserRoleDto, UpdateAdminUserStatusDto } from './admin-users.dto'
+import {
+  AdminUsersQuery,
+  UpdateAdminUserRoleDto,
+  UpdateAdminUserStatusDto,
+} from './admin-users.dto'
 import { AdminUsersService } from './admin-users.service'
 
 @Controller('admin/users')

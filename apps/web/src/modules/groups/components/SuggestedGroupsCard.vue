@@ -36,6 +36,7 @@ import GroupRow from '@/modules/groups/components/GroupRow.vue'
   <PageCard
     v-if="groups.length"
     class="sgroups"
+    quiet
     :title="t('suggestedGroups.title')"
     heading="h2"
     flush

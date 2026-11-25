@@ -123,7 +123,11 @@ export class AuthService {
     await this.prisma.$transaction([
       this.prisma.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } }),
       this.prisma.passwordResetToken.create({
-        data: { userId: user.id, tokenHash: hashToken(token), expiresAt: new Date(Date.now() + RESET_TTL_MS) },
+        data: {
+          userId: user.id,
+          tokenHash: hashToken(token),
+          expiresAt: new Date(Date.now() + RESET_TTL_MS),
+        },
       }),
     ])
     const link = `${this.config.get('APP_URL')}/reset-password?token=${token}`
@@ -139,15 +143,25 @@ export class AuthService {
   /** Token sekali pakai: pemakaian bersyarat mencegah dua permintaan bersamaan sama-sama berhasil; semua sesi dicabut. */
   async resetPassword(token: string, password: string): Promise<void> {
     const passwordHash = await argon2.hash(password)
-    const invalid = () => new AppException(400, 'VALIDATION_FAILED', 'Tautan reset tidak valid atau sudah kedaluwarsa')
+    const invalid = () =>
+      new AppException(400, 'VALIDATION_FAILED', 'Tautan reset tidak valid atau sudah kedaluwarsa')
     await this.prisma.$transaction(async (tx) => {
       const row = await tx.passwordResetToken.findUnique({ where: { tokenHash: hashToken(token) } })
       if (!row || row.usedAt || row.expiresAt < new Date()) throw invalid()
-      const used = await tx.passwordResetToken.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: new Date() } })
+      const used = await tx.passwordResetToken.updateMany({
+        where: { id: row.id, usedAt: null },
+        data: { usedAt: new Date() },
+      })
       if (used.count !== 1) throw invalid()
-      const updated = await tx.user.updateMany({ where: { id: row.userId, deletedAt: null }, data: { passwordHash } })
+      const updated = await tx.user.updateMany({
+        where: { id: row.userId, deletedAt: null },
+        data: { passwordHash },
+      })
       if (!updated.count) throw invalid()
-      await tx.refreshToken.updateMany({ where: { userId: row.userId, revokedAt: null }, data: { revokedAt: new Date() } })
+      await tx.refreshToken.updateMany({
+        where: { userId: row.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      })
     })
   }
 

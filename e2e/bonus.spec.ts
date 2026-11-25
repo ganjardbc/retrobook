@@ -15,7 +15,10 @@ test('THM-01 Time Travel theme switches via tokens and persists after reload', a
   await expect(html).not.toHaveAttribute('data-theme', /.+/)
 })
 
-test('FRD-06 block hides the profile both ways and can be undone from Blocked People', async ({ browser, page }) => {
+test('FRD-06 block hides the profile both ways and can be undone from Blocked People', async ({
+  browser,
+  page,
+}) => {
   await register(page)
   const bobContext = await browser.newContext()
   const bobPage = await bobContext.newPage()
@@ -47,7 +50,10 @@ test('ACT-01 activity log lists own post and deleting it there removes it', asyn
   await expect(page.locator('.post').filter({ hasText: content })).toHaveCount(0)
 })
 
-test('SPN-01 admin publishes a Sponsored card that members see, and removes it', async ({ browser, page }) => {
+test('SPN-01 admin publishes a Sponsored card that members see, and removes it', async ({
+  browser,
+  page,
+}) => {
   await register(page)
   const title = `Promo ${Date.now()}`
   const admin = await loginAsNewAdmin(browser)
@@ -60,13 +66,20 @@ test('SPN-01 admin publishes a Sponsored card that members see, and removes it',
   await expect(admin.page.getByText('Promosi dibuat.')).toBeVisible()
 
   await page.goto('/')
-  await expect(page.locator('.card').filter({ hasText: title })).toBeVisible()
-  await expect(page.getByRole('link', { name: new RegExp(title) })).toHaveAttribute('href', 'https://example.com/promo')
+  await expect(page.locator('.pcard').filter({ hasText: title })).toBeVisible()
+  await expect(page.getByRole('link', { name: new RegExp(title) })).toHaveAttribute(
+    'href',
+    'https://example.com/promo',
+  )
 
-  await admin.page.locator('.announce-list li').filter({ hasText: title }).getByRole('button', { name: 'Hapus' }).click()
+  await admin.page
+    .locator('.announce-list li')
+    .filter({ hasText: title })
+    .getByRole('button', { name: 'Hapus' })
+    .click()
   await expect(admin.page.locator('.announce-list li').filter({ hasText: title })).toHaveCount(0)
   await page.reload()
-  await expect(page.locator('.card').filter({ hasText: title })).toHaveCount(0)
+  await expect(page.locator('.pcard').filter({ hasText: title })).toHaveCount(0)
   await admin.context.close()
 })
 
@@ -81,15 +94,23 @@ test('ADM-17 hiding a hashtag removes it from trending', async ({ browser, page 
   await admin.page.goto(`${ADMIN_URL}/trending`)
   await admin.page.getByLabel('Cari hashtag').fill(tag)
   await admin.page.getByRole('button', { name: 'Cari' }).click()
-  await admin.page.locator('.announce-list li').filter({ hasText: `#${tag}` }).getByRole('button', { name: 'Sembunyikan' }).click()
+  await admin.page
+    .locator('.announce-list li')
+    .filter({ hasText: `#${tag}` })
+    .getByRole('button', { name: 'Sembunyikan' })
+    .click()
   await expect(admin.page.getByText('Disembunyikan dari trending')).toBeVisible()
 
   await page.reload()
-  await expect(page.locator('.card').filter({ hasText: 'Trending' }).getByText(`#${tag}`)).toHaveCount(0)
+  await expect(
+    page.locator('.pcard').filter({ hasText: 'Trending' }).getByText(`#${tag}`),
+  ).toHaveCount(0)
   await admin.context.close()
 })
 
-test('AUTH-05 forgotten password: reset link from the outbox sets a new password', async ({ browser }) => {
+test('AUTH-05 forgotten password: reset link from the outbox sets a new password', async ({
+  browser,
+}) => {
   const ctx = await browser.newContext()
   const member = await ctx.newPage()
   const user = await register(member)

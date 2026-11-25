@@ -11,8 +11,12 @@ export const actions = {
   async fetchStats(this: DashboardStoreContext) {
     this.loading = true
     this.error = ''
-    try { this.stats = await dashboardApi.getStats() }
-    catch (error) { this.error = error instanceof Error ? error.message : 'Gagal memuat dashboard.' }
-    finally { this.loading = false }
+    try {
+      this.stats = await dashboardApi.getStats()
+    } catch (error) {
+      this.error = error instanceof Error ? error.message : 'Gagal memuat dashboard.'
+    } finally {
+      this.loading = false
+    }
   },
 }

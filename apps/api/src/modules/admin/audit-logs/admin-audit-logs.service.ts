@@ -25,13 +25,23 @@ export class AdminAuditLogsService {
         take: query.limit + 1,
         ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
         select: {
-          id: true, action: true, targetType: true, targetId: true, detail: true, ip: true, createdAt: true,
+          id: true,
+          action: true,
+          targetType: true,
+          targetId: true,
+          detail: true,
+          ip: true,
+          createdAt: true,
           admin: { select: { id: true, username: true, displayName: true } },
         },
       }),
       this.prisma.auditLog.count({ where }),
     ])
     const items = rows.slice(0, query.limit)
-    return { items, total, nextCursor: rows.length > query.limit ? items.at(-1)?.id ?? null : null }
+    return {
+      items,
+      total,
+      nextCursor: rows.length > query.limit ? (items.at(-1)?.id ?? null) : null,
+    }
   }
 }

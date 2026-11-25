@@ -12,13 +12,22 @@ import { UpdateAdminSettingsDto } from './admin-settings.dto'
 @UseGuards(RolesGuard)
 @Roles(Role.ADMIN)
 export class AdminSettingsController {
-  constructor(private readonly settings: SettingsService, private readonly admin: AdminSettingsService) {}
+  constructor(
+    private readonly settings: SettingsService,
+    private readonly admin: AdminSettingsService,
+  ) {}
 
   @Get()
-  get() { return this.settings.get() }
+  get() {
+    return this.settings.get()
+  }
 
   @Patch()
-  update(@CurrentUser() admin: AuthUser, @Body() dto: UpdateAdminSettingsDto, @Req() request: Request) {
+  update(
+    @CurrentUser() admin: AuthUser,
+    @Body() dto: UpdateAdminSettingsDto,
+    @Req() request: Request,
+  ) {
     return this.admin.update(admin.id, dto, request.ip)
   }
 }

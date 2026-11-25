@@ -31,10 +31,17 @@ describe('Pengaturan sistem (integrasi)', () => {
 
   it('bawaan: pendaftaran terbuka, tidak maintenance; publik tanpa token; PATCH hanya admin dan tercatat', async () => {
     const [admin, user] = await Promise.all([h.mkUser('admin', { role: 'ADMIN' }), h.mkUser('u')])
-    expect((await http().get('/api/settings/public')).body).toEqual({ maintenanceMode: false, registrationOpen: true })
-    expect((await h.as(user).patch('/admin/settings').send({ maintenanceMode: true })).status).toBe(403)
+    expect((await http().get('/api/settings/public')).body).toEqual({
+      maintenanceMode: false,
+      registrationOpen: true,
+    })
+    expect((await h.as(user).patch('/admin/settings').send({ maintenanceMode: true })).status).toBe(
+      403,
+    )
     expect((await h.as(admin).patch('/admin/settings').send({})).status).toBe(400)
-    expect((await h.as(admin).patch('/admin/settings').send({ maintenanceMode: 'ya' })).status).toBe(400)
+    expect(
+      (await h.as(admin).patch('/admin/settings').send({ maintenanceMode: 'ya' })).status,
+    ).toBe(400)
     const res = await h.as(admin).patch('/admin/settings').send({ registrationOpen: false })
     expect(res.body).toEqual({ maintenanceMode: false, registrationOpen: false })
     expect((await h.prisma.auditLog.findMany()).map((a) => a.action)).toEqual(['SETTINGS_UPDATE'])
@@ -42,7 +49,12 @@ describe('Pengaturan sistem (integrasi)', () => {
 
   it('pendaftaran ditutup: register 403 REGISTRATION_CLOSED; dibuka lagi berlaku langsung', async () => {
     const admin = await h.mkUser('admin', { role: 'ADMIN' })
-    const body = { email: 'baru@example.com', username: 'baru_01', displayName: 'Baru', password: 'password-123' }
+    const body = {
+      email: 'baru@example.com',
+      username: 'baru_01',
+      displayName: 'Baru',
+      password: 'password-123',
+    }
     await h.as(admin).patch('/admin/settings').send({ registrationOpen: false })
     const closed = await http().post('/api/auth/register').send(body)
     expect([closed.status, closed.body.code]).toEqual([403, 'REGISTRATION_CLOSED'])
@@ -57,20 +69,38 @@ describe('Pengaturan sistem (integrasi)', () => {
       h.mkUser('admin', { role: 'ADMIN', passwordHash }),
       h.mkUser('u', { passwordHash }),
     ])
-    const login = await http().post('/api/auth/login').send({ identifier: user.username, password: 'password-123' })
+    const login = await http()
+      .post('/api/auth/login')
+      .send({ identifier: user.username, password: 'password-123' })
     expect(login.status).toBe(200)
     await h.as(admin).patch('/admin/settings').send({ maintenanceMode: true })
 
     const api = await h.as(user).get('/feed')
     expect([api.status, api.body.code]).toEqual([403, 'MAINTENANCE_MODE'])
-    const again = await http().post('/api/auth/login').send({ identifier: user.username, password: 'password-123' })
+    const again = await http()
+      .post('/api/auth/login')
+      .send({ identifier: user.username, password: 'password-123' })
     expect([again.status, again.body.code]).toEqual([403, 'MAINTENANCE_MODE'])
-    const refresh = await http().post('/api/auth/refresh').send({ refreshToken: login.body.refreshToken })
+    const refresh = await http()
+      .post('/api/auth/refresh')
+      .send({ refreshToken: login.body.refreshToken })
     expect([refresh.status, refresh.body.code]).toEqual([403, 'MAINTENANCE_MODE'])
     expect((await http().get('/api/settings/public')).body.maintenanceMode).toBe(true)
 
-    expect((await http().post('/api/auth/login').send({ identifier: admin.username, password: 'password-123' })).status).toBe(200)
-    expect((await http().post('/api/admin/auth/login').send({ identifier: admin.username, password: 'password-123' })).status).toBe(200)
+    expect(
+      (
+        await http()
+          .post('/api/auth/login')
+          .send({ identifier: admin.username, password: 'password-123' })
+      ).status,
+    ).toBe(200)
+    expect(
+      (
+        await http()
+          .post('/api/admin/auth/login')
+          .send({ identifier: admin.username, password: 'password-123' })
+      ).status,
+    ).toBe(200)
     expect((await h.as(admin).get('/admin/settings')).status).toBe(200)
 
     await h.as(admin).patch('/admin/settings').send({ maintenanceMode: false })

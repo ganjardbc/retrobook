@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common'
 import { Role } from '@prisma/client'
 import type { Request } from 'express'
 import { AuthUser, CurrentUser } from '../../auth/current-user.decorator'
@@ -14,7 +24,9 @@ export class AdminBotsController {
   constructor(private readonly bots: AdminBotsService) {}
 
   @Get()
-  list() { return this.bots.list() }
+  list() {
+    return this.bots.list()
+  }
 
   @Post()
   create(@CurrentUser() admin: AuthUser, @Body() dto: CreateBotDto, @Req() request: Request) {
@@ -22,7 +34,12 @@ export class AdminBotsController {
   }
 
   @Patch(':id')
-  update(@CurrentUser() admin: AuthUser, @Param('id', ParseIntPipe) id: number, @Body() dto: UpdateBotDto, @Req() request: Request) {
+  update(
+    @CurrentUser() admin: AuthUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateBotDto,
+    @Req() request: Request,
+  ) {
     return this.bots.update(admin.id, id, dto, request.ip)
   }
 }

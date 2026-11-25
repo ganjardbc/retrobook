@@ -15,16 +15,27 @@ onMounted(async () => {
   }
 })
 import PageCard from '@/components/PageCard.vue'
+import { Icon } from '@iconify/vue'
 </script>
 
 <template>
-  <PageCard v-if="tags.length" class="trending" :title="t('trending.title')" heading="h2" flush>
+  <PageCard
+    v-if="tags.length"
+    class="trending"
+    quiet
+    :title="t('trending.title')"
+    heading="h2"
+    flush
+  >
     <ul class="list">
       <li v-for="item in tags" :key="item.tag" class="item">
-        <RouterLink class="item__tag" :to="{ name: 'hashtag', params: { tag: item.tag } }"
-          >#{{ item.tag }}</RouterLink
-        >
-        <span class="item__count">{{ t('trending.count', { count: item.count }) }}</span>
+        <Icon icon="mdi:trending-up" class="item__icon" aria-hidden="true" />
+        <span class="item__text">
+          <RouterLink class="item__tag" :to="{ name: 'hashtag', params: { tag: item.tag } }"
+            >#{{ item.tag }}</RouterLink
+          >
+          <span class="item__count">{{ t('trending.count', { count: item.count }) }}</span>
+        </span>
       </li>
     </ul>
   </PageCard>
@@ -41,11 +52,20 @@ import PageCard from '@/components/PageCard.vue'
 }
 .item {
   display: flex;
-  flex-direction: column;
-  padding: var(--sp-2) var(--sp-3);
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
 }
-.item + .item {
-  border-top: 1px solid var(--c-border-soft);
+.item__icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--c-link);
+  font-size: 16px;
+}
+.item__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 .item__tag {
   color: var(--c-link);
