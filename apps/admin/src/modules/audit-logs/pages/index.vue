@@ -60,30 +60,32 @@ onMounted(() => void load())
     </form>
     <p v-if="error" class="user-error" role="alert">{{ error }}</p>
     <p v-if="!items.length && !loading" class="reports-empty">Tidak ada entri.</p>
-    <table v-else class="audit-table">
-      <thead>
-        <tr>
-          <th>Waktu</th>
-          <th>Admin</th>
-          <th>Aksi</th>
-          <th>Target</th>
-          <th>Detail</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="l in items" :key="l.id">
-          <td>{{ when(l.createdAt) }}</td>
-          <td>@{{ l.admin.username }}</td>
-          <td>{{ l.action }}</td>
-          <td>
-            {{ l.targetType ?? '—' }}<template v-if="l.targetId"> #{{ l.targetId }}</template>
-          </td>
-          <td>
-            <code>{{ l.detail ? JSON.stringify(l.detail) : '' }}</code>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-else class="audit-table-wrap">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Waktu</th>
+            <th>Admin</th>
+            <th>Aksi</th>
+            <th>Target</th>
+            <th>Detail</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="l in items" :key="l.id">
+            <td>{{ when(l.createdAt) }}</td>
+            <td>@{{ l.admin.username }}</td>
+            <td>{{ l.action }}</td>
+            <td>
+              {{ l.targetType ?? '—' }}<template v-if="l.targetId"> #{{ l.targetId }}</template>
+            </td>
+            <td>
+              <code>{{ l.detail ? JSON.stringify(l.detail) : '' }}</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <button v-if="nextCursor" class="button button--quiet" :disabled="loading" @click="load(true)">
       Muat lagi
     </button>
