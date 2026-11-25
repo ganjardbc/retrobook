@@ -11,6 +11,7 @@ import {
 } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
+import { BlockedWordsService } from '../blocked-words/blocked-words.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { UploadsService } from '../uploads/uploads.service'
 import { VisibilityService } from '../visibility/visibility.service'
@@ -77,6 +78,7 @@ export class PostsService {
     private readonly visibility: VisibilityService,
     private readonly uploads: UploadsService,
     private readonly notifications: NotificationsService,
+    private readonly blockedWords: BlockedWordsService,
   ) {}
 
   async create(viewerId: number, dto: CreatePostDto): Promise<PostDto> {
@@ -98,6 +100,7 @@ export class PostsService {
       data: {
         authorId: viewerId,
         content,
+        flagged: await this.blockedWords.matches(content),
         imageUrl,
         privacy: wallOwner ? 'FRIENDS' : (dto.privacy ?? 'FRIENDS'),
         wallOwnerId: wallOwner?.id,
@@ -143,6 +146,7 @@ export class PostsService {
       where: { id },
       data: {
         content,
+        flagged: await this.blockedWords.matches(content),
         imageUrl,
         privacy: dto.privacy,
         editedAt: new Date(),
@@ -186,6 +190,7 @@ export class PostsService {
       data: {
         authorId: viewerId,
         content: dto.content ?? '',
+        flagged: await this.blockedWords.matches(dto.content ?? ''),
         privacy: dto.privacy ?? 'FRIENDS',
         sharedFromId: rootId,
         hashtags: { create: hashtagLinks(extractHashtags(dto.content ?? '')) },

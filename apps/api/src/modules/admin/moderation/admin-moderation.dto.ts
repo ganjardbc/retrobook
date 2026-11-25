@@ -5,6 +5,7 @@ export enum AdminModerationFilter {
   HIDDEN = 'hidden',
   REPORTED = 'reported',
   DELETED = 'deleted',
+  FLAGGED = 'flagged',
 }
 
 export class AdminModerationQuery {

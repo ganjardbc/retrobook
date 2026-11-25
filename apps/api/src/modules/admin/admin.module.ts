@@ -11,11 +11,13 @@ import { AdminModerationController } from './moderation/admin-moderation.control
 import { AdminModerationService } from './moderation/admin-moderation.service'
 import { AdminReportsController } from './reports/admin-reports.controller'
 import { AdminReportsService } from './reports/admin-reports.service'
+import { AdminBlockedWordsController } from './blocked-words/admin-blocked-words.controller'
+import { AdminBlockedWordsService } from './blocked-words/admin-blocked-words.service'
 
 @Module({
   imports: [AuthModule],
-  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController],
-  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, RolesGuard],
+  controllers: [AdminAuthController, AdminDashboardController, AdminUsersController, AdminModerationController, AdminReportsController, AdminBlockedWordsController],
+  providers: [AdminAuditService, AdminDashboardService, AdminUsersService, AdminModerationService, AdminReportsService, AdminBlockedWordsService, RolesGuard],
   exports: [AdminAuditService],
 })
 export class AdminModule {}

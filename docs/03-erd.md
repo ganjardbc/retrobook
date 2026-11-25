@@ -108,6 +108,7 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 | image_url      | VARCHAR(255)                   | null                      | Satu foto per post                                                         |
 | feeling        | VARCHAR(40)                    | null                      | Contoh: feeling happy                                                      |
 | privacy        | ENUM(PUBLIC, FRIENDS, ONLY_ME) | NOT NULL, default FRIENDS |                                                                            |
+| flagged        | BOOL                           | NOT NULL, default false   | Memuat kata terlarang (BR-08), tidak menyembunyikan                        |
 | hidden         | BOOL                           | NOT NULL, default false   | Disembunyikan admin                                                        |
 | edited_at      | DATETIME                       | null                      | Penanda sudah diedit                                                       |
 | created_at     | DATETIME                       | NOT NULL                  |                                                                            |
@@ -122,6 +123,7 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 | author_id  | INT          | FK users.id, NOT NULL   |                                           |
 | content    | TEXT         | NOT NULL                | Maksimal 2.000 karakter divalidasi di API |
 | image_url  | VARCHAR(255) | null                    | Fase 3                                    |
+| flagged    | BOOL         | NOT NULL, default false | Memuat kata terlarang (BR-08)             |
 | hidden     | BOOL         | NOT NULL, default false |                                           |
 | created_at | DATETIME     | NOT NULL                |                                           |
 | deleted_at | DATETIME     | null                    |                                           |

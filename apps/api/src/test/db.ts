@@ -3,6 +3,7 @@ import type { PrismaClient } from '@prisma/client'
 /** Kosongkan semua tabel (urutan mengikuti FK). HANYA untuk database uji. */
 export async function resetDb(prisma: PrismaClient) {
   await prisma.auditLog.deleteMany()
+  await prisma.blockedWord.deleteMany()
   await prisma.report.deleteMany()
   await prisma.notification.deleteMany()
   await prisma.postHashtag.deleteMany()

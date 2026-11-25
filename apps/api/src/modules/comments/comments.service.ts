@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import type { Comment as CommentDto, Paged, UserSummary } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
 import { PrismaService } from '../../prisma/prisma.service'
+import { BlockedWordsService } from '../blocked-words/blocked-words.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { VisibilityService } from '../visibility/visibility.service'
 
@@ -25,6 +26,7 @@ export class CommentsService {
     private readonly prisma: PrismaService,
     private readonly visibility: VisibilityService,
     private readonly notifications: NotificationsService,
+    private readonly blockedWords: BlockedWordsService,
   ) {}
 
   /** Urut lama ke baru (INT-02), kursor = id komentar terakhir yang sudah diterima. */
@@ -54,7 +56,7 @@ export class CommentsService {
     if (!content.trim())
       throw new AppException(400, 'VALIDATION_FAILED', 'Komentar tidak boleh kosong')
     const row = await this.prisma.comment.create({
-      data: { postId, authorId: viewerId, content },
+      data: { postId, authorId: viewerId, content, flagged: await this.blockedWords.matches(content) },
       select: commentSelect,
     })
     await this.notifications.notify({

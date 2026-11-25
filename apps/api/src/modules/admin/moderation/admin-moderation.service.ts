@@ -7,12 +7,12 @@ import { AdminModerationBulkAction, AdminModerationFilter, type AdminModerationQ
 
 const notFound = (kind: string) => new AppException(404, 'NOT_FOUND', `${kind} tidak ditemukan`)
 const postSelect = {
-  id: true, content: true, imageUrl: true, hidden: true, createdAt: true, deletedAt: true,
+  id: true, content: true, imageUrl: true, hidden: true, flagged: true, createdAt: true, deletedAt: true,
   author: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
   _count: { select: { comments: { where: { deletedAt: null } } } },
 } satisfies Prisma.PostSelect
 const commentSelect = {
-  id: true, content: true, imageUrl: true, hidden: true, createdAt: true, deletedAt: true,
+  id: true, content: true, imageUrl: true, hidden: true, flagged: true, createdAt: true, deletedAt: true,
   author: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
   post: { select: { id: true, content: true, author: { select: { username: true, displayName: true } } } },
 } satisfies Prisma.CommentSelect
@@ -67,6 +67,7 @@ export class AdminModerationService {
     const authorSearch = query.q?.trim()
     const base = {
       ...(query.filter === AdminModerationFilter.HIDDEN ? { hidden: true } : {}),
+      ...(query.filter === AdminModerationFilter.FLAGGED ? { flagged: true } : {}),
       ...(query.filter === AdminModerationFilter.DELETED ? { deletedAt: { not: null } } : { deletedAt: null }),
       ...(query.filter === AdminModerationFilter.REPORTED ? { id: { in: reportedIds ?? [] } } : {}),
       ...(query.from || query.to ? { createdAt } : {}),
