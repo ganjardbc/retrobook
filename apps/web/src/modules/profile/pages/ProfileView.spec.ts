@@ -165,7 +165,7 @@ describe('ProfileView', () => {
     expect(friend.w.find('textarea').attributes('placeholder')).toBe(
       'Write something to Siti Aminah...',
     )
-    expect(friend.w.find('.status__privacy').exists()).toBe(false)
+    expect(friend.w.findAll('.status__privacy')).toHaveLength(1) // hanya perasaan
 
     setActivePinia(createPinia())
     useAuthStore().user = { id: 1, username: 'me', displayName: 'Me' }

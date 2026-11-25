@@ -99,7 +99,7 @@ describe('PostCard: wall post dan tag', () => {
     await w.find('.post__dots').trigger('click')
     await w.find('.post__item').trigger('click')
     expect(w.find('.post__editor').exists()).toBe(true)
-    expect(w.find('.post__edit-privacy').exists()).toBe(false)
+    expect(w.findAll('.post__edit-privacy')).toHaveLength(1) // hanya perasaan
   })
 })
 
@@ -108,7 +108,7 @@ describe('StatusBox: dinding dan tag', () => {
     const create = vi.spyOn(postsApi, 'create').mockResolvedValue(mkPost({ id: 5 }))
     const w = mount(StatusBox, { props: { wallOwner: { username: 'bob', displayName: 'Bob' } } })
     expect(w.find('textarea').attributes('placeholder')).toBe('Write something to Bob...')
-    expect(w.find('select').exists()).toBe(false)
+    expect(w.findAll('select')).toHaveLength(1) // hanya perasaan, tanpa privasi
     await w.find('textarea').setValue('hai')
     await w.find('form').trigger('submit')
     await flushPromises()

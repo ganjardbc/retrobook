@@ -21,6 +21,12 @@ import TagSuggestions from '@/modules/feed/components/TagSuggestions.vue'
 const props = defineProps<{ wallOwner?: Pick<UserSummary, 'username' | 'displayName'> }>()
 const emit = defineEmits<{ posted: [post: Post] }>()
 const MAX_TAGS = 10
+/** Ikon selektor privasi; tanpa pilihan, ikon mengikuti default umum (teman). */
+const PRIVACY_ICONS: Record<Privacy, string> = {
+  PUBLIC: 'mdi:earth',
+  FRIENDS: 'mdi:account-multiple',
+  ONLY_ME: 'mdi:lock',
+}
 const feed = useFeedStore()
 const content = ref('')
 const privacy = ref<Privacy | ''>('')
@@ -28,6 +34,11 @@ const feeling = ref<PostFeeling | ''>('')
 const imageUrl = ref<string | null>(null)
 const previewUrl = ref<string | null>(null)
 const busy = ref(false)
+const focused = ref(false)
+/** Footer tampil saat kotak difokus atau ada isi, seperti referensi (ref-1). */
+const expanded = computed(
+  () => focused.value || content.value !== '' || imageUrl.value !== null || tagged.value.length > 0,
+)
 const error = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const draftInput = ref<HTMLTextAreaElement | null>(null)
@@ -63,6 +74,10 @@ function addTag(user: UserSummary) {
 
 function onKeydown(e: KeyboardEvent) {
   if (mention.value !== null && suggestions.value?.handleKey(e)) e.preventDefault()
+}
+
+function onFocusout(e: FocusEvent) {
+  focused.value = (e.currentTarget as HTMLElement).contains(e.relatedTarget as Node | null)
 }
 
 function focusDraft() {
@@ -129,14 +144,19 @@ async function submit() {
 </script>
 
 <template>
-  <form class="status" @submit.prevent="submit">
+  <form
+    class="status"
+    @submit.prevent="submit"
+    @focusin="focused = true"
+    @focusout="onFocusout"
+  >
     <div class="status__tabs">
-      <span class="status__tab status__tab--active">{{ t('statusBox.tab.status') }}</span>
+      <span class="status__tab status__tab--active">
+        <Icon icon="mdi:text-box-edit-outline" aria-hidden="true" />{{ t('statusBox.tab.status') }}
+      </span>
       <button class="status__tab" type="button" @click="fileInput?.click()">
-        {{ t('statusBox.tab.photo') }}
+        <Icon icon="mdi:image-multiple-outline" aria-hidden="true" />{{ t('statusBox.tab.photo') }}
       </button>
-      <!-- Life Event menunggu Fase 3 (UX-06). -->
-      <button class="status__tab" type="button" disabled>{{ t('statusBox.tab.lifeEvent') }}</button>
       <input
         ref="fileInput"
         class="status__file"
@@ -206,20 +226,18 @@ async function submit() {
       <p v-if="error" class="form-error" role="alert">{{ error }}</p>
     </div>
 
-    <div class="status__foot">
-      <select v-model="feeling" class="status__privacy" aria-label="Perasaan atau aktivitas">
-        <option value="">Tanpa perasaan</option>
+    <div v-show="expanded" class="status__foot">
+      <select v-model="feeling" class="status__privacy" :aria-label="t('statusBox.feeling')">
+        <option value="">{{ t('statusBox.feeling.none') }}</option>
         <option v-for="option in POST_FEELINGS" :key="option" :value="option">{{ option }}</option>
       </select>
-      <select
-        v-if="!wallOwner"
-        v-model="privacy"
-        class="status__privacy"
-        :aria-label="t('statusBox.privacy')"
-      >
-        <option value="">Gunakan pengaturan default</option>
-        <option v-for="p in PRIVACIES" :key="p" :value="p">{{ t(`privacy.${p}`) }}</option>
-      </select>
+      <span v-if="!wallOwner" class="status__privacy-wrap">
+        <Icon :icon="PRIVACY_ICONS[privacy || 'FRIENDS']" aria-hidden="true" />
+        <select v-model="privacy" class="status__privacy" :aria-label="t('statusBox.privacy')">
+          <option value="">{{ t('statusBox.privacy.default') }}</option>
+          <option v-for="p in PRIVACIES" :key="p" :value="p">{{ t(`privacy.${p}`) }}</option>
+        </select>
+      </span>
       <Button type="submit" :disabled="!canPost">{{ t('statusBox.post') }}</Button>
     </div>
   </form>
@@ -233,16 +251,19 @@ async function submit() {
 }
 .status__tabs {
   display: flex;
-  gap: var(--sp-3);
+  gap: var(--sp-4);
   padding: var(--sp-2) var(--sp-3);
   background: var(--c-card-subtle);
   border-bottom: 1px solid var(--c-border-soft);
 }
 .status__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
   padding: 0;
   border: 0;
   background: none;
-  color: var(--c-link);
+  color: var(--c-text);
   font: inherit;
   font-weight: bold;
   cursor: pointer;
@@ -255,7 +276,6 @@ async function submit() {
   cursor: default;
 }
 .status__tab--active {
-  color: var(--c-text);
   cursor: default;
 }
 .status__file {
@@ -271,7 +291,7 @@ async function submit() {
   padding: 0;
   border: 0;
   outline: 0;
-  resize: vertical;
+  resize: none;
   font: inherit;
   font-size: var(--fs-post);
   color: var(--c-text);
@@ -309,6 +329,12 @@ async function submit() {
   padding: var(--sp-2) var(--sp-3);
   background: var(--c-card-subtle);
   border-top: 1px solid var(--c-border-soft);
+}
+.status__privacy-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  color: var(--c-text-muted);
 }
 .status__privacy {
   font: inherit;

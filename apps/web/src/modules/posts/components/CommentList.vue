@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Comment } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
+import { Icon } from '@iconify/vue'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ApiRequestError } from '@/plugins/http'
@@ -202,33 +203,45 @@ defineExpose({ focusInput: () => input.value?.focus() })
 
     <form v-if="auth.user" class="comments__form" @submit.prevent="send">
       <Avatar :name="auth.user.displayName" :src="auth.user.avatarUrl" size="s" />
-      <input
-        ref="input"
-        v-model="draft"
-        class="comments__input"
-        maxlength="2000"
-        :placeholder="t('comments.placeholder')"
-        :aria-label="t('comments.placeholder')"
-        :disabled="sending"
-      />
-      <input
-        ref="photoInput"
-        class="comments__file"
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        @change="onPhoto"
-      />
-      <button type="button" class="comments__link" :disabled="sending" @click="photoInput?.click()">
-        Foto
-      </button>
+      <div class="comments__field">
+        <input
+          ref="input"
+          v-model="draft"
+          class="comments__input"
+          maxlength="2000"
+          :placeholder="t('comments.placeholder')"
+          :aria-label="t('comments.placeholder')"
+          :disabled="sending"
+        />
+        <input
+          ref="photoInput"
+          class="comments__file"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          @change="onPhoto"
+        />
+        <button
+          type="button"
+          class="comments__camera"
+          :title="t('comments.photo')"
+          :aria-label="t('comments.photo')"
+          :disabled="sending"
+          @click="photoInput?.click()"
+        >
+          <Icon icon="mdi:camera" aria-hidden="true" />
+        </button>
+      </div>
       <Button type="submit" :disabled="sending || (!draft.trim() && !imageUrl)">Kirim</Button>
     </form>
     <div v-if="imageUrl" class="comments__preview">
-      <img :src="imageUrl" alt="Pratinjau foto komentar" /><button
+      <img :src="imageUrl" :alt="t('comments.photoPreview')" />
+      <button
         type="button"
+        class="comments__remove"
+        :aria-label="t('comments.removePhoto')"
         @click="imageUrl = null"
       >
-        Hapus foto
+        <Icon icon="mdi:close" aria-hidden="true" />
       </button>
     </div>
   </section>
@@ -297,21 +310,61 @@ defineExpose({ focusInput: () => input.value?.focus() })
   align-items: center;
   gap: var(--sp-2);
 }
-.comments__input {
+.comments__field {
+  position: relative;
   flex: 1;
   min-width: 0;
+}
+.comments__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 28px;
 }
 .comments__file {
   display: none;
 }
+.comments__camera {
+  position: absolute;
+  top: 50%;
+  right: var(--sp-1);
+  display: inline-flex;
+  padding: var(--sp-1);
+  border: 0;
+  background: none;
+  color: var(--c-text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+.comments__camera:hover:not(:disabled) {
+  color: var(--c-text);
+}
 .comments__preview {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
+  position: relative;
+  align-self: flex-start;
+  margin-left: calc(var(--avatar-s, 32px) + var(--sp-2));
 }
 .comments__preview img {
+  display: block;
   max-width: 120px;
   max-height: 100px;
   object-fit: cover;
+  border: var(--card-border);
+}
+.comments__remove {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--c-text-on-brand);
+  cursor: pointer;
 }
 </style>
