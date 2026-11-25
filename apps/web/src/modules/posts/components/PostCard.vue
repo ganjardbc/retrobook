@@ -23,6 +23,8 @@ import SharedPostCard from '@/modules/posts/components/SharedPostCard.vue'
 import LikeSummary from '@/modules/posts/components/LikeSummary.vue'
 import PostActions from '@/modules/posts/components/PostActions.vue'
 import Button from '@/components/Button.vue'
+import IconSelect, { type IconOption } from '@/components/IconSelect.vue'
+import { PRIVACY_ICONS } from '@/helpers/privacy'
 
 const props = defineProps<{ post: Post }>()
 const emit = defineEmits<{
@@ -41,6 +43,9 @@ const editPrivacy = ref<Privacy>('FRIENDS')
 const editFeeling = ref<PostFeeling | ''>('')
 const editError = ref('')
 
+const privacyOptions = computed<IconOption[]>(() =>
+  PRIVACIES.map((p) => ({ value: p, label: t(`privacy.${p}`), icon: PRIVACY_ICONS[p] })),
+)
 const auth = useAuthStore()
 const menuOpen = ref(false)
 const reporting = ref(false)
@@ -170,24 +175,28 @@ async function saveEdit() {
         maxlength="5000"
         :aria-label="t('post.edit.placeholder')"
       />
-      <select
-        v-if="!post.wallOwner"
-        v-model="editPrivacy"
-        class="post__edit-privacy"
-        :aria-label="t('statusBox.privacy')"
-      >
-        <option v-for="privacy in PRIVACIES" :key="privacy" :value="privacy">
-          {{ t(`privacy.${privacy}`) }}
-        </option>
-      </select>
-      <select v-model="editFeeling" class="post__edit-privacy" :aria-label="t('statusBox.feeling')">
-        <option value="">{{ t('statusBox.feeling.none') }}</option>
-        <option v-for="option in POST_FEELINGS" :key="option" :value="option">{{ option }}</option>
-      </select>
-      <p v-if="editError" class="form-error" role="alert">{{ editError }}</p>
-      <div class="post__edit-actions">
-        <Button variant="default" @click="editing = false">{{ t('edit.cancel') }}</Button>
-        <Button type="submit" :disabled="saving">{{ t('edit.save') }}</Button>
+      <p v-if="editError" class="form-error post__edit-error" role="alert">{{ editError }}</p>
+      <div class="post__edit-foot">
+        <IconSelect
+          v-if="!post.wallOwner"
+          v-model="editPrivacy"
+          :options="privacyOptions"
+          :label="t('statusBox.privacy')"
+        />
+        <select
+          v-model="editFeeling"
+          class="post__edit-select"
+          :aria-label="t('statusBox.feeling')"
+        >
+          <option value="">{{ t('statusBox.feeling.none') }}</option>
+          <option v-for="option in POST_FEELINGS" :key="option" :value="option">
+            {{ option }}
+          </option>
+        </select>
+        <div class="post__edit-actions">
+          <Button variant="default" @click="editing = false">{{ t('edit.cancel') }}</Button>
+          <Button type="submit" :disabled="saving">{{ t('edit.save') }}</Button>
+        </div>
       </div>
     </form>
     <p v-else-if="post.content" class="post__text"><HashtagText :text="post.content" /></p>
@@ -274,15 +283,31 @@ async function saveEdit() {
   padding: 0 var(--sp-3) var(--sp-3);
 }
 .post__edit-text {
+  display: block;
   width: 100%;
+  box-sizing: border-box;
   padding: var(--sp-2);
   border: 1px solid var(--c-input-border);
   border-radius: var(--radius);
   font: inherit;
-  resize: vertical;
+  font-size: var(--fs-post);
+  resize: none;
 }
-.post__edit-privacy {
-  align-self: flex-start;
+.post__edit-text:focus {
+  border-color: var(--c-brand);
+  outline: 0;
+}
+.post__edit-error {
+  margin: 0;
+}
+/* Satu baris seperti footer status box: privasi, perasaan, lalu aksi di kanan. */
+.post__edit-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.post__edit-select {
   padding: var(--sp-1);
   border: 1px solid var(--c-input-border);
   border-radius: var(--radius);
@@ -291,8 +316,8 @@ async function saveEdit() {
 }
 .post__edit-actions {
   display: flex;
-  justify-content: flex-end;
   gap: var(--sp-2);
+  margin-left: auto;
 }
 .post__image {
   display: block;

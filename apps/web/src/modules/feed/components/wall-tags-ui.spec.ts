@@ -99,7 +99,7 @@ describe('PostCard: wall post dan tag', () => {
     await w.find('.post__dots').trigger('click')
     await w.find('.post__item').trigger('click')
     expect(w.find('.post__editor').exists()).toBe(true)
-    expect(w.findAll('.post__edit-privacy')).toHaveLength(1) // hanya perasaan
+    expect(w.findAll('.post__editor select')).toHaveLength(1) // hanya perasaan, tanpa privasi
   })
 })
 
