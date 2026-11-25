@@ -1,4 +1,4 @@
-import type { FeedSort, Paged, Post, Privacy } from '@retrobook/shared'
+import type { FeedSort, Paged, Post, PostFeeling, Privacy } from '@retrobook/shared'
 import { request } from '@/plugins/http'
 
 export const postsApi = {
@@ -6,14 +6,15 @@ export const postsApi = {
     request<Paged<Post>>(`/feed?limit=${limit}&sort=${sort}${cursor ? `&cursor=${cursor}` : ''}`),
   create: (input: {
     content: string
-    privacy: Privacy
+    privacy?: Privacy
     imageUrl?: string | null
+    feeling?: PostFeeling | null
     /** WAL-01: tulis di dinding teman. */
     wallOwnerUsername?: string
     /** WAL-02: id teman yang di-tag. */
     taggedUserIds?: number[]
   }) => request<Post>('/posts', { method: 'POST', body: input }),
-  update: (id: number, input: { content: string; privacy: Privacy }) =>
+  update: (id: number, input: { content: string; privacy: Privacy; feeling?: PostFeeling | null }) =>
     request<Post>(`/posts/${id}`, { method: 'PATCH', body: input }),
   like: (id: number) =>
     request<{ likeCount: number; likedByMe: boolean }>(`/posts/${id}/like`, { method: 'PUT' }),

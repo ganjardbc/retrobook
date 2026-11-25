@@ -116,6 +116,7 @@ async function save() {
           saving ? t('edit.saving') : t('edit.save')
         }}</Button>
         <Button variant="default" :to="`/${auth.user?.username}`">{{ t('edit.cancel') }}</Button>
+        <Button variant="default" to="/me/privacy">Privasi</Button>
       </div>
     </template>
   </form>

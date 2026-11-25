@@ -27,6 +27,10 @@ import { SponsoredModule } from './modules/sponsored/sponsored.module'
 import { MailModule } from './modules/mail/mail.module'
 import { AdminModule } from './modules/admin/admin.module'
 import { AlbumsModule } from './modules/albums/albums.module'
+import { GroupsModule } from './modules/groups/groups.module'
+import { EventsModule } from './modules/events/events.module'
+import { NotesModule } from './modules/notes/notes.module'
+import { LifeEventsModule } from './modules/life-events/life-events.module'
 
 // Satu modul per domain di src/modules/*; tambahkan ke imports saat tugasnya dikerjakan.
 @Module({
@@ -62,6 +66,10 @@ import { AlbumsModule } from './modules/albums/albums.module'
     HealthModule,
     AdminModule,
     AlbumsModule,
+    GroupsModule,
+    EventsModule,
+    NotesModule,
+    LifeEventsModule,
   ],
 })
 export class AppModule {}

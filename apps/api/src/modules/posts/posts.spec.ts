@@ -103,6 +103,15 @@ describe('Posts dan visibilitas (integrasi)', () => {
       expect(res.body.author.email).toBeUndefined()
     })
 
+    it('menerima feeling dari daftar tetap dan menolak nilai lain', async () => {
+      const alice = await mkUser('alice')
+      const created = await api(alice).post('/posts').send({ content: 'halo', feeling: 'feeling happy' })
+      expect(created.status).toBe(201)
+      expect(created.body.feeling).toBe('feeling happy')
+      const invalid = await api(alice).post('/posts').send({ content: 'halo', feeling: 'whatever' })
+      expect(invalid.status).toBe(400)
+    })
+
     it('5.000 karakter lolos, 5.001 ditolak', async () => {
       const alice = await mkUser('alice')
       expect(

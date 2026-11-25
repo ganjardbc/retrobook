@@ -44,11 +44,17 @@ export class VisibilityService {
     }
   }
 
-  postWhere(viewerId: number): Prisma.PostWhereInput {
+  postWhere(viewerId: number, includeGroupPosts = false): Prisma.PostWhereInput {
     return {
       deletedAt: null,
       author: this.userWhere(),
-      AND: [this.noBlock(viewerId), { NOT: { wallOwner: this.blockedPair(viewerId) } }],
+      AND: [
+        this.noBlock(viewerId),
+        { NOT: { wallOwner: this.blockedPair(viewerId) } },
+        includeGroupPosts
+          ? { OR: [{ groupId: null }, { group: { members: { some: { userId: viewerId } } } }] }
+          : { groupId: null },
+      ],
       OR: [
         // Penulis tetap bisa membaca post miliknya sendiri, termasuk yang dipasang di dinding.
         { authorId: viewerId },

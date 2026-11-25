@@ -28,6 +28,29 @@ enum Privacy {
   ONLY_ME
 }
 
+enum GroupPrivacy {
+  PUBLIC
+  CLOSED
+}
+
+enum GroupMemberRole {
+  MEMBER
+  ADMIN
+}
+
+enum RsvpStatus {
+  GOING
+  MAYBE
+  DECLINED
+}
+
+enum LifeEventKind {
+  MOVED
+  STARTED_JOB
+  GRADUATED
+  OTHER
+}
+
 enum FriendStatus {
   PENDING
   ACCEPTED
@@ -80,6 +103,9 @@ model User {
   currentCity  String?    @map("current_city") @db.VarChar(80)
   workplace    String?    @db.VarChar(120)
   school       String?    @db.VarChar(120)
+  profileInfoPrivacy Privacy @default(PUBLIC) @map("profile_info_privacy")
+  friendsPrivacy Privacy @default(PUBLIC) @map("friends_privacy")
+  defaultPostPrivacy Privacy @default(FRIENDS) @map("default_post_privacy")
   lastSeenAt   DateTime?  @map("last_seen_at")
   createdAt    DateTime   @default(now()) @map("created_at")
   deletedAt    DateTime?  @map("deleted_at")
@@ -111,6 +137,12 @@ model User {
   passwordResetTokens  PasswordResetToken[]
   albums               Album[]
   photos               Photo[]
+  groupsCreated        Group[]        @relation("GroupCreator")
+  groupMemberships     GroupMember[]
+  eventsCreated        Event[]        @relation("EventCreator")
+  eventRsvps           EventRsvp[]
+  notes                Note[]         @relation("NoteAuthor")
+  lifeEvents           LifeEvent[]
 
   @@index([status, createdAt])
   @@index([username])
@@ -140,6 +172,7 @@ model Post {
   sharedFromId Int?      @map("shared_from_id")
   content      String    @db.Text // boleh string kosong bila ada image_url; MySQL TEXT tanpa DEFAULT, service wajib mengisi
   imageUrl     String?   @map("image_url") @db.VarChar(255)
+  groupId      Int?      @map("group_id")
   feeling      String?   @db.VarChar(40)
   privacy      Privacy   @default(FRIENDS)
   hidden       Boolean   @default(false)
@@ -156,11 +189,13 @@ model Post {
   likes         Like[]
   tags          PostTag[]
   hashtags      PostHashtag[]
+  group         Group?         @relation(fields: [groupId], references: [id], onDelete: SetNull)
   notifications Notification[]
 
   @@index([authorId, createdAt])
   @@index([wallOwnerId, createdAt])
   @@index([createdAt])
+  @@index([groupId, createdAt])
   @@map("posts")
 }
 
@@ -472,4 +507,82 @@ model Photo {
   @@index([albumId, id])
   @@index([ownerId, createdAt])
   @@map("photos")
+}
+
+model Group {
+  id          Int         @id @default(autoincrement())
+  name        String      @db.VarChar(80)
+  description String      @db.Text
+  privacy     GroupPrivacy @default(PUBLIC)
+  createdBy   Int         @map("created_by")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  creator     User        @relation("GroupCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  members     GroupMember[]
+  posts       Post[]
+  @@index([privacy, createdAt])
+  @@map("groups")
+}
+
+model GroupMember {
+  groupId  Int             @map("group_id")
+  userId   Int             @map("user_id")
+  role     GroupMemberRole @default(MEMBER)
+  joinedAt DateTime        @default(now()) @map("joined_at")
+  group    Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@id([groupId, userId])
+  @@index([userId, joinedAt])
+  @@map("group_members")
+}
+
+model Event {
+  id          Int        @id @default(autoincrement())
+  title       String     @db.VarChar(120)
+  description String     @db.Text
+  location    String     @db.VarChar(120)
+  startsAt    DateTime   @map("starts_at")
+  createdBy   Int        @map("created_by")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  creator     User       @relation("EventCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  rsvps       EventRsvp[]
+  @@index([startsAt])
+  @@map("events")
+}
+
+model EventRsvp {
+  eventId   Int        @map("event_id")
+  userId    Int        @map("user_id")
+  status    RsvpStatus @default(MAYBE)
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@id([eventId, userId])
+  @@index([userId, updatedAt])
+  @@map("event_rsvps")
+}
+
+model Note {
+  id        Int       @id @default(autoincrement())
+  authorId  Int       @map("author_id")
+  title     String    @db.VarChar(120)
+  body      String    @db.Text
+  privacy   Privacy   @default(FRIENDS)
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+  author    User      @relation("NoteAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  @@index([authorId, createdAt])
+  @@map("notes")
+}
+
+model LifeEvent {
+  id         Int           @id @default(autoincrement())
+  userId     Int           @map("user_id")
+  kind       LifeEventKind
+  title      String        @db.VarChar(120)
+  happenedOn DateTime      @db.Date @map("happened_on")
+  privacy    Privacy       @default(FRIENDS)
+  createdAt  DateTime      @default(now()) @map("created_at")
+  user       User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@index([userId, happenedOn])
+  @@map("life_events")
 }

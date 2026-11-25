@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PRIVACIES, type Post, type Privacy } from '@retrobook/shared'
+import { POST_FEELINGS, PRIVACIES, type Post, type PostFeeling, type Privacy } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -31,6 +31,7 @@ const editing = ref(false)
 const saving = ref(false)
 const editContent = ref('')
 const editPrivacy = ref<Privacy>('FRIENDS')
+const editFeeling = ref<PostFeeling | ''>('')
 const editError = ref('')
 
 const auth = useAuthStore()
@@ -60,6 +61,7 @@ function startEdit() {
   menuOpen.value = false
   editContent.value = props.post.content
   editPrivacy.value = props.post.privacy
+  editFeeling.value = (props.post.feeling as PostFeeling | null) ?? ''
   editError.value = ''
   editing.value = true
 }
@@ -72,6 +74,7 @@ async function saveEdit() {
     const updated = await postsApi.update(props.post.id, {
       content: editContent.value,
       privacy: editPrivacy.value,
+      feeling: editFeeling.value || null,
     })
     emit('updated', updated)
     editing.value = false
@@ -92,6 +95,7 @@ async function saveEdit() {
         <RouterLink class="post__name" :to="`/${post.author.username}`">{{
           post.author.displayName
         }}</RouterLink>
+        <span v-if="post.feeling" class="post__feeling"> {{ post.feeling }}</span>
         <template v-if="post.wallOwner">
           <span class="post__arrow" aria-hidden="true"> ▸ </span>
           <span class="visually-hidden"> {{ t('post.to') }} </span>
@@ -168,6 +172,10 @@ async function saveEdit() {
         <option v-for="privacy in PRIVACIES" :key="privacy" :value="privacy">
           {{ t(`privacy.${privacy}`) }}
         </option>
+      </select>
+      <select v-model="editFeeling" class="post__edit-privacy" aria-label="Perasaan atau aktivitas">
+        <option value="">Tanpa perasaan</option>
+        <option v-for="option in POST_FEELINGS" :key="option" :value="option">{{ option }}</option>
       </select>
       <p v-if="editError" class="form-error" role="alert">{{ editError }}</p>
       <div class="post__edit-actions">

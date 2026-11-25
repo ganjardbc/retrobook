@@ -33,7 +33,7 @@ export class CommentsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CreateCommentDto,
   ) {
-    return this.comments.create(user.id, id, dto.content)
+    return this.comments.create(user.id, id, dto)
   }
 
   @Delete('comments/:id')

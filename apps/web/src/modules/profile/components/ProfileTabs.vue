@@ -4,7 +4,6 @@ import { t } from '@retrobook/shared/i18n'
 import { RouterLink } from 'vue-router'
 
 defineProps<{ profile: Profile }>()
-// Tab More (Notes, Albums, Events) menunggu Fase 3.
 </script>
 
 <template>
@@ -18,12 +17,20 @@ defineProps<{ profile: Profile }>()
     </RouterLink>
     <RouterLink
       class="tabs__tab"
+      :to="`/${profile.username}/notes`"
+      exact-active-class="tabs__tab--active"
+    >
+      Notes
+    </RouterLink>
+    <RouterLink
+      class="tabs__tab"
       :to="`/${profile.username}/about`"
       exact-active-class="tabs__tab--active"
     >
       {{ t('profile.tab.about') }}
     </RouterLink>
     <RouterLink
+      v-if="profile.friendsVisible !== false"
       class="tabs__tab"
       :to="`/${profile.username}/friends`"
       exact-active-class="tabs__tab--active"

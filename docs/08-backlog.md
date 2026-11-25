@@ -147,15 +147,15 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 | ID | Tugas | PRD |
 |---|---|---|
 | [x] T-71 | Album foto: buat album dengan privasi, unggah hingga 10 foto, daftar dan halaman album | ALB-01 |
-| [ ] T-72 | Grup sederhana dan post grup | GRP-01 |
-| [ ] T-73 | Event dan RSVP | EVT-01 |
-| [ ] T-74 | Notes | NOT-01 |
-| [ ] T-75 | Life Event di timeline | LIF-01 |
-| [ ] T-76 | Privacy setting profil detail | PRF-06 |
-| [ ] T-77 | Hapus akun dengan anonimisasi terjadwal | AUTH-06, BR-06 |
-| [ ] T-78 | Foto di komentar | INT-05 |
-| [ ] T-79 | Like komentar | INT-03 |
-| [ ] T-80 | Feeling atau aktivitas pada post | POST-08 |
+| [x] T-72 | Grup sederhana: buat, gabung/keluar, rekomendasi grup publik, post grup khusus anggota | GRP-01 |
+| [x] T-73 | Event mendatang, buat event, dan RSVP Going/Maybe/Can't go | EVT-01 |
+| [x] T-74 | Notes dengan CRUD, privasi, dan tab profil | NOT-01 |
+| [x] T-75 | Life Event dengan privasi dan urutan tanggal di timeline | LIF-01 |
+| [x] T-76 | Pengaturan privasi info profil, daftar teman, dan default post | PRF-06 |
+| [x] T-77 | Hapus akun dengan soft delete segera dan anonimisasi terjadwal 30 hari | AUTH-06, BR-06 |
+| [x] T-78 | Komentar dengan teks dan/atau satu foto JPG/PNG/WebP | INT-05 |
+| [x] T-79 | Like/unlike komentar dengan hitungan dan state per member | INT-03 |
+| [x] T-80 | Feeling atau aktivitas pada post | POST-08 |
 
 ## Keputusan yang harus diambil (blokir)
 

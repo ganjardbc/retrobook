@@ -80,9 +80,25 @@ export class PostsService {
     if (!content.trim() && !imageUrl) throw empty()
     await this.assertUpload(imageUrl)
 
+    if (dto.groupId && dto.wallOwnerUsername) {
+      throw new AppException(
+        400,
+        'VALIDATION_FAILED',
+        'Post grup tidak dapat ditulis di dinding teman',
+      )
+    }
+    if (dto.groupId) await this.assertGroupMember(viewerId, dto.groupId)
     const wallOwner = dto.wallOwnerUsername
       ? await this.resolveWallOwner(viewerId, dto.wallOwnerUsername)
       : null
+    const defaultPostPrivacy =
+      dto.privacy ??
+      (
+        await this.prisma.user.findUniqueOrThrow({
+          where: { id: viewerId },
+          select: { defaultPostPrivacy: true },
+        })
+      ).defaultPostPrivacy
     // Wall post terlihat oleh teman penulis dan pemilik dinding (BR-04); ONLY_ME tidak masuk akal di sini.
     if (wallOwner && dto.privacy === 'ONLY_ME') {
       throw new AppException(400, 'VALIDATION_FAILED', 'Post di dinding teman tidak bisa ONLY_ME')
@@ -95,8 +111,10 @@ export class PostsService {
         content,
         flagged: await this.blockedWords.matches(content),
         imageUrl,
-        privacy: wallOwner ? 'FRIENDS' : (dto.privacy ?? 'FRIENDS'),
+        feeling: dto.feeling ?? null,
+        privacy: wallOwner ? 'FRIENDS' : defaultPostPrivacy,
         wallOwnerId: wallOwner?.id,
+        groupId: dto.groupId,
         tags: { create: tagIds.map((userId) => ({ userId })) },
         hashtags: { create: hashtagLinks(extractHashtags(content)) },
       },
@@ -104,6 +122,30 @@ export class PostsService {
     })
     await this.notifyCreated(row.id, viewerId, wallOwner?.id ?? null, tagIds)
     return this.toDto(row, new Set(), new Map())
+  }
+
+  async groupTimeline(viewerId: number, groupId: number, limit: number, cursor?: number) {
+    await this.assertGroupMember(viewerId, groupId)
+    const rows = await this.prisma.post.findMany({
+      where: { AND: [{ groupId }, this.visibility.postWhere(viewerId, true)] },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      include: this.include(viewerId),
+    })
+    const page = rows.slice(0, limit)
+    return {
+      items: await this.toDtos(viewerId, page),
+      nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+    }
+  }
+
+  private async assertGroupMember(userId: number, groupId: number) {
+    const member = await this.prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId, userId } },
+      select: { groupId: true },
+    })
+    if (!member) throw new AppException(404, 'NOT_FOUND', 'Grup tidak ditemukan')
   }
 
   async get(viewerId: number, id: number): Promise<PostDto> {
@@ -141,6 +183,7 @@ export class PostsService {
         content,
         flagged: await this.blockedWords.matches(content),
         imageUrl,
+        ...(dto.feeling !== undefined ? { feeling: dto.feeling } : {}),
         privacy: dto.privacy,
         editedAt: new Date(),
         hashtags: {
@@ -393,7 +436,7 @@ export class PostsService {
   /** Post yang boleh dibaca viewer, atau 404 yang sama untuk semua sebab (tidak membocorkan keberadaan). */
   private async findVisible(viewerId: number, id: number): Promise<PostRow> {
     const row = await this.prisma.post.findFirst({
-      where: { AND: [{ id }, this.visibility.postWhere(viewerId)] },
+      where: { AND: [{ id }, this.visibility.postWhere(viewerId, true)] },
       include: this.include(viewerId),
     })
     if (!row) throw notFound()
@@ -491,6 +534,7 @@ export class PostsService {
   ): PostDto {
     return {
       id: row.id,
+      groupId: row.groupId,
       author: row.author as UserSummary,
       wallOwner: row.wallOwner as UserSummary | null,
       sharedFrom:

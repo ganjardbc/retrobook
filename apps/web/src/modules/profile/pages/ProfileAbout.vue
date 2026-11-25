@@ -22,12 +22,15 @@ const rows = computed(() => {
 <template>
   <section v-if="p" class="about">
     <h2 class="about__title">{{ t('profile.about.title') }}</h2>
-    <!-- Bio ditampilkan sebagai teks, tidak pernah HTML. -->
-    <p v-if="p.bio" class="about__bio">{{ p.bio }}</p>
-    <ul v-if="rows.length" class="about__list">
-      <li v-for="r in rows" :key="r">{{ r }}</li>
-    </ul>
-    <p v-if="!p.bio && !rows.length" class="about__empty">{{ t('profile.about.empty') }}</p>
+    <p v-if="p.profileInfoVisible === false" class="about__empty">Info profil disetel privat.</p>
+    <template v-else>
+      <!-- Bio ditampilkan sebagai teks, tidak pernah HTML. -->
+      <p v-if="p.bio" class="about__bio">{{ p.bio }}</p>
+      <ul v-if="rows.length" class="about__list">
+        <li v-for="r in rows" :key="r">{{ r }}</li>
+      </ul>
+      <p v-if="!p.bio && !rows.length" class="about__empty">{{ t('profile.about.empty') }}</p>
+    </template>
   </section>
 </template>
 

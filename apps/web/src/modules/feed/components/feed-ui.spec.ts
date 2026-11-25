@@ -41,11 +41,11 @@ describe('StatusBox', () => {
     vi.restoreAllMocks()
   })
 
-  it('tombol Post nonaktif sampai ada teks atau foto; privasi default Friends', async () => {
+  it('tombol Post nonaktif sampai ada teks atau foto; privasi memakai pengaturan default akun', async () => {
     const w = mount(StatusBox)
     const btn = () => w.find('button[type="submit"]')
     expect(btn().attributes('disabled')).toBeDefined()
-    expect((w.find('select').element as HTMLSelectElement).value).toBe('FRIENDS')
+    expect((w.findAll('select')[1]!.element as HTMLSelectElement).value).toBe('')
     await w.find('textarea').setValue('   ')
     expect(btn().attributes('disabled')).toBeDefined()
     await w.find('textarea').setValue('halo')
@@ -57,12 +57,23 @@ describe('StatusBox', () => {
     const spy = vi.spyOn(postsApi, 'create').mockResolvedValue(created)
     const w = mount(StatusBox)
     await w.find('textarea').setValue('baru')
-    await w.find('select').setValue('PUBLIC')
+    await w.findAll('select')[1]!.setValue('PUBLIC')
     await w.find('form').trigger('submit')
     await flushPromises()
     expect(spy).toHaveBeenCalledWith({ content: 'baru', privacy: 'PUBLIC', imageUrl: null })
     expect(useFeedStore().items[0]?.id).toBe(10)
     expect((w.find('textarea').element as HTMLTextAreaElement).value).toBe('')
+  })
+
+  it('perasaan terpilih ikut dikirim dan kembali kosong setelah berhasil', async () => {
+    const create = vi.spyOn(postsApi, 'create').mockResolvedValue(mkPost({ feeling: 'feeling grateful' }))
+    const w = mount(StatusBox)
+    await w.find('textarea').setValue('syukur')
+    await w.find('select[aria-label="Perasaan atau aktivitas"]').setValue('feeling grateful')
+    await w.find('form').trigger('submit')
+    await flushPromises()
+    expect(create).toHaveBeenCalledWith({ content: 'syukur', feeling: 'feeling grateful', imageUrl: null })
+    expect((w.find('select[aria-label="Perasaan atau aktivitas"]').element as HTMLSelectElement).value).toBe('')
   })
 
   it('galat server ditampilkan dan teks tidak hilang', async () => {
@@ -109,11 +120,7 @@ describe('StatusBox', () => {
     expect(w.find('.status__preview img').attributes('src')).toBe('/uploads/a.png')
     await w.find('form').trigger('submit')
     await flushPromises()
-    expect(create).toHaveBeenCalledWith({
-      content: '',
-      privacy: 'FRIENDS',
-      imageUrl: '/uploads/a.png',
-    })
+    expect(create).toHaveBeenCalledWith({ content: '', imageUrl: '/uploads/a.png' })
   })
 })
 
@@ -132,6 +139,14 @@ describe('PostCard', () => {
     expect(w.find('.post__text').text()).toBe(evil)
     expect(w.find('.post__text img').exists()).toBe(false)
     expect((window as unknown as { __pwn?: number }).__pwn).toBeUndefined()
+  })
+
+  it('menampilkan perasaan di samping nama penulis', () => {
+    const w = mount(PostCard, {
+      props: { post: mkPost({ feeling: 'feeling happy' }) },
+      global: { plugins: [router()] },
+    })
+    expect(w.find('.post__feeling').text()).toBe('feeling happy')
   })
 
   it('menampilkan penulis (tautan profil), privasi, dan tanda diedit', () => {

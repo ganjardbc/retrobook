@@ -103,7 +103,7 @@ Setiap tabel dijelaskan lengkap; tipe memakai notasi MySQL dan "null" berarti ko
 | author_id      | INT                            | FK users.id, NOT NULL     | Penulis                                                                    |
 | wall_owner_id  | INT                            | FK users.id, null         | Terisi bila menulis di dinding teman                                       |
 | shared_from_id | INT                            | FK posts.id, null         | Terisi bila post adalah share                                              |
-| group_id       | INT                            | FK groups.id, null        | Fase 3                                                                     |
+| group_id       | INT                            | FK groups.id, null        | Post grup; SET NULL saat grup dihapus                                      |
 | content        | TEXT                           | NOT NULL, default kosong  | Boleh kosong bila ada image_url; maksimal 5.000 karakter divalidasi di API |
 | image_url      | VARCHAR(255)                   | null                      | Satu foto per post                                                         |
 | feeling        | VARCHAR(40)                    | null                      | Contoh: feeling happy                                                      |

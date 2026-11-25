@@ -8,7 +8,10 @@ import { commentsApi } from '@/modules/posts/services/comments'
 import { useAuthStore } from '@/modules/auth/stores'
 import { formatTime } from '@/helpers/time'
 import Avatar from '@/components/Avatar.vue'
+import Button from '@/components/Button.vue'
 import ReportDialog from '@/modules/posts/components/ReportDialog.vue'
+import { postsApi } from '@/modules/posts/services/api'
+import { imageProblem } from '@/helpers/image'
 
 const props = defineProps<{ postId: number; postAuthorId: number; commentCount: number }>()
 const emit = defineEmits<{ 'count-change': [delta: number] }>()
@@ -22,6 +25,8 @@ const sending = ref(false)
 const error = ref('')
 const draft = ref('')
 const input = ref<HTMLInputElement | null>(null)
+const photoInput = ref<HTMLInputElement | null>(null)
+const imageUrl = ref<string | null>(null)
 
 const viewLabel = computed(() =>
   props.commentCount === 1
@@ -58,12 +63,15 @@ async function load(first: boolean) {
 
 async function send() {
   const content = draft.value
-  if (sending.value || !content.trim()) return
+  if (sending.value || (!content.trim() && !imageUrl.value)) return
   sending.value = true
   error.value = ''
   try {
-    const created = await commentsApi.create(props.postId, content)
+    const created = imageUrl.value
+      ? await commentsApi.create(props.postId, content, imageUrl.value)
+      : await commentsApi.create(props.postId, content)
     draft.value = ''
+    imageUrl.value = null
     emit('count-change', 1)
     // Daftar belum dibuka tapi sudah ada komentar lain: buka dari awal agar urutannya benar.
     if (!expanded.value && props.commentCount > 1) await load(true)
@@ -78,6 +86,25 @@ async function send() {
   }
 }
 
+async function onPhoto(event: Event) {
+  const el = event.target as HTMLInputElement
+  const file = el.files?.[0]
+  el.value = ''
+  if (!file) return
+  const problem = imageProblem(file)
+  if (problem) return void (error.value = t(problem))
+  sending.value = true
+  error.value = ''
+  try {
+    imageUrl.value = (await postsApi.uploadImage(file)).url
+  } catch (cause) {
+    error.value =
+      cause instanceof ApiRequestError ? cause.messages.join(' ') : t('comments.error.send')
+  } finally {
+    sending.value = false
+  }
+}
+
 async function remove(c: Comment) {
   if (!window.confirm(t('comments.delete.confirm'))) return
   try {
@@ -86,6 +113,18 @@ async function remove(c: Comment) {
     emit('count-change', -1)
   } catch {
     error.value = t('comments.error.load')
+  }
+}
+
+async function toggleLike(comment: Comment) {
+  try {
+    const result = comment.likedByMe
+      ? await commentsApi.unlike(comment.id)
+      : await commentsApi.like(comment.id)
+    comment.likeCount = result.likeCount
+    comment.likedByMe = result.likedByMe
+  } catch (cause) {
+    error.value = cause instanceof ApiRequestError ? cause.messages.join(' ') : t('like.error')
   }
 }
 
@@ -122,9 +161,18 @@ defineExpose({ focusInput: () => input.value?.focus() })
             }}</RouterLink>
             {{ c.content }}
           </p>
+          <img v-if="c.imageUrl" class="comment__image" :src="c.imageUrl" alt="Foto di komentar" />
           <div class="comment__meta">
             <span>{{ formatTime(c.createdAt) }}</span>
-            <button v-if="canDelete(c)" class="comments__link" type="button" @click="remove(c)">
+            <button type="button" class="comments__link" @click="toggleLike(c)">
+              {{ c.likedByMe ? 'Unlike' : 'Like' }} · {{ c.likeCount }}
+            </button>
+            <button
+              v-if="canDelete(c)"
+              class="comments__link comments__delete"
+              type="button"
+              @click="remove(c)"
+            >
               {{ t('comments.delete') }}
             </button>
             <button
@@ -163,7 +211,26 @@ defineExpose({ focusInput: () => input.value?.focus() })
         :aria-label="t('comments.placeholder')"
         :disabled="sending"
       />
+      <input
+        ref="photoInput"
+        class="comments__file"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        @change="onPhoto"
+      />
+      <button type="button" class="comments__link" :disabled="sending" @click="photoInput?.click()">
+        Foto
+      </button>
+      <Button type="submit" :disabled="sending || (!draft.trim() && !imageUrl)">Kirim</Button>
     </form>
+    <div v-if="imageUrl" class="comments__preview">
+      <img :src="imageUrl" alt="Pratinjau foto komentar" /><button
+        type="button"
+        @click="imageUrl = null"
+      >
+        Hapus foto
+      </button>
+    </div>
   </section>
 </template>
 
@@ -206,6 +273,13 @@ defineExpose({ focusInput: () => input.value?.focus() })
   color: var(--c-text-muted);
   font-size: var(--fs-small);
 }
+.comment__image {
+  display: block;
+  max-width: min(100%, 360px);
+  max-height: 360px;
+  object-fit: contain;
+  border-radius: var(--radius);
+}
 .comments__link {
   align-self: flex-start;
   padding: 0;
@@ -226,5 +300,18 @@ defineExpose({ focusInput: () => input.value?.focus() })
 .comments__input {
   flex: 1;
   min-width: 0;
+}
+.comments__file {
+  display: none;
+}
+.comments__preview {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.comments__preview img {
+  max-width: 120px;
+  max-height: 100px;
+  object-fit: cover;
 }
 </style>

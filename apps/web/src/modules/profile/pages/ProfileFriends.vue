@@ -14,24 +14,29 @@ onMounted(() => void list.loadMore())
 
 <template>
   <section class="friends" :aria-label="t('profile.friends.title')">
-    <h2 class="friends__head">
-      {{ t('profile.friends.title') }}
-      <span class="friends__count">{{ store.profile?.friendCount }}</span>
-    </h2>
-    <ul v-if="list.items.length" class="friends__list">
-      <FriendRow v-for="u in list.items" :key="u.id" :user="u" />
-    </ul>
-    <p v-else-if="list.loading" class="friends__note" role="status">{{ t('common.loading') }}</p>
-    <p v-else-if="list.failed" class="friends__note" role="alert">
-      {{ t('friends.error.load') }}
-      <Button variant="default" @click="list.loadMore()">{{ t('feed.retry') }}</Button>
+    <p v-if="store.profile?.friendsVisible === false" class="friends__note">
+      Daftar teman disetel privat.
     </p>
-    <p v-else class="friends__note">{{ t('profile.friends.empty') }}</p>
-    <div v-if="list.items.length && !list.done" class="friends__more">
-      <Button variant="default" :disabled="list.loading" @click="list.loadMore()">{{
-        t('profile.more')
-      }}</Button>
-    </div>
+    <template v-else>
+      <h2 class="friends__head">
+        {{ t('profile.friends.title') }}
+        <span class="friends__count">{{ store.profile?.friendCount }}</span>
+      </h2>
+      <ul v-if="list.items.length" class="friends__list">
+        <FriendRow v-for="u in list.items" :key="u.id" :user="u" />
+      </ul>
+      <p v-else-if="list.loading" class="friends__note" role="status">{{ t('common.loading') }}</p>
+      <p v-else-if="list.failed" class="friends__note" role="alert">
+        {{ t('friends.error.load') }}
+        <Button variant="default" @click="list.loadMore()">{{ t('feed.retry') }}</Button>
+      </p>
+      <p v-else class="friends__note">{{ t('profile.friends.empty') }}</p>
+      <div v-if="list.items.length && !list.done" class="friends__more">
+        <Button variant="default" :disabled="list.loading" @click="list.loadMore()">{{
+          t('profile.more')
+        }}</Button>
+      </div>
+    </template>
   </section>
 </template>
 

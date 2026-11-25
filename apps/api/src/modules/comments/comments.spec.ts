@@ -11,6 +11,8 @@ import { configureApp } from '../../common/configure-app'
 import { resetDb } from '../../test/db'
 import { testHelpers } from '../../test/helpers'
 
+const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0])
+
 describe('Komentar (integrasi)', () => {
   let app: INestApplication
   let h: ReturnType<typeof testHelpers>
@@ -34,7 +36,51 @@ describe('Komentar (integrasi)', () => {
     return { alice, post }
   }
 
+  it('like komentar idempoten, tercermin di daftar, lalu unlike mengurangi hitungan', async () => {
+    const { post } = await mkPost()
+    const author = await h.mkUser('author')
+    const liker = await h.mkUser('liker')
+    const comment = await h.prisma.comment.create({
+      data: { postId: post.id, authorId: author.id, content: 'hai' },
+    })
+    expect((await h.as(liker).put(`/comments/${comment.id}/like`)).body).toEqual({
+      likeCount: 1,
+      likedByMe: true,
+    })
+    expect((await h.as(liker).put(`/comments/${comment.id}/like`)).body).toEqual({
+      likeCount: 1,
+      likedByMe: true,
+    })
+    const listed = await h.as(liker).get(`/posts/${post.id}/comments`)
+    expect(listed.body.items[0]).toMatchObject({ id: comment.id, likeCount: 1, likedByMe: true })
+    expect((await h.as(liker).del(`/comments/${comment.id}/like`)).body).toEqual({
+      likeCount: 0,
+      likedByMe: false,
+    })
+  })
+
   describe('buat (POST /posts/:id/comments)', () => {
+    it('komentar foto dapat dibuat dari URL upload yang valid dan gambar hilang ditolak', async () => {
+      const { post } = await mkPost()
+      const bob = await h.mkUser('bob')
+      const missing = await h
+        .as(bob)
+        .post(`/posts/${post.id}/comments`)
+        .send({ imageUrl: '/uploads/11111111111111111111111111111111.png' })
+      expect(missing.status).toBe(400)
+      const upload = await h
+        .as(bob)
+        .post('/uploads/post-image')
+        .attach('file', PNG, { filename: 'comment.png', contentType: 'image/png' })
+      expect(upload.status).toBe(201)
+      const created = await h
+        .as(bob)
+        .post(`/posts/${post.id}/comments`)
+        .send({ imageUrl: upload.body.url })
+      expect(created.status).toBe(201)
+      expect(created.body).toMatchObject({ content: '', imageUrl: upload.body.url })
+    })
+
     it('berhasil: 201, bentuk objek sesuai kontrak, tanpa data sensitif', async () => {
       const { post } = await mkPost()
       const bob = await h.mkUser('bob')

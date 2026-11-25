@@ -33,6 +33,19 @@ export type ReportReason = (typeof REPORT_REASONS)[number]
 export const FEED_SORTS = ['recent', 'top'] as const
 export type FeedSort = (typeof FEED_SORTS)[number]
 
+/** Pilihan tetap untuk perasaan pada post (POST-08). */
+export const POST_FEELINGS = [
+  'feeling happy',
+  'feeling grateful',
+  'feeling excited',
+  'feeling nostalgic',
+  'feeling tired',
+  'feeling loved',
+  'feeling hopeful',
+  'feeling silly',
+] as const
+export type PostFeeling = (typeof POST_FEELINGS)[number]
+
 /** Tema Time Travel (THM-01); '2015' adalah tema bawaan di :root. */
 export const THEMES = ['2010', '2015', '2020'] as const
 export type Theme = (typeof THEMES)[number]

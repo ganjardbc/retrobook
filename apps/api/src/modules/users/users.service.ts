@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { Prisma, User } from '@prisma/client'
 import type { FriendsPage, Paged, Post, Profile, ProfilePhoto } from '@retrobook/shared'
 import { AppException } from '../../common/app-exception'
@@ -8,6 +8,9 @@ import { PostsService } from '../posts/posts.service'
 import { UploadsService } from '../uploads/uploads.service'
 import { VisibilityService } from '../visibility/visibility.service'
 import type { UpdateProfileDto } from './dto/profile.dto'
+import type { UpdatePrivacyDto } from './dto/privacy.dto'
+import * as argon2 from 'argon2'
+import { randomBytes } from 'node:crypto'
 
 /**
  * Profil (PRF-01). Semua info profil terlihat oleh member yang login (BR-02; pengaturan privasi
@@ -16,7 +19,8 @@ import type { UpdateProfileDto } from './dto/profile.dto'
  *
  */
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit, OnModuleDestroy {
+  private anonymizeTimer?: NodeJS.Timeout
   constructor(
     private readonly prisma: PrismaService,
     private readonly visibility: VisibilityService,
@@ -24,6 +28,89 @@ export class UsersService {
     private readonly posts: PostsService,
     private readonly uploads: UploadsService,
   ) {}
+
+  onModuleInit() {
+    this.anonymizeTimer = setInterval(
+      () => void this.anonymizeExpiredAccounts().catch(() => undefined),
+      60 * 60 * 1000,
+    )
+    this.anonymizeTimer.unref()
+    void this.anonymizeExpiredAccounts().catch(() => undefined)
+  }
+
+  onModuleDestroy() {
+    if (this.anonymizeTimer) clearInterval(this.anonymizeTimer)
+  }
+
+  async deleteAccount(userId: number, password: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, deletedAt: null },
+      select: { passwordHash: true },
+    })
+    if (!user) throw new AppException(404, 'NOT_FOUND', 'Akun tidak ditemukan')
+    if (!(await argon2.verify(user.passwordHash, password))) {
+      throw new AppException(403, 'INVALID_CREDENTIALS', 'Password tidak cocok')
+    }
+    const now = new Date()
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: userId }, data: { deletedAt: now } }),
+      this.prisma.post.updateMany({
+        where: { authorId: userId, deletedAt: null },
+        data: { deletedAt: now },
+      }),
+      this.prisma.comment.updateMany({
+        where: { authorId: userId, deletedAt: null },
+        data: { deletedAt: now },
+      }),
+      this.prisma.message.updateMany({
+        where: { OR: [{ senderId: userId }, { receiverId: userId }], deletedAt: null },
+        data: { deletedAt: now },
+      }),
+      this.prisma.note.updateMany({
+        where: { authorId: userId, deletedAt: null },
+        data: { deletedAt: now },
+      }),
+      this.prisma.album.updateMany({
+        where: { ownerId: userId, deletedAt: null },
+        data: { deletedAt: now },
+      }),
+      this.prisma.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: now },
+      }),
+      this.prisma.passwordResetToken.deleteMany({ where: { userId } }),
+    ])
+  }
+
+  async anonymizeExpiredAccounts() {
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const accounts = await this.prisma.user.findMany({
+      where: { deletedAt: { lte: cutoff }, NOT: { username: { startsWith: 'deleted-' } } },
+      select: { id: true },
+      take: 100,
+    })
+    for (const account of accounts) {
+      const id = account.id
+      await this.prisma.user.updateMany({
+        where: { id, deletedAt: { lte: cutoff }, NOT: { username: { startsWith: 'deleted-' } } },
+        data: {
+          email: `deleted-${id}@invalid.local`,
+          username: `deleted-${id}`,
+          displayName: 'Deleted account',
+          passwordHash: await argon2.hash(randomBytes(32).toString('hex')),
+          bio: null,
+          birthday: null,
+          hometown: null,
+          currentCity: null,
+          workplace: null,
+          school: null,
+          avatarUrl: null,
+          coverUrl: null,
+        },
+      })
+    }
+    return accounts.length
+  }
 
   async getProfile(viewerId: number, username: string): Promise<Profile> {
     return this.buildProfile(await this.findProfileUser(viewerId, username), viewerId)
@@ -46,6 +133,21 @@ export class UsersService {
     return this.buildProfile(user, viewerId)
   }
 
+  async getPrivacy(userId: number) {
+    return this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { profileInfoPrivacy: true, friendsPrivacy: true, defaultPostPrivacy: true },
+    })
+  }
+
+  async updatePrivacy(userId: number, dto: UpdatePrivacyDto) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: dto,
+      select: { profileInfoPrivacy: true, friendsPrivacy: true, defaultPostPrivacy: true },
+    })
+  }
+
   /** PRF-03: ganti foto profil atau cover. Berkas lama tetap tersimpan (hanya URL yang diganti). */
   async setPhoto(
     viewerId: number,
@@ -65,6 +167,9 @@ export class UsersService {
       this.friends.count(u.id),
       this.friends.relationshipOf(viewerId, u.id),
     ])
+    const self = u.id === viewerId
+    const profileInfoVisible = canViewPrivacy(u.profileInfoPrivacy, self, relationship)
+    const friendsVisible = canViewPrivacy(u.friendsPrivacy, self, relationship)
     return {
       id: u.id,
       username: u.username,
@@ -72,13 +177,15 @@ export class UsersService {
       avatarUrl: u.avatarUrl,
       isBot: u.isBot,
       coverUrl: u.coverUrl,
-      bio: u.bio,
-      birthday: u.birthday ? u.birthday.toISOString().slice(0, 10) : null,
-      hometown: u.hometown,
-      currentCity: u.currentCity,
-      workplace: u.workplace,
-      school: u.school,
-      friendCount,
+      bio: profileInfoVisible ? u.bio : null,
+      birthday: profileInfoVisible && u.birthday ? u.birthday.toISOString().slice(0, 10) : null,
+      hometown: profileInfoVisible ? u.hometown : null,
+      currentCity: profileInfoVisible ? u.currentCity : null,
+      workplace: profileInfoVisible ? u.workplace : null,
+      school: profileInfoVisible ? u.school : null,
+      profileInfoVisible,
+      friendsVisible,
+      friendCount: friendsVisible ? friendCount : 0,
       relationship,
       createdAt: u.createdAt.toISOString(),
     }
@@ -110,6 +217,10 @@ export class UsersService {
     q?: string,
   ): Promise<FriendsPage> {
     const u = await this.findProfileUser(viewerId, username)
+    const relationship = await this.friends.relationshipOf(viewerId, u.id)
+    if (!canViewPrivacy(u.friendsPrivacy, viewerId === u.id, relationship)) {
+      return { items: [], nextCursor: null, total: 0 }
+    }
     return this.friends.list(u.id, limit, cursor, q, viewerId)
   }
 
@@ -162,6 +273,14 @@ export class UsersService {
 const blankToNull = (v: string | null | undefined): string | null => {
   const t = v?.trim()
   return t ? t : null
+}
+
+function canViewPrivacy(
+  privacy: 'PUBLIC' | 'FRIENDS' | 'ONLY_ME',
+  self: boolean,
+  relationship: string,
+) {
+  return self || privacy === 'PUBLIC' || (privacy === 'FRIENDS' && relationship === 'FRIENDS')
 }
 
 /** YYYY-MM-DD yang sungguh ada di kalender, antara 1900-01-01 dan hari ini (UTC); null/kosong menghapus. */

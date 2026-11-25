@@ -4,11 +4,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { usersApi } from '@/modules/profile/services/api'
+import { albumsApi } from '@/modules/profile/services/albums'
 import { useAuthStore } from '@/modules/auth/stores'
 import { useProfileStore } from '@/modules/profile/stores'
 import ProfileAbout from '@/modules/profile/pages/ProfileAbout.vue'
 import ProfileFriends from '@/modules/profile/pages/ProfileFriends.vue'
 import ProfilePhotos from '@/modules/profile/pages/ProfilePhotos.vue'
+import ProfileNotes from '@/modules/profile/pages/ProfileNotes.vue'
 import ProfileTimeline from '@/modules/profile/pages/ProfileTimeline.vue'
 import ProfileView from '@/modules/profile/pages/ProfileView.vue'
 
@@ -55,6 +57,7 @@ async function mountAt(path: string) {
           { path: 'about', name: 'profile-about', component: ProfileAbout },
           { path: 'friends', name: 'profile-friends', component: ProfileFriends },
           { path: 'photos', name: 'profile-photos', component: ProfilePhotos },
+          { path: 'notes', name: 'profile-notes', component: ProfileNotes },
         ],
       },
     ],
@@ -81,12 +84,13 @@ describe('tab Friends dan Photos profil', () => {
       items: [1, 2, 3].map(photo),
       nextCursor: null,
     })
+    vi.spyOn(albumsApi, 'forProfile').mockResolvedValue([])
   })
 
   it('tab Friends dan Photos adalah tautan ke rute masing-masing', async () => {
     const { w } = await mountAt('/siti')
     const hrefs = w.findAll('.tabs a').map((a) => a.attributes('href'))
-    expect(hrefs).toEqual(['/siti', '/siti/about', '/siti/friends', '/siti/photos'])
+    expect(hrefs).toEqual(['/siti', '/siti/notes', '/siti/about', '/siti/friends', '/siti/photos'])
   })
 
   it('kartu info menampilkan grid enam teman dengan jumlah total dan tautan ke tab Friends', async () => {

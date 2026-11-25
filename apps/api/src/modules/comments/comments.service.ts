@@ -6,6 +6,8 @@ import { PrismaService } from '../../prisma/prisma.service'
 import { BlockedWordsService } from '../blocked-words/blocked-words.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { VisibilityService } from '../visibility/visibility.service'
+import { UploadsService } from '../uploads/uploads.service'
+import type { CreateCommentDto } from './dto/comment.dto'
 
 const commentSelect = {
   id: true,
@@ -27,6 +29,7 @@ export class CommentsService {
     private readonly visibility: VisibilityService,
     private readonly notifications: NotificationsService,
     private readonly blockedWords: BlockedWordsService,
+    private readonly uploads: UploadsService,
   ) {}
 
   /** Urut lama ke baru (INT-02), kursor = id komentar terakhir yang sudah diterima. */
@@ -45,18 +48,43 @@ export class CommentsService {
       select: commentSelect,
     })
     const page = rows.slice(0, limit)
+    const ids = page.map((row) => row.id)
+    const [likes, mine] = await Promise.all([
+      this.prisma.like.groupBy({
+        by: ['commentId'],
+        where: { commentId: { in: ids }, ...this.visibility.likerWhere(viewerId) },
+        _count: { _all: true },
+      }),
+      this.prisma.like.findMany({
+        where: { commentId: { in: ids }, userId: viewerId },
+        select: { commentId: true },
+      }),
+    ])
+    const counts = new Map(likes.map((like) => [like.commentId, like._count._all]))
+    const liked = new Set(mine.map((like) => like.commentId))
     return {
-      items: page.map((r) => this.toDto(r)),
+      items: page.map((r) => this.toDto(r, counts.get(r.id) ?? 0, liked.has(r.id))),
       nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
     }
   }
 
-  async create(viewerId: number, postId: number, content: string): Promise<CommentDto> {
+  async create(viewerId: number, postId: number, dto: CreateCommentDto): Promise<CommentDto> {
     const post = await this.assertPostVisible(viewerId, postId)
-    if (!content.trim())
+    const content = dto.content ?? ''
+    const imageUrl = dto.imageUrl ?? null
+    if (!content.trim() && !imageUrl)
       throw new AppException(400, 'VALIDATION_FAILED', 'Komentar tidak boleh kosong')
+    if (imageUrl && !(await this.uploads.exists(imageUrl))) {
+      throw new AppException(400, 'VALIDATION_FAILED', 'Gambar tidak ditemukan; unggah ulang')
+    }
     const row = await this.prisma.comment.create({
-      data: { postId, authorId: viewerId, content, flagged: await this.blockedWords.matches(content) },
+      data: {
+        postId,
+        authorId: viewerId,
+        content,
+        imageUrl,
+        flagged: await this.blockedWords.matches(content),
+      },
       select: commentSelect,
     })
     await this.notifications.notify({
@@ -86,22 +114,22 @@ export class CommentsService {
 
   private async assertPostVisible(viewerId: number, postId: number, message?: string) {
     const post = await this.prisma.post.findFirst({
-      where: { AND: [{ id: postId }, this.visibility.postWhere(viewerId)] },
+      where: { AND: [{ id: postId }, this.visibility.postWhere(viewerId, true)] },
       select: { id: true, authorId: true },
     })
     if (!post) throw message ? new AppException(404, 'NOT_FOUND', message) : postNotFound()
     return post
   }
 
-  private toDto(row: Row): CommentDto {
+  private toDto(row: Row, likeCount = 0, likedByMe = false): CommentDto {
     return {
       id: row.id,
       postId: row.postId,
       author: row.author as UserSummary,
       content: row.content,
       imageUrl: row.imageUrl,
-      likeCount: 0, // like komentar: INT-03 (T-79)
-      likedByMe: false,
+      likeCount,
+      likedByMe,
       createdAt: row.createdAt.toISOString(),
     }
   }

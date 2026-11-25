@@ -23,6 +23,7 @@ export type SharedPost = {
 
 export type Post = {
   id: number
+  groupId?: number | null
   author: UserSummary
   wallOwner: UserSummary | null
   /**
@@ -42,6 +43,18 @@ export type Post = {
   likedPreview: UserSummary[]
   editedAt: string | null
   createdAt: string
+}
+
+export type GroupPrivacy = 'PUBLIC' | 'CLOSED'
+export type GroupSummary = {
+  id: number
+  name: string
+  description: string
+  privacy: GroupPrivacy
+  createdBy: number
+  createdAt: string
+  memberCount: number
+  isMember: boolean
 }
 
 export type Comment = {
@@ -73,6 +86,8 @@ export type Profile = UserSummary & {
   workplace: string | null
   school: string | null
   friendCount: number
+  profileInfoVisible?: boolean
+  friendsVisible?: boolean
   relationship: Relationship
   createdAt: string
 }

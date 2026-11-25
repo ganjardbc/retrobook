@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { PRIVACIES, type Post, type Privacy, type UserSummary } from '@retrobook/shared'
+import {
+  POST_FEELINGS,
+  PRIVACIES,
+  type Post,
+  type PostFeeling,
+  type Privacy,
+  type UserSummary,
+} from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { computed, nextTick, ref } from 'vue'
@@ -16,7 +23,8 @@ const emit = defineEmits<{ posted: [post: Post] }>()
 const MAX_TAGS = 10
 const feed = useFeedStore()
 const content = ref('')
-const privacy = ref<Privacy>('FRIENDS')
+const privacy = ref<Privacy | ''>('')
+const feeling = ref<PostFeeling | ''>('')
 const imageUrl = ref<string | null>(null)
 const previewUrl = ref<string | null>(null)
 const busy = ref(false)
@@ -99,7 +107,8 @@ async function submit() {
   try {
     const post = await postsApi.create({
       content: content.value,
-      privacy: privacy.value,
+      ...(privacy.value ? { privacy: privacy.value } : {}),
+      ...(feeling.value ? { feeling: feeling.value } : {}),
       imageUrl: imageUrl.value,
       ...(props.wallOwner ? { wallOwnerUsername: props.wallOwner.username } : {}),
       ...(tagged.value.length ? { taggedUserIds: tagged.value.map((u) => u.id) } : {}),
@@ -107,6 +116,7 @@ async function submit() {
     feed.prepend(post)
     emit('posted', post)
     content.value = ''
+    feeling.value = ''
     tagged.value = []
     mention.value = null
     removePhoto()
@@ -197,12 +207,17 @@ async function submit() {
     </div>
 
     <div class="status__foot">
+      <select v-model="feeling" class="status__privacy" aria-label="Perasaan atau aktivitas">
+        <option value="">Tanpa perasaan</option>
+        <option v-for="option in POST_FEELINGS" :key="option" :value="option">{{ option }}</option>
+      </select>
       <select
         v-if="!wallOwner"
         v-model="privacy"
         class="status__privacy"
         :aria-label="t('statusBox.privacy')"
       >
+        <option value="">Gunakan pengaturan default</option>
         <option v-for="p in PRIVACIES" :key="p" :value="p">{{ t(`privacy.${p}`) }}</option>
       </select>
       <Button type="submit" :disabled="!canPost">{{ t('statusBox.post') }}</Button>

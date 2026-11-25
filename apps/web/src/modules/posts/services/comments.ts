@@ -6,7 +6,18 @@ export const commentsApi = {
     request<Paged<Comment>>(
       `/posts/${postId}/comments?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`,
     ),
-  create: (postId: number, content: string) =>
-    request<Comment>(`/posts/${postId}/comments`, { method: 'POST', body: { content } }),
+  create: (postId: number, content: string, imageUrl?: string) =>
+    request<Comment>(`/posts/${postId}/comments`, {
+      method: 'POST',
+      body: { content, ...(imageUrl ? { imageUrl } : {}) },
+    }),
   remove: (commentId: number) => request<void>(`/comments/${commentId}`, { method: 'DELETE' }),
+  like: (commentId: number) =>
+    request<{ likeCount: number; likedByMe: boolean }>(`/comments/${commentId}/like`, {
+      method: 'PUT',
+    }),
+  unlike: (commentId: number) =>
+    request<{ likeCount: number; likedByMe: boolean }>(`/comments/${commentId}/like`, {
+      method: 'DELETE',
+    }),
 }

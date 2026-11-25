@@ -27,6 +27,8 @@ const auth = useAuthStore()
       </li>
     </ul>
     <RouterLink class="menu__row" to="/albums">Album Foto</RouterLink>
+    <RouterLink class="menu__row" to="/groups">Grup</RouterLink>
+    <RouterLink class="menu__row" to="/events">Events</RouterLink>
   </nav>
 </template>
 

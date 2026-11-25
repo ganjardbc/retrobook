@@ -103,7 +103,7 @@ type Paged<T> = { items: T[]; nextCursor: number | null };
 | GET | `/me` | ya | Profil diri sendiri beserta jumlah notifikasi dan pesan belum dibaca | 200 |
 | PATCH | `/me` | ya | Ubah profil (PRF-02) | 200 |
 | PATCH | `/me/password` | ya | Ganti password (butuh password lama) | 204 |
-| DELETE | `/me` | ya | Hapus akun, soft delete dan anonimisasi sesuai BR-06 (AUTH-06) | 204 |
+| DELETE | `/me` | ya | `{ password }`; soft delete dan cabut sesi segera, anonimkan identitas setelah 30 hari (AUTH-06, BR-06) | 204 |
 
 **POST /auth/register**
 
@@ -143,6 +143,7 @@ Status implementasi (T-22): `PATCH /me`, `POST /me/avatar`, dan `POST /me/cover`
 | POST | `/me/avatar` | Unggah foto profil, field `file` (PRF-03) |
 | POST | `/me/cover` | Unggah cover (PRF-03) |
 | GET | `/users/:username/years` | Daftar tahun yang punya post, untuk scroller tahun |
+| GET/PATCH | `/me/privacy` | Baca/ubah privasi info profil, daftar teman, dan default post baru |
 
 Status implementasi (T-20): `GET /users/:username` dan `GET /users/:username/posts` (tanpa `?year`, T-44) sudah ada; `/users/:username/friends` dan `/photos` menyusul di T-24, serta `/me`, `PATCH /me`, dan unggah avatar atau cover di T-22. Profil mengembalikan `id, username, displayName, avatarUrl, coverUrl, isBot, bio, birthday (YYYY-MM-DD), hometown, currentCity, workplace, school, friendCount, relationship, createdAt` dan tidak pernah memuat email, role, atau status akun. Username dicocokkan tanpa memperhatikan huruf besar. Akun tidak ada, BANNED, atau terhapus: 404 yang sama (BR-05); akun SUSPENDED tetap terlihat. Timeline memakai aturan visibilitas yang sama dengan feed (hanya post milik pemilik profil yang boleh dibaca pemanggil), terbaru dulu, kursor, 10 per halaman. Pemblokiran (BR-11) belum diterapkan.
 
@@ -181,7 +182,7 @@ Status implementasi (T-23): `POST /posts/:id/share` menerima `{ content?, privac
 }
 ```
 
-Status implementasi (T-12): hanya `content`, `imageUrl`, dan `privacy` yang diterima; `feeling`, `wallOwnerUsername`, `taggedUserIds`, hashtag, dan kata terlarang menyusul (T-35, T-42, T-56) dan field asing ditolak 400. `imageUrl` hanya menerima URL hasil `POST /uploads/post-image` yang berkasnya ada. `GET /feed` mendukung `sort=recent` (bawaan) dan `sort=top` (T-43). Bukan pemilik: 403 bila post terlihat, 404 bila tidak.
+Status implementasi (T-12, T-80): `content`, `imageUrl`, `privacy`, `feeling`, `wallOwnerUsername`, dan `taggedUserIds` diterima; feeling opsional dibatasi pada `feeling happy`, `feeling grateful`, `feeling excited`, `feeling nostalgic`, `feeling tired`, `feeling loved`, `feeling hopeful`, dan `feeling silly`. Feeling dapat diubah/dihapus lewat `PATCH /posts/:id`. Hashtag dan kata terlarang mengikuti T-35, T-42, T-56; field asing ditolak 400. `imageUrl` hanya menerima URL hasil `POST /uploads/post-image` yang berkasnya ada. `GET /feed` mendukung `sort=recent` (bawaan) dan `sort=top` (T-43). Bukan pemilik: 403 bila post terlihat, 404 bila tidak.
 
 Aturan: `content` maksimal 5.000 karakter; boleh kosong hanya bila `imageUrl` ada; mengandung kata terlarang tidak ditolak: konten tersimpan dengan `flagged = true` dan muncul di filter `flagged` moderasi (BR-08; PRD menang atas draf awal yang menolak dengan `CONTENT_BLOCKED_WORD`); hashtag (`#kata`) diekstrak ke `hashtags` dan `post_hashtags`. `wallOwnerUsername` hanya sah untuk teman; wall post mengikuti BR-04. Tag hanya untuk teman dan memicu notifikasi `TAG`.
 
@@ -210,7 +211,8 @@ Hanya satu jenis reaksi, yaitu Like (BR-13). Status implementasi (T-15): endpoin
 | Method | Path | Fungsi |
 |---|---|---|
 | GET | `/posts/:id/comments` | Urut lama ke baru (cursor) |
-| POST | `/posts/:id/comments` | Tambah komentar `{ content, imageUrl? }`, maksimal 2.000 karakter |
+| POST | `/posts/:id/comments` | Tambah komentar teks maksimal 2.000 karakter dan/atau satu foto hasil unggahan |
+| PUT/DELETE | `/comments/:id/like` | Like/unlike komentar, satu like per member; 404 untuk komentar tidak terlihat |
 | DELETE | `/comments/:id` | Pemilik komentar atau pemilik post |
 
 Kata terlarang berlaku sama seperti post.
@@ -339,13 +341,19 @@ Presence: online bila minimal satu koneksi aktif; `users.last_seen_at` diperbaru
 | GET/POST | `/albums` | Daftar album sendiri (beserta jumlah/cover foto) dan buat album (`name`, `privacy`; default FRIENDS) | ALB-01 |
 | GET | `/albums/:id` | Detail album dan foto; privasi album diterapkan, ID yang tidak terlihat menghasilkan 404 | ALB-01 |
 | POST | `/albums/:id/photos` | Unggah beberapa foto (`files`, maksimal 10; JPG/PNG/WebP, maksimal 5 MB per foto) | ALB-01 |
-| GET/POST | `/groups` | Daftar dan buat grup | GRP-01 |
-| POST | `/groups/:id/join`, `/groups/:id/leave` | Gabung dan keluar | GRP-01 |
-| GET/POST | `/groups/:id/posts` | Post di grup (anggota saja) | GRP-01 |
-| GET/POST | `/events` | Daftar dan buat event | EVT-01 |
-| PUT | `/events/:id/rsvp` | `{ status: 'GOING'|'MAYBE'|'DECLINED' }` | EVT-01 |
-| GET/POST/PATCH/DELETE | `/notes`, `/notes/:id` | Catatan panjang | NOT-01 |
-| GET/POST/DELETE | `/life-events` | Milestone di timeline | LIF-01 |
+| GET | `/groups` | `{ items, suggested }`: grup yang diikuti dan grup publik rekomendasi, urut anggota terbanyak | GRP-01 |
+| POST | `/groups` | Buat grup (`name`, `description`, `privacy` PUBLIC/CLOSED); pembuat otomatis menjadi ADMIN | GRP-01 |
+| GET | `/groups/:id` | Detail grup publik atau grup tertutup yang diikuti | GRP-01 |
+| POST | `/groups/:id/join`, `/groups/:id/leave` | Gabung dan keluar dari grup | GRP-01 |
+| GET/POST | `/groups/:id/posts` | Paginasi dan buat post grup; hanya anggota yang dapat membaca atau menulis | GRP-01 |
+| GET/POST | `/events` | Daftar event mendatang dan buat event | EVT-01 |
+| PUT | `/events/:id/rsvp` | Upsert `{ status: 'GOING'|'MAYBE'|'DECLINED' }`; satu status per member | EVT-01 |
+| GET/POST | `/notes` | Daftar note sendiri dan buat note (`title`, `body`, `privacy`) | NOT-01 |
+| GET/PATCH/DELETE | `/notes/:id` | Baca note sesuai privasi, ubah, atau soft delete (pemilik saja untuk ubah/hapus) | NOT-01 |
+| GET | `/users/:username/notes` | Daftar note yang dapat dilihat sesuai privasi FRIENDS/PUBLIC | NOT-01 |
+| GET/POST | `/life-events` | Daftar milik sendiri dan buat milestone (`kind`, `title`, `happenedOn`, `privacy`) | LIF-01 |
+| DELETE | `/life-events/:id` | Hapus Life Event milik sendiri | LIF-01 |
+| GET | `/users/:username/life-events` | Daftar milestone yang terlihat sesuai privasi, urut `happenedOn` terbaru | LIF-01 |
 | GET | `/me/activity` | Activity log sendiri; `DELETE /me/activity/:type/:id` menghapus item | ACT-01 |
 | GET | `/sponsored` | Satu promosi aktif untuk kolom kanan | SPN-01 |
 | GET | `/announcements/active` | Banner pengumuman aktif | ADM-13 |

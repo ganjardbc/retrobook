@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { commentsApi } from '@/modules/posts/services/comments'
+import { postsApi } from '@/modules/posts/services/api'
 import { ApiRequestError } from '@/plugins/http'
 import { useAuthStore } from '@/modules/auth/stores'
 import CommentList from '@/modules/posts/components/CommentList.vue'
@@ -95,6 +96,45 @@ describe('CommentList', () => {
     expect(w.emitted('count-change')).toEqual([[1]])
   })
 
+  it('melampirkan satu foto dan mengirim komentar foto', async () => {
+    vi.spyOn(postsApi, 'uploadImage').mockResolvedValue({
+      url: '/uploads/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png',
+    })
+    const create = vi.spyOn(commentsApi, 'create').mockResolvedValue({
+      ...mk(10, 5, ''),
+      imageUrl: '/uploads/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png',
+    })
+    const w = mount_({ commentCount: 0 })
+    const fileInput = w.find('.comments__file')
+    Object.defineProperty(fileInput.element, 'files', {
+      value: [new File(['png'], 'photo.png', { type: 'image/png' })],
+      configurable: true,
+    })
+    await fileInput.trigger('change')
+    await flushPromises()
+    await w.find('form').trigger('submit')
+    await flushPromises()
+    expect(create).toHaveBeenCalledWith(1, '', '/uploads/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png')
+    expect(w.find('.comment__image').attributes('src')).toContain(
+      '/uploads/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png',
+    )
+    expect(w.emitted('count-change')).toEqual([[1]])
+  })
+
+  it('like komentar memperbarui jumlah dan state lokal', async () => {
+    vi.spyOn(commentsApi, 'list').mockResolvedValue({ items: [mk(4, 2, 'hai')], nextCursor: null })
+    vi.spyOn(commentsApi, 'like').mockResolvedValue({ likeCount: 1, likedByMe: true })
+    const w = mount_({ commentCount: 1 })
+    await w.find('.comments__link').trigger('click')
+    await flushPromises()
+    const likeButton = w
+      .findAll('.comment__meta button')
+      .find((button) => button.text().includes('Like'))!
+    await likeButton.trigger('click')
+    await flushPromises()
+    expect(w.find('.comment__meta').text()).toContain('Unlike · 1')
+  })
+
   it('kosong atau spasi saja tidak dikirim', async () => {
     const create = vi.spyOn(commentsApi, 'create')
     const w = mount_({ commentCount: 0 })
@@ -160,10 +200,10 @@ describe('CommentList', () => {
     await w.find('.comments__link').trigger('click')
     await flushPromises()
     const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false)
-    await w.find('.comment__meta .comments__link').trigger('click')
+    await w.find('.comment__meta .comments__delete').trigger('click')
     expect(remove).not.toHaveBeenCalled()
     confirm.mockReturnValueOnce(true)
-    await w.find('.comment__meta .comments__link').trigger('click')
+    await w.find('.comment__meta .comments__delete').trigger('click')
     await flushPromises()
     expect(remove).toHaveBeenCalledWith(1)
     expect(w.findAll('.comment')).toHaveLength(0)

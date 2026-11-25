@@ -1,5 +1,5 @@
 import { Privacy } from '@prisma/client'
-import { FEED_SORTS, type FeedSort } from '@retrobook/shared'
+import { FEED_SORTS, POST_FEELINGS, type FeedSort } from '@retrobook/shared'
 import { Type } from 'class-transformer'
 import {
   ArrayMaxSize,
@@ -21,6 +21,10 @@ export const UPLOAD_URL = /^\/uploads\/[0-9a-f]{32}\.(jpg|png|webp)$/
 
 export class UpdatePostDto {
   @IsOptional()
+  @IsIn(POST_FEELINGS, { message: 'Feeling tidak tersedia' })
+  feeling?: (typeof POST_FEELINGS)[number] | null
+
+  @IsOptional()
   @IsString()
   @MaxLength(5000, { message: 'Post maksimal 5.000 karakter' })
   content?: string
@@ -36,6 +40,11 @@ export class UpdatePostDto {
 
 /** POST /posts. Dinding dan tag hanya ditentukan saat membuat; edit tidak mengubahnya. */
 export class CreatePostDto extends UpdatePostDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  groupId?: number
   /** WAL-01: tulis di dinding teman (BR-04). */
   @IsOptional()
   @IsString()
