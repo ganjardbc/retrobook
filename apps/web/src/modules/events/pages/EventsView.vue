@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { t } from '@retrobook/shared/i18n'
+import { t, intlLocale } from '@retrobook/shared/i18n'
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import Button from '@/components/Button.vue'
@@ -67,7 +67,7 @@ async function setRsvp(event: EventItem, status: RsvpStatus) {
   }
 }
 const when = (iso: string) =>
-  new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+  new Date(iso).toLocaleString(intlLocale(), { dateStyle: 'medium', timeStyle: 'short' })
 onMounted(() => void load())
 </script>
 

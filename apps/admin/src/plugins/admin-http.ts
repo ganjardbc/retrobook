@@ -1,5 +1,6 @@
 import { adminSession } from '@/helpers/session'
 import { adminAuthApi, AdminApiError } from '@/modules/auth/services/api'
+import { t } from '@retrobook/shared/i18n'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
 type RequestOptions = { method?: string; body?: unknown }
@@ -21,8 +22,7 @@ async function send<T>(path: string, options: RequestOptions): Promise<T> {
   if (response.status === 401 && adminSession.refreshToken) {
     try {
       const refreshed = await adminAuthApi.refresh(adminSession.refreshToken)
-      if (refreshed.user.role !== 'ADMIN')
-        throw new AdminApiError(403, 'Akses hanya untuk administrator.')
+      if (refreshed.user.role !== 'ADMIN') throw new AdminApiError(403, t('admin.http.adminOnly'))
       adminSession.set(refreshed)
       response = await sendRequest()
     } catch (error) {
@@ -38,7 +38,7 @@ async function send<T>(path: string, options: RequestOptions): Promise<T> {
     const message = payload?.message
     throw new AdminApiError(
       response.status,
-      Array.isArray(message) ? message.join(' ') : (message ?? 'Permintaan gagal.'),
+      Array.isArray(message) ? message.join(' ') : (message ?? t('admin.http.failed')),
     )
   }
   return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>)

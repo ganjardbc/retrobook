@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@retrobook/shared/i18n'
 import { onMounted, ref } from 'vue'
 import { adminSettingsApi, type SystemSettings } from '@/modules/settings/services/api'
 
@@ -10,7 +11,7 @@ async function load() {
   try {
     settings.value = await adminSettingsApi.get()
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Gagal memuat pengaturan.'
+    error.value = e instanceof Error ? e.message : t('admin.settings.loadError')
   }
 }
 async function change(changes: Partial<SystemSettings>) {
@@ -19,9 +20,9 @@ async function change(changes: Partial<SystemSettings>) {
   notice.value = ''
   try {
     settings.value = await adminSettingsApi.update(changes)
-    notice.value = 'Pengaturan disimpan dan langsung berlaku.'
+    notice.value = t('admin.settings.saved')
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Gagal menyimpan pengaturan.'
+    error.value = e instanceof Error ? e.message : t('admin.settings.saveError')
   } finally {
     busy.value = false
   }
@@ -29,11 +30,7 @@ async function change(changes: Partial<SystemSettings>) {
 function toggleMaintenance() {
   if (!settings.value) return
   const next = !settings.value.maintenanceMode
-  if (
-    next &&
-    !window.confirm('Aktifkan maintenance? Semua non-admin akan melihat halaman pemeliharaan.')
-  )
-    return
+  if (next && !window.confirm(t('admin.settings.maintenance.confirm'))) return
   void change({ maintenanceMode: next })
 }
 onMounted(load)
@@ -42,11 +39,9 @@ onMounted(load)
 <template>
   <div class="page-heading">
     <div>
-      <p class="eyebrow">SISTEM</p>
-      <h1>Pengaturan</h1>
-      <p class="page-description">
-        Perubahan berlaku langsung tanpa deploy ulang dan tercatat di audit log.
-      </p>
+      <p class="eyebrow">{{ t('admin.nav.group.system') }}</p>
+      <h1>{{ t('admin.nav.settings') }}</h1>
+      <p class="page-description">{{ t('admin.settings.description') }}</p>
     </div>
   </div>
   <section class="surface-card words-card">
@@ -55,10 +50,8 @@ onMounted(load)
     <template v-if="settings">
       <div class="setting-row">
         <div>
-          <strong>Maintenance mode</strong>
-          <p class="report-meta">
-            Hanya admin yang bisa masuk; pengguna lain melihat halaman pemeliharaan.
-          </p>
+          <strong>{{ t('admin.settings.maintenance') }}</strong>
+          <p class="report-meta">{{ t('admin.settings.maintenance.note') }}</p>
         </div>
         <button
           class="button"
@@ -68,13 +61,17 @@ onMounted(load)
           :aria-checked="settings.maintenanceMode"
           @click="toggleMaintenance"
         >
-          {{ settings.maintenanceMode ? 'Aktif — matikan' : 'Mati — aktifkan' }}
+          {{
+            settings.maintenanceMode
+              ? t('admin.settings.maintenance.on')
+              : t('admin.settings.maintenance.off')
+          }}
         </button>
       </div>
       <div class="setting-row">
         <div>
-          <strong>Pendaftaran</strong>
-          <p class="report-meta">Bila ditutup, register baru ditolak.</p>
+          <strong>{{ t('admin.settings.registration') }}</strong>
+          <p class="report-meta">{{ t('admin.settings.registration.note') }}</p>
         </div>
         <button
           class="button button--quiet"
@@ -83,7 +80,11 @@ onMounted(load)
           :aria-checked="settings.registrationOpen"
           @click="change({ registrationOpen: !settings.registrationOpen })"
         >
-          {{ settings.registrationOpen ? 'Terbuka — tutup' : 'Ditutup — buka' }}
+          {{
+            settings.registrationOpen
+              ? t('admin.settings.registration.on')
+              : t('admin.settings.registration.off')
+          }}
         </button>
       </div>
     </template>

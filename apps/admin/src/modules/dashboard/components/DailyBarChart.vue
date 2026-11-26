@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { intlLocale, t } from '@retrobook/shared/i18n'
 import type { DailyCount } from '@/modules/dashboard/services/types'
 
 const props = defineProps<{ items: DailyCount[]; label: string; loading?: boolean }>()
@@ -15,10 +16,10 @@ const bars = computed(() => {
       y: 165 - height,
       width,
       height,
-      day: new Intl.DateTimeFormat('id-ID', { weekday: 'short' }).format(
+      day: new Intl.DateTimeFormat(intlLocale(), { weekday: 'short' }).format(
         new Date(`${item.date}T12:00:00`),
       ),
-      title: `${item.count} ${props.label.toLowerCase()} · ${new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(new Date(`${item.date}T12:00:00`))}`,
+      title: `${item.count} ${props.label.toLowerCase()} · ${new Intl.DateTimeFormat(intlLocale(), { dateStyle: 'medium' }).format(new Date(`${item.date}T12:00:00`))}`,
     }
   })
 })
@@ -26,8 +27,10 @@ const ticks = computed(() => [maxValue.value, Math.round(maxValue.value / 2), 0]
 </script>
 
 <template>
-  <div v-if="loading" class="chart-loading"><span class="loader" /><span>Memuat grafik…</span></div>
-  <div v-else-if="!items.length" class="chart-empty">Belum ada data untuk periode ini.</div>
+  <div v-if="loading" class="chart-loading">
+    <span class="loader" /><span>{{ t('admin.chart.loading') }}</span>
+  </div>
+  <div v-else-if="!items.length" class="chart-empty">{{ t('admin.chart.empty') }}</div>
   <svg v-else class="daily-chart" viewBox="0 0 760 215" role="img" :aria-label="label">
     <g v-for="(tick, index) in ticks" :key="`tick-${index}`">
       <text x="40" :y="25 + index * 70" text-anchor="end">{{ tick }}</text>

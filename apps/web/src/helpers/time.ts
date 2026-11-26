@@ -1,4 +1,4 @@
-import { t } from '@retrobook/shared/i18n'
+import { intlLocale, t } from '@retrobook/shared/i18n'
 
 const MIN = 60_000
 const HOUR = 60 * MIN
@@ -17,18 +17,18 @@ export function formatTime(iso: string, now: Date = new Date()): string {
     return n === 1 ? t('time.hourAgo') : t('time.hoursAgo', { n })
   }
   const sameYear = then.getFullYear() === now.getFullYear()
-  const date = then.toLocaleDateString('en-US', {
+  const date = then.toLocaleDateString(intlLocale(), {
     month: 'long',
     day: 'numeric',
     ...(sameYear ? {} : { year: 'numeric' }),
   })
-  const time = then.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const time = then.toLocaleTimeString(intlLocale(), { hour: 'numeric', minute: '2-digit' })
   return t('time.at', { date, time })
 }
 
 /** Jam pesan: "3:48 PM". */
 export function formatClock(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString(intlLocale(), { hour: 'numeric', minute: '2-digit' })
 }
 
 /** Pemisah hari di chat: "Today", "Yesterday", lalu "November 13" (dengan tahun bila bukan tahun ini). */
@@ -38,7 +38,7 @@ export function formatDayLabel(iso: string, now: Date = new Date()): string {
   const yesterday = new Date(now)
   yesterday.setDate(now.getDate() - 1)
   if (then.toDateString() === yesterday.toDateString()) return t('time.yesterday')
-  return then.toLocaleDateString('en-US', {
+  return then.toLocaleDateString(intlLocale(), {
     month: 'long',
     day: 'numeric',
     ...(then.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' }),

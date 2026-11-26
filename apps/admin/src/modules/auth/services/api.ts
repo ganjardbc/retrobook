@@ -1,4 +1,5 @@
 import type { AuthSession } from '@retrobook/shared'
+import { t } from '@retrobook/shared/i18n'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
 export type Admin = AuthSession['user']
@@ -24,7 +25,7 @@ async function send<T>(path: string, body: unknown): Promise<T> {
     const message = payload?.message
     throw new AdminApiError(
       response.status,
-      Array.isArray(message) ? message.join(' ') : (message ?? 'Permintaan gagal.'),
+      Array.isArray(message) ? message.join(' ') : (message ?? t('admin.http.failed')),
     )
   }
   return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>)

@@ -5,6 +5,7 @@ import {
   type Admin,
   type AdminSession,
 } from '@/modules/auth/services/api'
+import { t } from '@retrobook/shared/i18n'
 
 type AuthStoreContext = {
   user: Admin | null
@@ -14,7 +15,7 @@ type AuthStoreContext = {
 
 export const actions = {
   start(this: AuthStoreContext, session: Awaited<ReturnType<typeof adminAuthApi.login>>) {
-    if (session.user.role !== 'ADMIN') throw new Error('Akun ini tidak memiliki akses admin.')
+    if (session.user.role !== 'ADMIN') throw new Error(t('admin.auth.noAccess'))
     adminSession.set(session)
     this.user = session.user
   },

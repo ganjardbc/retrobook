@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PRIVACIES } from '@retrobook/shared'
-import { t } from '@retrobook/shared/i18n'
+import { t, intlLocale } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { computed, ref, watch } from 'vue'
 import Button from '@/components/Button.vue'
@@ -125,7 +125,7 @@ async function remove(note: NoteItem) {
               :aria-label="t(`privacy.${note.privacy}`)"
             />
             <time :datetime="note.createdAt">{{
-              new Date(note.createdAt).toLocaleDateString([], { dateStyle: 'medium' })
+              new Date(note.createdAt).toLocaleDateString(intlLocale(), { dateStyle: 'medium' })
             }}</time>
           </span>
         </div>

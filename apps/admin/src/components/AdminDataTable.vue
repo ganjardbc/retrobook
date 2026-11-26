@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@retrobook/shared/i18n'
 export type TableColumn<T> = {
   key: keyof T | string
   label: string
@@ -17,8 +18,8 @@ withDefaults(
   {
     rowKey: 'id',
     loading: false,
-    emptyTitle: 'Belum ada data',
-    emptyDescription: 'Data akan muncul di sini setelah tersedia.',
+    emptyTitle: undefined,
+    emptyDescription: undefined,
   },
 )
 
@@ -41,7 +42,7 @@ function cell(row: Record<string, unknown>, key: string | number | symbol) {
           >
             {{ column.label }}
           </th>
-          <th v-if="$slots.actions" class="align-right">Aksi</th>
+          <th v-if="$slots.actions" class="align-right">{{ t('admin.table.actions') }}</th>
         </tr>
       </thead>
       <tbody v-if="rows.length && !loading">
@@ -56,11 +57,12 @@ function cell(row: Record<string, unknown>, key: string | number | symbol) {
       </tbody>
     </table>
     <div v-if="loading" class="table-state">
-      <span class="loader" /><strong>Memuat data…</strong>
+      <span class="loader" /><strong>{{ t('admin.table.loading') }}</strong>
     </div>
     <div v-else-if="!rows.length" class="table-state">
-      <span class="empty-icon">⌕</span><strong>{{ emptyTitle }}</strong>
-      <p>{{ emptyDescription }}</p>
+      <span class="empty-icon">⌕</span
+      ><strong>{{ emptyTitle ?? t('admin.table.emptyTitle') }}</strong>
+      <p>{{ emptyDescription ?? t('admin.table.emptyDescription') }}</p>
       <slot name="empty-action" />
     </div>
   </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { t } from '@retrobook/shared/i18n'
+import { t, intlLocale } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -35,7 +35,12 @@ import PageCard from '@/components/PageCard.vue'
         <Icon icon="mdi:calendar" class="item__icon" aria-hidden="true" />
         <span>
           <RouterLink class="item__name" :to="`/events/${e.id}`">{{ e.title }}</RouterLink>
-          {{ new Date(e.startsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }}
+          {{
+            new Date(e.startsAt).toLocaleTimeString(intlLocale(), {
+              hour: 'numeric',
+              minute: '2-digit',
+            })
+          }}
         </span>
       </li>
     </ul>

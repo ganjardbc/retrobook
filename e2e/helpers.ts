@@ -78,6 +78,8 @@ export async function userId(username: string) {
 /** Buat akun lewat UI user app, jadikan admin, lalu masuk ke admin panel di halaman yang diberikan. */
 export async function loginAsNewAdmin(browser: Browser) {
   const context = await browser.newContext()
+  // Admin default Inggris; skenario e2e admin menulis selector Indonesia, jadi pilih bahasa Indonesia untuk admin.
+  await context.addInitScript(() => localStorage.setItem('rb.admin.locale', 'id'))
   const page = await context.newPage()
   const admin = await register(page)
   await promoteToAdmin(admin.username)

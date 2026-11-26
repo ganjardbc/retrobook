@@ -4,6 +4,7 @@ import type {
   ModerationFilter,
   ModerationResource,
 } from '@/modules/moderation/services/types'
+import { t } from '@retrobook/shared/i18n'
 
 type StoreContext = {
   resource: ModerationResource
@@ -44,7 +45,7 @@ export const actions = {
       this.nextCursor = page.nextCursor
     } catch (error) {
       if (version === this.fetchVersion)
-        this.error = error instanceof Error ? error.message : 'Gagal memuat konten.'
+        this.error = error instanceof Error ? error.message : t('admin.moderation.error.load')
     } finally {
       if (version === this.fetchVersion) this.loading = false
     }

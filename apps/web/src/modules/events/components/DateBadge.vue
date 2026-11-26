@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { intlLocale } from '@retrobook/shared/i18n'
 import { computed } from 'vue'
 
 const props = defineProps<{ iso: string }>()
 const date = computed(() => new Date(props.iso))
-const month = computed(() => date.value.toLocaleDateString([], { month: 'short' }).toUpperCase())
+const month = computed(() =>
+  date.value.toLocaleDateString(intlLocale(), { month: 'short' }).toUpperCase(),
+)
 </script>
 
 <template>

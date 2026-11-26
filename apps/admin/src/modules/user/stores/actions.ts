@@ -2,6 +2,7 @@ import type { AdminUser, UserListFilters } from '@/modules/user/services/types'
 import type { AdminUserDetail } from '@/modules/user/services/types'
 import { adminUsersApi } from '@/modules/user/services/api'
 import { AdminApiError } from '@/modules/auth/services/api'
+import { t } from '@retrobook/shared/i18n'
 
 type UserStoreContext = {
   users: AdminUser[]
@@ -49,7 +50,7 @@ export const actions = {
       this.nextCursor = page.nextCursor
     } catch (error) {
       if (requestVersion === this.fetchVersion) {
-        this.error = error instanceof AdminApiError ? error.message : 'Gagal memuat pengguna.'
+        this.error = error instanceof AdminApiError ? error.message : t('admin.users.loadError')
       }
     } finally {
       if (requestVersion === this.fetchVersion) this.loading = false
@@ -63,7 +64,7 @@ export const actions = {
       this.currentUser = await adminUsersApi.detail(id)
     } catch (error) {
       this.detailError =
-        error instanceof AdminApiError ? error.message : 'Gagal memuat detail pengguna.'
+        error instanceof AdminApiError ? error.message : t('admin.detail.loadError')
     } finally {
       this.detailLoading = false
     }

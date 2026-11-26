@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { intlLocale, t } from '@retrobook/shared/i18n'
+import { computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminDataTable, { type TableColumn } from '@/components/AdminDataTable.vue'
 import AdminFilters from '@/components/AdminFilters.vue'
@@ -8,12 +9,31 @@ import type { AdminUser } from '@/modules/user/services/types'
 
 const users = useUserStore()
 const router = useRouter()
-const columns: TableColumn<Record<string, unknown>>[] = [
-  { key: 'person', label: 'PENGGUNA' },
-  { key: 'role', label: 'ROLE', width: '120px' },
-  { key: 'status', label: 'STATUS', width: '140px' },
-  { key: 'createdAt', label: 'BERGABUNG', width: '150px' },
-]
+const columns = computed<TableColumn<Record<string, unknown>>[]>(() => [
+  { key: 'person', label: t('admin.users.col.user') },
+  { key: 'role', label: t('admin.users.col.role'), width: '120px' },
+  { key: 'status', label: t('admin.common.status').toUpperCase(), width: '140px' },
+  { key: 'createdAt', label: t('admin.users.col.joined'), width: '150px' },
+])
+const filterDefinitions = computed(() => [
+  {
+    key: 'status',
+    label: t('admin.common.status'),
+    options: [
+      { label: t('admin.user.status.ACTIVE'), value: 'ACTIVE' },
+      { label: t('admin.user.status.SUSPENDED'), value: 'SUSPENDED' },
+      { label: t('admin.user.status.BANNED'), value: 'BANNED' },
+    ],
+  },
+  {
+    key: 'role',
+    label: t('admin.users.col.role'),
+    options: [
+      { label: t('admin.user.role.USER'), value: 'USER' },
+      { label: t('admin.user.role.ADMIN'), value: 'ADMIN' },
+    ],
+  },
+])
 let debounce: ReturnType<typeof setTimeout>
 onMounted(() => void users.fetchUsers())
 watch([() => users.search, () => users.filters.status, () => users.filters.role], () => {
@@ -25,7 +45,7 @@ function openUser(row: Record<string, unknown>) {
   void router.push({ name: 'admin-users-detail', params: { id: String(row.id) } })
 }
 function date(value: unknown) {
-  return new Date(String(value)).toLocaleDateString('id-ID', {
+  return new Date(String(value)).toLocaleDateString(intlLocale(), {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -39,53 +59,37 @@ function user(row: Record<string, unknown>) {
 <template>
   <div class="page-heading">
     <div>
-      <p class="eyebrow">DIREKTORI KOMUNITAS</p>
-      <h1>Pengguna</h1>
-      <p class="page-description">Tinjau akun dan status keanggotaan komunitas.</p>
+      <p class="eyebrow">{{ t('admin.users.eyebrow') }}</p>
+      <h1>{{ t('admin.nav.users') }}</h1>
+      <p class="page-description">{{ t('admin.users.description') }}</p>
     </div>
   </div>
   <section class="surface-card users-card">
     <div class="card-toolbar">
       <div>
-        <h2>Semua pengguna</h2>
-        <p>Daftar akun Retrobook</p>
+        <h2>{{ t('admin.users.all') }}</h2>
+        <p>{{ t('admin.users.allNote') }}</p>
       </div>
-      <span class="result-count">{{ users.total.toLocaleString('id-ID') }} pengguna</span>
+      <span class="result-count">{{
+        t('admin.users.total', { count: users.total.toLocaleString(intlLocale()) })
+      }}</span>
     </div>
     <AdminFilters
       v-model:search="users.search"
       v-model:filters="users.filters"
-      search-placeholder="Cari nama, username, atau email…"
-      :filter-definitions="[
-        {
-          key: 'status',
-          label: 'Status',
-          options: [
-            { label: 'Aktif', value: 'ACTIVE' },
-            { label: 'Ditangguhkan', value: 'SUSPENDED' },
-            { label: 'Diblokir', value: 'BANNED' },
-          ],
-        },
-        {
-          key: 'role',
-          label: 'Role',
-          options: [
-            { label: 'Pengguna', value: 'USER' },
-            { label: 'Admin', value: 'ADMIN' },
-          ],
-        },
-      ]"
+      :search-placeholder="t('admin.users.searchPlaceholder')"
+      :filter-definitions="filterDefinitions"
       @reset="users.resetFilters"
     />
     <p v-if="users.error" class="user-error" role="alert">
-      {{ users.error }} <button @click="users.fetchUsers">Coba lagi</button>
+      {{ users.error }} <button @click="users.fetchUsers">{{ t('admin.common.retry') }}</button>
     </p>
     <AdminDataTable
       :columns="columns"
       :rows="users.users as unknown as Record<string, unknown>[]"
       :loading="users.loading"
-      empty-title="Belum ada pengguna untuk ditampilkan"
-      empty-description="Ubah pencarian atau filter untuk melihat pengguna."
+      :empty-title="t('admin.users.empty')"
+      :empty-description="t('admin.users.emptyHint')"
       @row-click="openUser"
     >
       <template #cell-person="{ row }"
@@ -102,13 +106,13 @@ function user(row: Record<string, unknown>) {
       >
       <template #cell-role="{ value }"
         ><span class="user-pill" :class="`user-pill--${String(value).toLowerCase()}`">{{
-          value === 'ADMIN' ? 'Admin' : 'Pengguna'
+          t(`admin.user.role.${value === 'ADMIN' ? 'ADMIN' : 'USER'}`)
         }}</span></template
       >
       <template #cell-status="{ value }"
         ><span class="user-status" :class="`user-status--${String(value).toLowerCase()}`"
           ><i />{{
-            value === 'ACTIVE' ? 'Aktif' : value === 'SUSPENDED' ? 'Ditangguhkan' : 'Diblokir'
+            t(`admin.user.status.${String(value) as 'ACTIVE' | 'SUSPENDED' | 'BANNED'}`)
           }}</span
         ></template
       >
@@ -116,7 +120,7 @@ function user(row: Record<string, unknown>) {
       <template #actions="{ row }"
         ><button
           class="row-action"
-          :aria-label="`Buka ${row.displayName}`"
+          :aria-label="t('admin.users.open', { name: String(row.displayName) })"
           @click.stop="openUser(row)"
         >
           ›
@@ -125,21 +129,22 @@ function user(row: Record<string, unknown>) {
     </AdminDataTable>
     <div class="table-pagination">
       <span
-        >Menampilkan <strong>{{ users.users.length }}</strong> dari
-        <strong>{{ users.total }}</strong> pengguna
-        <template v-if="users.total">· Halaman {{ users.pageIndex + 1 }}</template></span
+        >{{ t('admin.users.showing', { shown: users.users.length, total: users.total })
+        }}<template v-if="users.total">{{
+          t('admin.table.pageSuffix', { page: users.pageIndex + 1 })
+        }}</template></span
       >
       <div>
         <button
           :disabled="users.pageIndex === 0 || users.loading"
-          aria-label="Halaman sebelumnya"
+          :aria-label="t('admin.table.prev')"
           @click="users.previousPage"
         >
           ←</button
         ><span class="page-number">{{ users.pageIndex + 1 }}</span
         ><button
           :disabled="users.nextCursor === null || users.loading"
-          aria-label="Halaman berikutnya"
+          :aria-label="t('admin.table.next')"
           @click="users.nextPage"
         >
           →

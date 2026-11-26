@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { adminReportsApi } from '@/modules/reports/services/api'
 import type { AdminReport, ReportAction, ReportStatus } from '@/modules/reports/services/types'
+import { t } from '@retrobook/shared/i18n'
 
 export const useReportsStore = defineStore('admin-reports', {
   state: () => ({
@@ -24,7 +25,7 @@ export const useReportsStore = defineStore('admin-reports', {
         this.nextCursor = page.nextCursor
         if (!this.selected) this.selectedId = this.items[0]?.id ?? null
       } catch (error) {
-        this.error = error instanceof Error ? error.message : 'Gagal memuat laporan.'
+        this.error = error instanceof Error ? error.message : t('admin.reports.loadError')
       } finally {
         this.loading = false
       }

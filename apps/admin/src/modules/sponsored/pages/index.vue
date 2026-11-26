@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { intlLocale, t } from '@retrobook/shared/i18n'
 import { onMounted, reactive, ref } from 'vue'
 import { adminSponsoredApi, type Sponsored } from '@/modules/sponsored/services/api'
 
@@ -10,12 +11,12 @@ const fail = (e: unknown, fallback: string) => {
   error.value = e instanceof Error ? e.message : fallback
 }
 const iso = (local: string) => (local ? new Date(local).toISOString() : null)
-const when = (v: string | null) => (v ? new Date(v).toLocaleString('id-ID') : '—')
+const when = (v: string | null) => (v ? new Date(v).toLocaleString(intlLocale()) : '—')
 async function load() {
   try {
     items.value = (await adminSponsoredApi.list()).items
   } catch (e) {
-    fail(e, 'Gagal memuat promosi.')
+    fail(e, t('admin.sponsored.loadError'))
   }
 }
 async function create() {
@@ -29,11 +30,11 @@ async function create() {
       startsAt: iso(form.startsAt),
       endsAt: iso(form.endsAt),
     })
-    notice.value = 'Promosi dibuat.'
+    notice.value = t('admin.sponsored.created')
     Object.assign(form, { title: '', body: '', linkUrl: '', startsAt: '', endsAt: '' })
     await load()
   } catch (e) {
-    fail(e, 'Gagal membuat promosi.')
+    fail(e, t('admin.sponsored.createError'))
   }
 }
 async function toggle(s: Sponsored) {
@@ -42,17 +43,17 @@ async function toggle(s: Sponsored) {
     await adminSponsoredApi.update(s.id, { active: !s.active })
     await load()
   } catch (e) {
-    fail(e, 'Gagal mengubah promosi.')
+    fail(e, t('admin.sponsored.updateError'))
   }
 }
 async function remove(s: Sponsored) {
-  if (!window.confirm(`Hapus promosi "${s.title}"?`)) return
+  if (!window.confirm(t('admin.sponsored.confirmDelete', { title: s.title }))) return
   error.value = ''
   try {
     await adminSponsoredApi.remove(s.id)
     await load()
   } catch (e) {
-    fail(e, 'Gagal menghapus promosi.')
+    fail(e, t('admin.sponsored.deleteError'))
   }
 }
 onMounted(load)
@@ -61,57 +62,57 @@ onMounted(load)
 <template>
   <div class="page-heading">
     <div>
-      <p class="eyebrow">KOMUNITAS</p>
-      <h1>Sponsored</h1>
-      <p class="page-description">
-        Promosi internal di kolom kanan user app. Hanya satu yang tampil: yang aktif, dalam jadwal,
-        dan terbaru. Tautan harus http(s) atau path internal.
-      </p>
+      <p class="eyebrow">{{ t('admin.common.community') }}</p>
+      <h1>{{ t('admin.nav.sponsored') }}</h1>
+      <p class="page-description">{{ t('admin.sponsored.description') }}</p>
     </div>
   </div>
   <section class="surface-card words-card">
     <form class="reports-detail" @submit.prevent="create">
       <label class="moderation-control"
-        ><span>Judul</span><input v-model="form.title" maxlength="120" required
+        ><span>{{ t('admin.common.title') }}</span
+        ><input v-model="form.title" maxlength="120" required
       /></label>
       <label class="moderation-control"
-        ><span>Isi</span><textarea v-model="form.body" maxlength="500" rows="2" required />
+        ><span>{{ t('admin.common.body') }}</span
+        ><textarea v-model="form.body" maxlength="500" rows="2" required />
       </label>
       <label class="moderation-control"
-        ><span>Tautan</span
+        ><span>{{ t('admin.sponsored.link') }}</span
         ><input
           v-model="form.linkUrl"
           maxlength="255"
-          placeholder="https://… atau /hashtag/promo"
+          :placeholder="t('admin.sponsored.linkPlaceholder')"
           required
       /></label>
       <div class="words-form">
         <label class="moderation-control"
-          ><span>Mulai (opsional)</span
+          ><span>{{ t('admin.sponsored.start') }}</span
           ><input v-model="form.startsAt" type="datetime-local" /></label
         ><label class="moderation-control"
-          ><span>Selesai (opsional)</span
+          ><span>{{ t('admin.sponsored.end') }}</span
           ><input v-model="form.endsAt" type="datetime-local" /></label
-        ><button class="button" type="submit">Buat promosi</button>
+        ><button class="button" type="submit">{{ t('admin.sponsored.create') }}</button>
       </div>
     </form>
     <p v-if="error" class="user-error" role="alert">{{ error }}</p>
     <p v-if="notice" class="user-notice" role="status">{{ notice }}</p>
-    <p v-if="!items.length" class="reports-empty">Belum ada promosi.</p>
+    <p v-if="!items.length" class="reports-empty">{{ t('admin.sponsored.empty') }}</p>
     <ul class="announce-list">
       <li v-for="s in items" :key="s.id">
         <div>
-          <strong>{{ s.title }}</strong> <small>{{ s.active ? 'Aktif' : 'Nonaktif' }}</small>
+          <strong>{{ s.title }}</strong>
+          <small>{{ s.active ? t('admin.common.active') : t('admin.common.inactive') }}</small>
           <p class="report-meta">{{ s.body }}</p>
           <p class="report-meta">{{ s.linkUrl }} · {{ when(s.startsAt) }} → {{ when(s.endsAt) }}</p>
         </div>
         <div class="reports-actions">
           <button class="button button--quiet" @click="toggle(s)">
-            {{ s.active ? 'Nonaktifkan' : 'Aktifkan' }}</button><button
+            {{ s.active ? t('admin.common.disable') : t('admin.common.enable') }}</button><button
             class="button button--danger"
             @click="remove(s)"
           >
-            Hapus
+            {{ t('admin.common.delete') }}
           </button>
         </div>
       </li>

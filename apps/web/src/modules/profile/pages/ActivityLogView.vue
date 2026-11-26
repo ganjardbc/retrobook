@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { t } from '@retrobook/shared/i18n'
+import { t, intlLocale } from '@retrobook/shared/i18n'
 import { onMounted, ref } from 'vue'
 import Button from '@/components/Button.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -43,7 +43,7 @@ async function remove(item: ActivityItem) {
   }
 }
 
-const when = (iso: string) => new Date(iso).toLocaleString()
+const when = (iso: string) => new Date(iso).toLocaleString(intlLocale())
 onMounted(() => void load())
 </script>
 

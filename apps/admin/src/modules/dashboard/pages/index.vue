@@ -1,54 +1,55 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import { intlLocale, t } from '@retrobook/shared/i18n'
 import { RouterLink } from 'vue-router'
 import DailyBarChart from '@/modules/dashboard/components/DailyBarChart.vue'
 import { useDashboardStore } from '@/modules/dashboard/stores'
 
 const dashboard = useDashboardStore()
 const stats = computed(() => dashboard.stats)
-const number = (value?: number) => new Intl.NumberFormat('id-ID').format(value ?? 0)
+const number = (value?: number) => new Intl.NumberFormat(intlLocale()).format(value ?? 0)
 const cards = computed(() => [
   {
-    label: 'Total pengguna',
+    label: t('admin.dashboard.card.users'),
     value: stats.value?.totalUsers,
     icon: '♙',
     tone: 'blue',
-    note: 'Akun terdaftar',
+    note: t('admin.dashboard.card.users.note'),
   },
   {
-    label: 'Total post',
+    label: t('admin.dashboard.card.posts'),
     value: stats.value?.totalPosts,
     icon: '▤',
     tone: 'violet',
-    note: 'Konten komunitas',
+    note: t('admin.dashboard.card.posts.note'),
   },
   {
-    label: 'Total komentar',
+    label: t('admin.dashboard.card.comments'),
     value: stats.value?.totalComments,
     icon: '▱',
     tone: 'teal',
-    note: 'Percakapan',
+    note: t('admin.dashboard.card.comments.note'),
   },
   {
-    label: 'Aktif hari ini',
+    label: t('admin.dashboard.card.active'),
     value: stats.value?.activeUsersToday,
     icon: '◉',
     tone: 'green',
-    note: 'Pengguna aktif',
+    note: t('admin.dashboard.card.active.note'),
   },
   {
-    label: 'Pendaftar baru',
+    label: t('admin.dashboard.card.new'),
     value: stats.value?.newUsersLast7Days,
     icon: '↗',
     tone: 'amber',
-    note: '7 hari terakhir',
+    note: t('admin.dashboard.card.new.note'),
   },
   {
-    label: 'Laporan pending',
+    label: t('admin.dashboard.card.reports'),
     value: stats.value?.pendingReports,
     icon: '⚑',
     tone: 'rose',
-    note: 'Menunggu tinjauan',
+    note: t('admin.dashboard.card.reports.note'),
   },
 ])
 
@@ -60,12 +61,12 @@ onMounted(() => {
 <template>
   <div class="page-heading dashboard-heading">
     <div>
-      <p class="eyebrow">PUSAT KENDALI</p>
-      <h1>Ringkasan</h1>
-      <p class="page-description">Pantau kondisi komunitas Retrobook dari satu tempat.</p>
+      <p class="eyebrow">{{ t('admin.dashboard.eyebrow') }}</p>
+      <h1>{{ t('admin.nav.overview') }}</h1>
+      <p class="page-description">{{ t('admin.dashboard.description') }}</p>
     </div>
     <button class="date-pill" :disabled="dashboard.loading" @click="dashboard.fetchStats()">
-      <span>◷</span> 7 hari terakhir
+      <span>◷</span> {{ t('admin.dashboard.last7') }}
       <span class="refresh-icon" :class="{ 'refresh-icon--spin': dashboard.loading }">↻</span>
     </button>
   </div>
@@ -73,13 +74,13 @@ onMounted(() => {
   <div v-if="dashboard.error" class="dashboard-error" role="alert">
     <span class="error-mark">!</span>
     <div>
-      <strong>Statistik belum dapat dimuat</strong>
+      <strong>{{ t('admin.dashboard.errorTitle') }}</strong>
       <p>{{ dashboard.error }}</p>
     </div>
-    <button @click="dashboard.fetchStats()">Coba lagi <span>↻</span></button>
+    <button @click="dashboard.fetchStats()">{{ t('admin.common.retry') }} <span>↻</span></button>
   </div>
 
-  <section class="stat-grid" aria-label="Statistik komunitas">
+  <section class="stat-grid" :aria-label="t('admin.dashboard.statsLabel')">
     <article
       v-for="card in cards"
       :key="card.label"
@@ -101,37 +102,37 @@ onMounted(() => {
   <section class="chart-section">
     <div class="chart-section__heading">
       <div>
-        <p class="eyebrow">AKTIVITAS KOMUNITAS</p>
-        <h2>Tren 7 hari</h2>
+        <p class="eyebrow">{{ t('admin.dashboard.activity') }}</p>
+        <h2>{{ t('admin.dashboard.trend') }}</h2>
       </div>
-      <span class="chart-period"><i /> Diperbarui saat dibuka</span>
+      <span class="chart-period"><i /> {{ t('admin.dashboard.updatedOnOpen') }}</span>
     </div>
     <div class="charts-grid">
       <article class="chart-card">
         <div class="chart-card__heading">
           <div>
-            <h3>Pendaftaran pengguna</h3>
-            <p>Pengguna baru per hari</p>
+            <h3>{{ t('admin.dashboard.chart.reg') }}</h3>
+            <p>{{ t('admin.dashboard.chart.reg.note') }}</p>
           </div>
           <span class="chart-indicator chart-indicator--blue" aria-hidden="true" />
         </div>
         <DailyBarChart
           :items="stats?.registrationsByDay ?? []"
-          label="Pendaftaran pengguna per hari"
+          :label="t('admin.dashboard.chart.reg.label')"
           :loading="dashboard.loading && !stats"
         />
       </article>
       <article class="chart-card">
         <div class="chart-card__heading">
           <div>
-            <h3>Post dibuat</h3>
-            <p>Post baru per hari</p>
+            <h3>{{ t('admin.dashboard.chart.posts') }}</h3>
+            <p>{{ t('admin.dashboard.chart.posts.note') }}</p>
           </div>
           <span class="chart-indicator chart-indicator--green" aria-hidden="true" />
         </div>
         <DailyBarChart
           :items="stats?.postsByDay ?? []"
-          label="Post baru per hari"
+          :label="t('admin.dashboard.chart.posts.label')"
           :loading="dashboard.loading && !stats"
         />
       </article>
@@ -140,34 +141,34 @@ onMounted(() => {
 
   <section class="section-heading">
     <div>
-      <p class="eyebrow">NAVIGASI CEPAT</p>
-      <h2>Mulai dari sini</h2>
+      <p class="eyebrow">{{ t('admin.dashboard.quick') }}</p>
+      <h2>{{ t('admin.dashboard.quick.title') }}</h2>
     </div>
   </section>
   <div class="quick-grid">
     <RouterLink to="/users" class="quick-card"
       ><span class="quick-icon quick-icon--blue">♙</span>
       <div>
-        <strong>Kelola pengguna</strong>
-        <p>Cari dan tinjau akun komunitas</p>
+        <strong>{{ t('admin.dashboard.quick.users') }}</strong>
+        <p>{{ t('admin.dashboard.quick.users.note') }}</p>
       </div>
       <span class="quick-arrow">↗</span></RouterLink
     >
     <RouterLink class="quick-card" to="/moderation"
       ><span class="quick-icon quick-icon--amber">▤</span>
       <div>
-        <strong>Moderasi konten</strong>
-        <p>Tinjau post dan komentar</p>
+        <strong>{{ t('admin.moderation.title') }}</strong>
+        <p>{{ t('admin.dashboard.quick.moderation.note') }}</p>
       </div>
       <span class="quick-arrow">→</span></RouterLink
     >
     <div class="quick-card quick-card--disabled">
       <span class="quick-icon quick-icon--rose">⚑</span>
       <div>
-        <strong>Antrean laporan</strong>
-        <p>Segera tersedia</p>
+        <strong>{{ t('admin.reports.title') }}</strong>
+        <p>{{ t('admin.dashboard.quick.soon') }}</p>
       </div>
-      <span class="soon-pill">SEGERA</span>
+      <span class="soon-pill">{{ t('admin.dashboard.soon') }}</span>
     </div>
   </div>
 </template>

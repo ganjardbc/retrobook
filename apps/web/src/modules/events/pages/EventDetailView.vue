@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { t } from '@retrobook/shared/i18n'
+import { t, intlLocale } from '@retrobook/shared/i18n'
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import PageCard from '@/components/PageCard.vue'
@@ -46,7 +46,11 @@ async function setRsvp(status: RsvpStatus) {
       <DateBadge :iso="event.startsAt" />
       <div class="event__main">
         <p class="event__meta">
-          {{ new Date(event.startsAt).toLocaleString([], { dateStyle: 'full', timeStyle: 'short' })
+          {{
+            new Date(event.startsAt).toLocaleString(intlLocale(), {
+              dateStyle: 'full',
+              timeStyle: 'short',
+            })
           }}<template v-if="event.location"> · {{ event.location }}</template>
         </p>
         <p v-if="event.description" class="event__desc">{{ event.description }}</p>

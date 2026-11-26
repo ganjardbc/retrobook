@@ -1,10 +1,12 @@
+import { enAdmin } from './en.admin'
+
 // Semua teks antarmuka (D-2: Inggris era asli). Komponen memakai t('kunci'), bukan literal.
 export const en = {
   'common.logOut': 'Log Out',
   'common.loading': 'Loading…',
   'footer.parody': 'Fun project / parody. Not an official product of anything.',
   'footer.privacy': 'Privacy',
-  'footer.language': 'English (US)',
+  'footer.language': 'Language',
   'theme.label': 'Time Travel',
   'sponsored.title': 'Sponsored',
 
@@ -532,4 +534,5 @@ export const en = {
   'error.rateLimited': 'Too many attempts. Please try again in {n} seconds.',
   'error.network': 'Cannot reach the server. Please try again.',
   'error.generic': 'Something went wrong. Please try again.',
+  ...enAdmin,
 } as const

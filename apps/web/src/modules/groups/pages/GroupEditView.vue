@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { GroupPrivacy, GroupSummary } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
@@ -12,10 +12,10 @@ import PageCard from '@/components/PageCard.vue'
 import { ApiRequestError } from '@/plugins/http'
 import { groupsApi } from '../services/api'
 
-const privacyOptions: IconOption[] = [
+const privacyOptions = computed<IconOption[]>(() => [
   { value: 'PUBLIC', label: t('groups.privacy.PUBLIC'), icon: 'mdi:earth' },
   { value: 'CLOSED', label: t('groups.privacy.CLOSED'), icon: 'mdi:lock' },
-]
+])
 const route = useRoute()
 const router = useRouter()
 const id = String(route.params.id)

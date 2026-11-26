@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PRIVACIES } from '@retrobook/shared'
-import { t } from '@retrobook/shared/i18n'
+import { t, intlLocale } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { computed, ref, watch } from 'vue'
 import Button from '@/components/Button.vue'
@@ -122,7 +122,9 @@ async function remove(item: LifeEvent) {
           <strong>{{ t(`lifeEvents.kind.${item.kind}`) }}</strong>
           <span class="item__title">{{ item.title }}</span>
           <time class="item__meta" :datetime="item.happenedOn">{{
-            new Date(`${item.happenedOn}T00:00:00`).toLocaleDateString([], { dateStyle: 'medium' })
+            new Date(`${item.happenedOn}T00:00:00`).toLocaleDateString(intlLocale(), {
+              dateStyle: 'medium',
+            })
           }}</time>
         </div>
         <Icon

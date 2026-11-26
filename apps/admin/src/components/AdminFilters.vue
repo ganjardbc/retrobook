@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@retrobook/shared/i18n'
 export type FilterOption = { label: string; value: string }
 export type FilterDefinition = {
   key: string
@@ -6,14 +7,11 @@ export type FilterDefinition = {
   placeholder?: string
   options?: FilterOption[]
 }
-withDefaults(
-  defineProps<{
-    filterDefinitions: FilterDefinition[]
-    searchPlaceholder?: string
-    searchLabel?: string
-  }>(),
-  { searchPlaceholder: 'Cari…', searchLabel: 'Pencarian' },
-)
+defineProps<{
+  filterDefinitions: FilterDefinition[]
+  searchPlaceholder?: string
+  searchLabel?: string
+}>()
 const search = defineModel<string>('search', { default: '' })
 const values = defineModel<Record<string, string>>('filters', { default: () => ({}) })
 const emit = defineEmits<{ reset: [] }>()
@@ -27,12 +25,12 @@ function clear() {
 <template>
   <div class="filter-bar">
     <label class="search-field"
-      ><span class="sr-only">{{ searchLabel }}</span
+      ><span class="sr-only">{{ searchLabel ?? t('admin.filters.search') }}</span
       ><span class="search-icon">⌕</span
       ><input
         v-model="search"
         type="search"
-        :placeholder="searchPlaceholder"
+        :placeholder="searchPlaceholder ?? t('admin.filters.searchPlaceholder')"
         @keydown.enter.prevent
     /></label>
     <label v-for="filter in filterDefinitions" :key="filter.key" class="select-field"
@@ -49,7 +47,7 @@ function clear() {
       class="clear-filters"
       @click="clear"
     >
-      Reset filter
+      {{ t('admin.filters.reset') }}
     </button>
     <slot />
   </div>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { t, type MessageKey } from '@retrobook/shared/i18n'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAdminAuthStore } from '@/modules/auth/stores'
 
@@ -8,44 +10,48 @@ const router = useRouter()
 const auth = useAdminAuthStore()
 const mobileNavOpen = ref(false)
 
-type NavItem = { to: string; label: string; icon: string }
+type NavItem = { to: string; label: MessageKey; icon: string }
 // Satu sumber untuk sidebar dan breadcrumb; kelompok mengikuti cakupan kerja admin.
-const groups: { label: string; items: NavItem[] }[] = [
-  { label: 'WORKSPACE', items: [{ to: '/', label: 'Ringkasan', icon: '◫' }] },
+const groups: { label: MessageKey; items: NavItem[] }[] = [
   {
-    label: 'PENGGUNA',
+    label: 'admin.nav.group.workspace',
+    items: [{ to: '/', label: 'admin.nav.overview', icon: '◫' }],
+  },
+  {
+    label: 'admin.nav.group.users',
     items: [
-      { to: '/users', label: 'Pengguna', icon: '♙' },
-      { to: '/bots', label: 'Bot', icon: '◎' },
+      { to: '/users', label: 'admin.nav.users', icon: '♙' },
+      { to: '/bots', label: 'admin.nav.bots', icon: '◎' },
     ],
   },
   {
-    label: 'MODERASI',
+    label: 'admin.nav.group.moderation',
     items: [
-      { to: '/moderation', label: 'Moderasi', icon: '▤' },
-      { to: '/reports', label: 'Laporan', icon: '⚑' },
-      { to: '/blocked-words', label: 'Kata terlarang', icon: '⊘' },
+      { to: '/moderation', label: 'admin.nav.moderation', icon: '▤' },
+      { to: '/reports', label: 'admin.nav.reports', icon: '⚑' },
+      { to: '/blocked-words', label: 'admin.nav.blockedWords', icon: '⊘' },
     ],
   },
   {
-    label: 'KONTEN',
+    label: 'admin.nav.group.content',
     items: [
-      { to: '/announcements', label: 'Pengumuman', icon: '✦' },
-      { to: '/sponsored', label: 'Sponsored', icon: '★' },
-      { to: '/trending', label: 'Trending', icon: '#' },
+      { to: '/announcements', label: 'admin.nav.announcements', icon: '✦' },
+      { to: '/sponsored', label: 'admin.nav.sponsored', icon: '★' },
+      { to: '/trending', label: 'admin.nav.trending', icon: '#' },
     ],
   },
   {
-    label: 'SISTEM',
+    label: 'admin.nav.group.system',
     items: [
-      { to: '/settings', label: 'Pengaturan', icon: '⚙' },
-      { to: '/audit-logs', label: 'Audit log', icon: '☰' },
+      { to: '/settings', label: 'admin.nav.settings', icon: '⚙' },
+      { to: '/audit-logs', label: 'admin.nav.auditLogs', icon: '☰' },
     ],
   },
 ]
 const isActive = (to: string) => (to === '/' ? route.path === '/' : route.path.startsWith(to))
 const currentLabel = computed(
-  () => groups.flatMap((g) => g.items).find((item) => isActive(item.to))?.label ?? 'Ringkasan',
+  () =>
+    groups.flatMap((g) => g.items).find((item) => isActive(item.to))?.label ?? 'admin.nav.overview',
 )
 const initials = computed(() => auth.user?.displayName?.slice(0, 1).toUpperCase() ?? 'A')
 
@@ -61,21 +67,21 @@ async function logout() {
       <RouterLink class="brand-lockup sidebar-brand" to="/"
         ><span class="brand-mark">r</span><span>retrobook <small>ADMIN</small></span></RouterLink
       >
-      <nav class="side-nav" aria-label="Navigasi admin">
+      <nav class="side-nav" :aria-label="t('admin.nav.aria')">
         <section v-for="group in groups" :key="group.label" class="nav-group">
-          <div class="workspace-label">{{ group.label }}</div>
+          <div class="workspace-label">{{ t(group.label) }}</div>
           <RouterLink
             v-for="item in group.items"
             :key="item.to"
             class="nav-link"
             :class="{ 'nav-link--active': isActive(item.to) }"
             :to="item.to"
-            ><span class="nav-icon">{{ item.icon }}</span> {{ item.label }}</RouterLink
+            ><span class="nav-icon">{{ item.icon }}</span> {{ t(item.label) }}</RouterLink
           >
         </section>
       </nav>
       <div class="sidebar-bottom">
-        <div class="sidebar-note"><span class="status-dot" /> Semua sistem beroperasi</div>
+        <div class="sidebar-note"><span class="status-dot" /> {{ t('admin.nav.systemOk') }}</div>
       </div>
     </aside>
     <div v-if="mobileNavOpen" class="mobile-scrim" @click="mobileNavOpen = false" />
@@ -83,29 +89,37 @@ async function logout() {
       <header class="topbar">
         <button
           class="mobile-menu"
-          aria-label="Buka navigasi"
+          :aria-label="t('admin.nav.open')"
           @click="mobileNavOpen = !mobileNavOpen"
         >
           ☰
         </button>
         <div class="breadcrumbs">
-          <span>Workspace</span><span class="crumb-sep">/</span><strong>{{ currentLabel }}</strong>
+          <span>{{ t('admin.nav.group.workspace') }}</span><span class="crumb-sep">/</span
+          ><strong>{{ t(currentLabel) }}</strong>
         </div>
         <div class="topbar-right">
-          <span class="environment-tag"><i /> INTERNAL</span>
+          <span class="environment-tag"><i /> {{ t('admin.layout.internal') }}</span>
           <div class="profile-chip">
             <span class="avatar">{{ initials }}</span><span class="profile-name"
-              >{{ auth.user?.displayName ?? 'Administrator' }}<small>Administrator</small></span
+              >{{ auth.user?.displayName ?? t('admin.layout.administrator')
+              }}<small>{{ t('admin.layout.administrator') }}</small></span
             >
           </div>
-          <button class="logout-button" title="Keluar" aria-label="Keluar" @click="logout">
+          <LanguageSwitcher />
+          <button
+            class="logout-button"
+            :title="t('common.logOut')"
+            :aria-label="t('common.logOut')"
+            @click="logout"
+          >
             ↗
           </button>
         </div>
       </header>
       <main class="page-content"><RouterView /></main>
       <footer class="admin-footer">
-        <span>RETROBOOK ADMIN</span><span>Ruang aman untuk komunitas.</span>
+        <span>RETROBOOK ADMIN</span><span>{{ t('admin.layout.tagline') }}</span>
       </footer>
     </section>
   </div>

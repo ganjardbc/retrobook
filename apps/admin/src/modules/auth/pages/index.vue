@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { t } from '@retrobook/shared/i18n'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { safeAdminRedirect } from '@/core/router'
 import { AdminApiError } from '@/modules/auth/services/api'
@@ -26,7 +28,7 @@ async function submit() {
         ? cause.message
         : cause instanceof Error
           ? cause.message
-          : 'Tidak dapat masuk. Coba lagi.'
+          : t('admin.login.error')
   } finally {
     busy.value = false
   }
@@ -39,11 +41,12 @@ async function submit() {
       <div class="brand-lockup">
         <span class="brand-mark">r</span><span>retrobook <small>ADMIN</small></span>
       </div>
-      <p class="eyebrow">RUANG KERJA INTERNAL</p>
-      <h1>Selamat datang kembali</h1>
-      <p class="login-copy">Masuk dengan akun administrator untuk mengelola komunitas.</p>
+      <LanguageSwitcher class="login-lang" />
+      <p class="eyebrow">{{ t('admin.login.eyebrow') }}</p>
+      <h1>{{ t('admin.login.title') }}</h1>
+      <p class="login-copy">{{ t('admin.login.copy') }}</p>
       <form class="login-form" @submit.prevent="submit">
-        <label for="identifier">Email atau username</label>
+        <label for="identifier">{{ t('auth.login.identifier') }}</label>
         <input
           id="identifier"
           v-model="identifier"
@@ -52,7 +55,9 @@ async function submit() {
           required
           autofocus
         />
-        <div class="password-label"><label for="password">Kata sandi</label></div>
+        <div class="password-label">
+          <label for="password">{{ t('auth.login.password') }}</label>
+        </div>
         <input
           id="password"
           v-model="password"
@@ -63,18 +68,19 @@ async function submit() {
         />
         <p v-if="error" class="form-error" role="alert">{{ error }}</p>
         <button class="button button--primary login-submit" type="submit" :disabled="busy">
-          {{ busy ? 'Memeriksa…' : 'Masuk ke admin' }} <span aria-hidden="true">→</span>
+          {{ busy ? t('admin.login.checking') : t('admin.login.submit') }}
+          <span aria-hidden="true">→</span>
         </button>
       </form>
-      <p class="login-foot">Akses terbatas untuk administrator Retrobook.</p>
+      <p class="login-foot">{{ t('admin.login.foot') }}</p>
     </section>
     <div class="login-aside">
       <div class="aside-orbit orbit-one" />
       <div class="aside-orbit orbit-two" />
       <div class="aside-content">
         <span class="eyebrow">RETROBOOK / MODERATION</span>
-        <p>Komunitas yang sehat dimulai dari ruang yang terjaga.</p>
-        <span class="aside-caption">PANEL ADMINISTRASI · 2015—SEKARANG</span>
+        <p>{{ t('admin.login.aside') }}</p>
+        <span class="aside-caption">{{ t('admin.login.caption') }}</span>
       </div>
     </div>
   </main>

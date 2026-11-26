@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { GroupPrivacy, GroupSummary } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import Button from '@/components/Button.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import LoadingRows from '@/components/LoadingRows.vue'
@@ -12,10 +12,10 @@ import { ApiRequestError } from '@/plugins/http'
 import GroupRow from '../components/GroupRow.vue'
 import { groupsApi } from '../services/api'
 
-const privacyOptions: IconOption[] = [
+const privacyOptions = computed<IconOption[]>(() => [
   { value: 'PUBLIC', label: t('groups.privacy.PUBLIC'), icon: 'mdi:earth' },
   { value: 'CLOSED', label: t('groups.privacy.CLOSED'), icon: 'mdi:lock' },
-]
+])
 const groups = ref<GroupSummary[]>([])
 const suggested = ref<GroupSummary[]>([])
 const showForm = ref(false)

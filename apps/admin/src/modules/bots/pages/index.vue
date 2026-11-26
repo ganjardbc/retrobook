@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@retrobook/shared/i18n'
 import { onMounted, reactive, ref } from 'vue'
 import { adminBotsApi, type Bot } from '@/modules/bots/services/api'
 
@@ -13,7 +14,7 @@ async function load() {
   try {
     bots.value = (await adminBotsApi.list()).items
   } catch (e) {
-    fail(e, 'Gagal memuat bot.')
+    fail(e, t('admin.bots.loadError'))
   }
 }
 async function create() {
@@ -21,11 +22,11 @@ async function create() {
   notice.value = ''
   try {
     await adminBotsApi.create({ ...form })
-    notice.value = `Bot @${form.username} dibuat.`
+    notice.value = t('admin.bots.created', { username: form.username })
     Object.assign(form, { username: '', displayName: '', persona: '', postsPerDay: 2 })
     await load()
   } catch (e) {
-    fail(e, 'Gagal membuat bot.')
+    fail(e, t('admin.bots.createError'))
   }
 }
 async function update(bot: Bot, body: Parameters<typeof adminBotsApi.update>[1]) {
@@ -35,11 +36,11 @@ async function update(bot: Bot, body: Parameters<typeof adminBotsApi.update>[1])
     await adminBotsApi.update(bot.userId, body)
     await load()
   } catch (e) {
-    fail(e, 'Gagal mengubah bot.')
+    fail(e, t('admin.bots.updateError'))
   }
 }
 function editPersona(bot: Bot) {
-  const persona = window.prompt('Topik persona (pisahkan dengan koma):', bot.persona)?.trim()
+  const persona = window.prompt(t('admin.bots.personaPrompt'), bot.persona)?.trim()
   if (persona) void update(bot, { persona })
 }
 onMounted(load)
@@ -48,49 +49,53 @@ onMounted(load)
 <template>
   <div class="page-heading">
     <div>
-      <p class="eyebrow">KOMUNITAS</p>
-      <h1>Bot AI</h1>
-      <p class="page-description">
-        Bot menerima pertemanan, memposting sesuai frekuensi, dan membalas komentar. Bot tidak bisa
-        login dan tidak dihitung sebagai pengguna aktif.
-      </p>
+      <p class="eyebrow">{{ t('admin.common.community') }}</p>
+      <h1>{{ t('admin.bots.title') }}</h1>
+      <p class="page-description">{{ t('admin.bots.description') }}</p>
     </div>
   </div>
   <section class="surface-card words-card">
     <form class="words-form" @submit.prevent="create">
       <label class="moderation-control"
-        ><span>Username</span><input v-model="form.username" pattern="[A-Za-z0-9._]{3,30}" required
+        ><span>{{ t('auth.register.username') }}</span
+        ><input v-model="form.username" pattern="[A-Za-z0-9._]{3,30}" required
       /></label>
       <label class="moderation-control"
-        ><span>Nama tampilan</span><input v-model="form.displayName" maxlength="80" required
+        ><span>{{ t('auth.register.displayName') }}</span
+        ><input v-model="form.displayName" maxlength="80" required
       /></label>
       <label class="moderation-control"
-        ><span>Topik persona</span
+        ><span>{{ t('admin.bots.persona') }}</span
         ><input v-model="form.persona" maxlength="500" placeholder="coffee, music" required
       /></label>
       <label class="moderation-control"
-        ><span>Post per hari</span
+        ><span>{{ t('admin.bots.postsPerDay') }}</span
         ><input v-model.number="form.postsPerDay" type="number" min="1" max="24" required
       /></label>
-      <button class="button" type="submit">Buat bot</button>
+      <button class="button" type="submit">{{ t('admin.bots.create') }}</button>
     </form>
     <p v-if="error" class="user-error" role="alert">{{ error }}</p>
     <p v-if="notice" class="user-notice" role="status">{{ notice }}</p>
-    <p v-if="!bots.length" class="reports-empty">Belum ada bot.</p>
+    <p v-if="!bots.length" class="reports-empty">{{ t('admin.bots.empty') }}</p>
     <ul class="announce-list">
       <li v-for="b in bots" :key="b.userId">
         <div>
           <strong>{{ b.user.displayName }}</strong>
-          <small>@{{ b.user.username }} · {{ b.active ? 'Aktif' : 'Nonaktif' }}</small>
-          <p class="report-meta">Topik: {{ b.persona }} · {{ b.postsPerDay }} post/hari</p>
+          <small
+            >@{{ b.user.username }} ·
+            {{ b.active ? t('admin.common.active') : t('admin.common.inactive') }}</small
+          >
+          <p class="report-meta">
+            {{ t('admin.bots.summary', { persona: b.persona, count: b.postsPerDay }) }}
+          </p>
         </div>
         <div class="reports-actions">
           <button class="button button--quiet" @click="update(b, { active: !b.active })">
-            {{ b.active ? 'Nonaktifkan' : 'Aktifkan' }}</button><button
+            {{ b.active ? t('admin.common.disable') : t('admin.common.enable') }}</button><button
             class="button button--quiet"
             @click="editPersona(b)"
           >
-            Ubah persona
+            {{ t('admin.bots.editPersona') }}
           </button>
         </div>
       </li>

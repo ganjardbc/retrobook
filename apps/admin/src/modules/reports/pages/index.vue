@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { intlLocale, t } from '@retrobook/shared/i18n'
 import { onMounted, ref, watch } from 'vue'
 import { useReportsStore } from '@/modules/reports/stores'
 import type { AdminReport, ReportAction, ReportStatus } from '@/modules/reports/services/types'
@@ -25,7 +26,7 @@ watch(
   },
 )
 function date(value: string) {
-  return new Date(value).toLocaleString('id-ID', {
+  return new Date(value).toLocaleString(intlLocale(), {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
@@ -33,8 +34,10 @@ function date(value: string) {
   })
 }
 function preview(r: AdminReport) {
-  if (!r.target) return 'Target sudah tidak ada.'
-  return 'content' in r.target ? r.target.content || '〔gambar〕' : `Profil @${r.target.username}`
+  if (!r.target) return t('admin.reports.targetGone')
+  return 'content' in r.target
+    ? r.target.content || t('admin.common.imageTag')
+    : t('admin.reports.profileOf', { username: r.target.username })
 }
 function authorOf(r: AdminReport) {
   return r.target ? ('author' in r.target ? r.target.author : r.target) : null
@@ -45,9 +48,9 @@ async function decide(status: 'REVIEWED' | 'DISMISSED', action?: ReportAction) {
   notice.value = ''
   try {
     await reports.decide(status, action, note.value.trim())
-    notice.value = 'Keputusan tersimpan dan tercatat di audit.'
+    notice.value = t('admin.reports.saved')
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Keputusan gagal disimpan.'
+    error.value = e instanceof Error ? e.message : t('admin.reports.saveError')
   } finally {
     busy.value = false
   }
@@ -57,30 +60,30 @@ async function decide(status: 'REVIEWED' | 'DISMISSED', action?: ReportAction) {
 <template>
   <div class="page-heading">
     <div>
-      <p class="eyebrow">KEAMANAN KOMUNITAS</p>
-      <h1>Antrean laporan</h1>
-      <p class="page-description">
-        Putuskan laporan di tempat: pilih, tulis catatan bila perlu, klik keputusan.
-      </p>
+      <p class="eyebrow">{{ t('admin.common.communitySafety') }}</p>
+      <h1>{{ t('admin.reports.title') }}</h1>
+      <p class="page-description">{{ t('admin.reports.description') }}</p>
     </div>
-    <span class="moderation-total">{{ reports.total.toLocaleString('id-ID') }} laporan</span>
+    <span class="moderation-total">{{
+      t('admin.reports.total', { count: reports.total.toLocaleString(intlLocale()) })
+    }}</span>
   </div>
   <section class="surface-card reports-card">
     <div class="reports-list">
       <label class="moderation-control"
-        ><span>Status</span
+        ><span>{{ t('admin.common.status') }}</span
         ><select v-model="reports.status">
-          <option value="PENDING">Pending</option>
-          <option value="REVIEWED">Ditinjau</option>
-          <option value="DISMISSED">Diabaikan</option>
-          <option value="">Semua</option>
+          <option value="PENDING">{{ t('admin.reports.status.PENDING') }}</option>
+          <option value="REVIEWED">{{ t('admin.reports.status.REVIEWED') }}</option>
+          <option value="DISMISSED">{{ t('admin.reports.status.DISMISSED') }}</option>
+          <option value="">{{ t('admin.common.all') }}</option>
         </select></label
       >
       <p v-if="reports.error" class="user-error" role="alert">
-        {{ reports.error }} <button @click="reports.fetch()">Coba lagi</button>
+        {{ reports.error }} <button @click="reports.fetch()">{{ t('admin.common.retry') }}</button>
       </p>
       <p v-else-if="!reports.items.length && !reports.loading" class="reports-empty">
-        Tidak ada laporan.
+        {{ t('admin.reports.empty') }}
       </p>
       <button
         v-for="r in reports.items"
@@ -91,7 +94,7 @@ async function decide(status: 'REVIEWED' | 'DISMISSED', action?: ReportAction) {
       >
         <strong>{{ r.reason }} · {{ r.targetType }}</strong
         ><span>{{ preview(r).slice(0, 80) }}</span
-        ><small>{{ date(r.createdAt) }} · {{ r.status }}</small>
+        ><small>{{ date(r.createdAt) }} · {{ t(`admin.reports.status.${r.status}`) }}</small>
       </button>
       <button
         v-if="reports.nextCursor"
@@ -99,12 +102,12 @@ async function decide(status: 'REVIEWED' | 'DISMISSED', action?: ReportAction) {
         :disabled="reports.loading"
         @click="reports.fetch(true)"
       >
-        Muat lagi
+        {{ t('admin.common.loadMore') }}
       </button>
     </div>
     <div class="reports-detail">
       <p v-if="notice" class="user-notice" role="status">{{ notice }}</p>
-      <p v-if="!reports.selected" class="reports-empty">Pilih laporan di kiri.</p>
+      <p v-if="!reports.selected" class="reports-empty">{{ t('admin.reports.pick') }}</p>
       <template v-else>
         <h2>
           {{ reports.selected.reason }} · {{ reports.selected.targetType }} #{{
@@ -112,50 +115,57 @@ async function decide(status: 'REVIEWED' | 'DISMISSED', action?: ReportAction) {
           }}
         </h2>
         <p class="report-meta">
-          Dilaporkan oleh <strong>@{{ reports.selected.reporter.username }}</strong
+          {{ t('admin.reports.reportedBy') }}
+          <strong>@{{ reports.selected.reporter.username }}</strong
           >, {{ date(reports.selected.createdAt) }}
         </p>
         <blockquote class="report-target">{{ preview(reports.selected) }}</blockquote>
         <p v-if="authorOf(reports.selected)" class="report-meta">
-          Penulis: <strong>@{{ authorOf(reports.selected)?.username }}</strong>
+          {{ t('admin.reports.author') }}:
+          <strong>@{{ authorOf(reports.selected)?.username }}</strong>
         </p>
         <p v-if="reports.selected.note" class="report-meta">
-          Catatan pelapor: {{ reports.selected.note }}
+          {{ t('admin.reports.reporterNote', { note: reports.selected.note }) }}
         </p>
         <template v-if="reports.selected.status === 'PENDING'">
           <label class="moderation-control"
-            ><span>Catatan keputusan (opsional)</span><input v-model="note" maxlength="500"
+            ><span>{{ t('admin.reports.decisionNote') }}</span
+            ><input v-model="note" maxlength="500"
           /></label>
           <p v-if="error" class="user-error" role="alert">{{ error }}</p>
           <div class="reports-actions">
             <button class="button button--quiet" :disabled="busy" @click="decide('DISMISSED')">
-              Abaikan
+              {{ t('admin.reports.action.dismiss') }}
             </button>
             <button
               class="button button--quiet"
               :disabled="busy || isUser(reports.selected)"
               @click="decide('REVIEWED', 'HIDE_CONTENT')"
             >
-              Sembunyikan
+              {{ t('admin.common.hide') }}
             </button>
             <button
               class="button button--danger"
               :disabled="busy || isUser(reports.selected)"
               @click="decide('REVIEWED', 'DELETE_CONTENT')"
             >
-              Hapus
+              {{ t('admin.common.delete') }}
             </button>
             <button
               class="button button--danger"
               :disabled="busy"
               @click="decide('REVIEWED', 'SUSPEND_USER')"
             >
-              Skors penulis
+              {{ t('admin.reports.action.suspend') }}
             </button>
           </div>
         </template>
         <p v-else class="report-meta">
-          Sudah diputuskan: {{ reports.selected.status as ReportStatus }}.
+          {{
+            t('admin.reports.decided', {
+              status: t(`admin.reports.status.${reports.selected.status as ReportStatus}`),
+            })
+          }}
         </p>
       </template>
     </div>

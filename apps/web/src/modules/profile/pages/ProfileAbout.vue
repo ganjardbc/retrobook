@@ -22,7 +22,9 @@ const rows = computed(() => {
 <template>
   <section v-if="p" class="about">
     <h2 class="about__title">{{ t('profile.about.title') }}</h2>
-    <p v-if="p.profileInfoVisible === false" class="about__empty">Info profil disetel privat.</p>
+    <p v-if="p.profileInfoVisible === false" class="about__empty">
+      {{ t('profile.about.private') }}
+    </p>
     <template v-else>
       <!-- Bio ditampilkan sebagai teks, tidak pernah HTML. -->
       <p v-if="p.bio" class="about__bio">{{ p.bio }}</p>

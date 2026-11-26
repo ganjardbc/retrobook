@@ -173,7 +173,7 @@ Isi minggu ini bergantung waktu yang tersisa; urutkan dari atas dan berhenti bil
 | # | Keputusan | Dibutuhkan sebelum | Usulan |
 |---|---|---|---|
 | D-1 | Nama final dan logo | Minggu 1 (label parodi, header) | Nama kerja dulu, ganti lewat satu konstanta |
-| D-2 | Bahasa antarmuka (Inggris atau Indonesia) | Minggu 2 (teks komponen) | Inggris era asli; kunci teks terpisah |
+| D-2 | Bahasa antarmuka (Inggris atau Indonesia) | Minggu 2 (teks komponen) | Inggris era asli; kunci teks terpisah. **Diputuskan:** Inggris bawaan, Indonesia opsional lewat pemilih bahasa (footer user app, topbar admin), disimpan di localStorage (`rb.locale`, `rb.admin.locale`); kamus di `packages/shared/i18n` (`en.ts`, `id.ts`, `en.admin.ts`, `id.admin.ts`) |
 | D-3 | Hanya demo lokal atau dibuka publik | Minggu 10 | Lokal dulu |
 | D-4 | Masa tunggu anonimisasi akun | T-77 | 30 hari |
 | D-5 | Aturan umur token dan batas rate limit | Minggu 1 dan 6 | 15 menit dan 30 hari; angka di API spec |

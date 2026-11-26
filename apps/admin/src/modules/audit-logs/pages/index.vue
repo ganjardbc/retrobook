@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { intlLocale, t } from '@retrobook/shared/i18n'
 import { onMounted, reactive, ref } from 'vue'
 import {
   adminAuditLogsApi,
@@ -21,54 +22,60 @@ async function load(more = false) {
     total.value = page.total
     nextCursor.value = page.nextCursor
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Gagal memuat audit log.'
+    error.value = e instanceof Error ? e.message : t('admin.audit.loadError')
   } finally {
     loading.value = false
   }
 }
-const when = (v: string) => new Date(v).toLocaleString('id-ID')
+const when = (v: string) => new Date(v).toLocaleString(intlLocale())
 onMounted(() => void load())
 </script>
 
 <template>
   <div class="page-heading">
     <div>
-      <p class="eyebrow">KEAMANAN</p>
-      <h1>Audit log</h1>
-      <p class="page-description">
-        Jejak semua aksi tulis admin. Hanya baca; tidak bisa diubah atau dihapus.
-      </p>
+      <p class="eyebrow">{{ t('admin.audit.eyebrow') }}</p>
+      <h1>{{ t('admin.nav.auditLogs') }}</h1>
+      <p class="page-description">{{ t('admin.audit.description') }}</p>
     </div>
-    <span class="moderation-total">{{ total.toLocaleString('id-ID') }} entri</span>
+    <span class="moderation-total">{{
+      t('admin.audit.total', { count: total.toLocaleString(intlLocale()) })
+    }}</span>
   </div>
   <section class="surface-card words-card">
     <form class="words-form" @submit.prevent="load()">
       <label class="moderation-control"
-        ><span>ID admin</span><input v-model="filters.adminId" type="text" inputmode="numeric"
+        ><span>{{ t('admin.audit.adminId') }}</span
+        ><input v-model="filters.adminId" type="text" inputmode="numeric"
       /></label>
       <label class="moderation-control"
-        ><span>Aksi</span
-        ><input v-model="filters.action" maxlength="60" placeholder="mis. USER_STATUS"
+        ><span>{{ t('admin.audit.action') }}</span
+        ><input
+          v-model="filters.action"
+          maxlength="60"
+          :placeholder="t('admin.audit.actionPlaceholder')"
       /></label>
       <label class="moderation-control"
-        ><span>Dari</span><input v-model="filters.from" type="date"
+        ><span>{{ t('admin.audit.from') }}</span
+        ><input v-model="filters.from" type="date"
       /></label>
       <label class="moderation-control"
-        ><span>Sampai</span><input v-model="filters.to" type="date"
+        ><span>{{ t('admin.audit.to') }}</span
+        ><input v-model="filters.to" type="date"
       /></label>
-      <button class="button" type="submit">Terapkan</button>
+      <button class="button" type="submit">{{ t('admin.audit.apply') }}</button>
     </form>
     <p v-if="error" class="user-error" role="alert">{{ error }}</p>
-    <p v-if="!items.length && !loading" class="reports-empty">Tidak ada entri.</p>
+    <p v-if="!items.length && !loading" class="reports-empty">{{ t('admin.audit.empty') }}</p>
     <div v-else class="audit-table-wrap">
       <table class="audit-table">
         <thead>
           <tr>
-            <th>Waktu</th>
-            <th>Admin</th>
-            <th>Aksi</th>
-            <th>Target</th>
-            <th>Detail</th>
+            <th>{{ t('admin.audit.col.time') }}</th>
+            <th>{{ t('admin.audit.col.admin') }}</th>
+            <th>{{ t('admin.audit.action') }}</th>
+            <th>{{ t('admin.audit.col.target') }}</th>
+            <th>{{ t('admin.audit.col.detail') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -87,7 +94,7 @@ onMounted(() => void load())
       </table>
     </div>
     <button v-if="nextCursor" class="button button--quiet" :disabled="loading" @click="load(true)">
-      Muat lagi
+      {{ t('admin.common.loadMore') }}
     </button>
   </section>
 </template>
