@@ -4,7 +4,10 @@ import { ADMIN_URL, createPost, loginAsNewAdmin, register, userId } from './help
 
 const apiLogin = `http://127.0.0.1:${process.env.E2E_API_PORT ?? '3031'}/api/auth/login`
 
-test('E2E-08 member reports a post; admin decides in two clicks; audit log records it', async ({ browser, page }) => {
+test('E2E-08 member reports a post; admin decides in two clicks; audit log records it', async ({
+  browser,
+  page,
+}) => {
   const author = await register(page)
   const content = `Spam ${randomBytes(4).toString('hex')}`
   await createPost(page, content, 'PUBLIC')
@@ -29,7 +32,12 @@ test('E2E-08 member reports a post; admin decides in two clicks; audit log recor
   await admin.page.goto(`${ADMIN_URL}/audit-logs`)
   await admin.page.getByLabel('Aksi').fill('REPORT_REVIEWED_HIDE_CONTENT')
   await admin.page.getByRole('button', { name: 'Terapkan' }).click()
-  await expect(admin.page.locator('.audit-table tbody tr').filter({ hasText: `@${admin.admin.username}` }).first()).toBeVisible()
+  await expect(
+    admin.page
+      .locator('.audit-table tbody tr')
+      .filter({ hasText: `@${admin.admin.username}` })
+      .first(),
+  ).toBeVisible()
 
   // Keputusan itu menyembunyikan post bagi pelapor.
   await reporter.reload()
@@ -38,7 +46,10 @@ test('E2E-08 member reports a post; admin decides in two clicks; audit log recor
   await reporterContext.close()
 })
 
-test('E2E-09 admin hides a post: gone in the user app, still visible in the admin panel', async ({ browser, page }) => {
+test('E2E-09 admin hides a post: gone in the user app, still visible in the admin panel', async ({
+  browser,
+  page,
+}) => {
   const author = await register(page)
   const content = `Hide me ${randomBytes(4).toString('hex')}`
   await createPost(page, content, 'PUBLIC')
@@ -63,7 +74,10 @@ test('E2E-09 admin hides a post: gone in the user app, still visible in the admi
   await viewerContext.close()
 })
 
-test('E2E-10 suspending a user ends the active session and blocks login', async ({ browser, page }) => {
+test('E2E-10 suspending a user ends the active session and blocks login', async ({
+  browser,
+  page,
+}) => {
   const member = await register(page)
   const id = await userId(member.username)
 
@@ -85,7 +99,10 @@ test('E2E-10 suspending a user ends the active session and blocks login', async 
   await admin.context.close()
 })
 
-test('ADM-13 announcement shows as feed banner and notification, and disappears when deleted', async ({ browser, page }) => {
+test('ADM-13 announcement shows as feed banner and notification, and disappears when deleted', async ({
+  browser,
+  page,
+}) => {
   await register(page)
   const title = `Notice ${randomBytes(4).toString('hex')}`
   const admin = await loginAsNewAdmin(browser)
@@ -99,14 +116,21 @@ test('ADM-13 announcement shows as feed banner and notification, and disappears 
   await page.goto('/')
   await expect(page.locator('.banner').filter({ hasText: title })).toBeVisible()
 
-  await admin.page.locator('.announce-list li').filter({ hasText: title }).getByRole('button', { name: 'Hapus' }).click()
+  await admin.page
+    .locator('.announce-list li')
+    .filter({ hasText: title })
+    .getByRole('button', { name: 'Hapus' })
+    .click()
   await expect(admin.page.locator('.announce-list li').filter({ hasText: title })).toHaveCount(0)
   await page.reload()
   await expect(page.locator('.banner').filter({ hasText: title })).toHaveCount(0)
   await admin.context.close()
 })
 
-test('ADM-11 blocked word: content is still published but flagged for moderation', async ({ browser, page }) => {
+test('ADM-11 blocked word: content is still published but flagged for moderation', async ({
+  browser,
+  page,
+}) => {
   await register(page)
   const word = `kata${randomBytes(4).toString('hex')}`
   const admin = await loginAsNewAdmin(browser)

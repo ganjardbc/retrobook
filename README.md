@@ -38,10 +38,10 @@ Buka `http://localhost:5173` (user app) dan `http://localhost:5174` (admin). MyS
 
 `pnpm --filter @retrobook/db seed` membuat 30 user, 1 admin, 120 pertemanan (campuran diterima dan menunggu), 200 post (campuran privasi dan hashtag), 600 komentar, 1.000 like, 300 pesan (sebagian belum dibaca), 10 laporan, 2 pengaturan, dan 10 kata terlarang. Aman dijalankan ulang (tidak mengubah apa pun bila data sudah ada). `SEED_RESET=true` menghapus **semua** data lalu mengisi ulang; seed menolak jalan di production.
 
-| Akun | Login | Password |
-|---|---|---|
-| User demo | `alice`, `bob`, `carol`, ... (30 akun) | `retrobook-demo` |
-| Admin demo | `admin` (admin panel) | `retrobook-demo` |
+| Akun       | Login                                  | Password         |
+| ---------- | -------------------------------------- | ---------------- |
+| User demo  | `alice`, `bob`, `carol`, ... (30 akun) | `retrobook-demo` |
+| Admin demo | `admin` (admin panel)                  | `retrobook-demo` |
 
 Admin untuk lingkungan nyata dibuat dengan skrip, bukan seed:
 
