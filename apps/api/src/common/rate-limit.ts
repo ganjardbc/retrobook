@@ -33,6 +33,12 @@ export const MESSAGE_PER_USER: RateRule = {
   windowMs: 60_000,
   by: 'user',
 }
+export const UPLOAD_PER_USER: RateRule = {
+  name: 'upload',
+  limit: 60,
+  windowMs: 3_600_000,
+  by: 'user',
+}
 export const POKE_PER_USER: RateRule = { name: 'poke', limit: 20, windowMs: 3_600_000, by: 'user' }
 
 type Bucket = { count: number; resetAt: number }

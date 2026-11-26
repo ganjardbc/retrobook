@@ -11,6 +11,8 @@ import type { Env } from './config/env.validation'
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
   const config = app.get<ConfigService<Env, true>>(ConfigService)
+  // Di belakang nginx (deploy/nginx.conf): tanpa ini req.ip = IP nginx dan semua user berbagi satu batas laju.
+  app.set('trust proxy', 1)
   configureApp(app)
   serveUploads(app)
   const origin = config

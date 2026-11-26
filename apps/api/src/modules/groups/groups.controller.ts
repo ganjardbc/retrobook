@@ -16,6 +16,7 @@ import { CursorQueryDto } from '../posts/dto/post.dto'
 import { ImageFileInterceptor } from '../uploads/image-upload.interceptor'
 import { CreateGroupDto, CreateGroupPostDto, UpdateGroupDto } from './dto/group.dto'
 import { GroupsService } from './groups.service'
+import { RateLimit, UPLOAD_PER_USER } from '../../common/rate-limit'
 
 @Controller('groups')
 export class GroupsController {
@@ -47,6 +48,7 @@ export class GroupsController {
 
   @Post(':id/photo')
   @HttpCode(200)
+  @RateLimit(UPLOAD_PER_USER)
   @UseInterceptors(ImageFileInterceptor())
   photo(
     @CurrentUser() user: AuthUser,

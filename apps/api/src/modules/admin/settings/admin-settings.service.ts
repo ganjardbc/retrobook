@@ -36,6 +36,7 @@ export class AdminSettingsService {
         }
       },
     )
+    this.settings.invalidate()
     return this.settings.get()
   }
 }

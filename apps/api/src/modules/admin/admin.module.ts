@@ -18,6 +18,7 @@ import { AdminSettingsService } from './settings/admin-settings.service'
 import { SettingsModule } from '../settings/settings.module'
 import { AdminAnnouncementsController } from './announcements/admin-announcements.controller'
 import { AdminAnnouncementsService } from './announcements/admin-announcements.service'
+import { RealtimeModule } from '../realtime/realtime.module'
 import { NotificationsModule } from '../notifications/notifications.module'
 import { AdminAuditLogsController } from './audit-logs/admin-audit-logs.controller'
 import { AdminAuditLogsService } from './audit-logs/admin-audit-logs.service'
@@ -29,7 +30,7 @@ import { AdminHashtagsController } from './hashtags/admin-hashtags.controller'
 import { AdminHashtagsService } from './hashtags/admin-hashtags.service'
 
 @Module({
-  imports: [AuthModule, SettingsModule, NotificationsModule],
+  imports: [AuthModule, SettingsModule, NotificationsModule, RealtimeModule],
   controllers: [
     AdminAuthController,
     AdminDashboardController,

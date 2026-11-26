@@ -66,7 +66,13 @@ async function doRefresh(): Promise<boolean> {
 
 /** Banyak request bersamaan yang kena 401 hanya memicu satu panggilan refresh (AUTH-03). */
 export function refreshSession(): Promise<boolean> {
-  refreshing ??= doRefresh().finally(() => {
+  // Kunci lintas-tab: dua tab tidak boleh memutar refresh token yang sama bersamaan, karena server
+  // menganggap pemakaian ulang token sebagai pencurian dan mencabut semua sesi. Token dibaca ulang di dalam kunci.
+  const exclusive = () =>
+    typeof navigator !== 'undefined' && navigator.locks
+      ? (navigator.locks.request('rb-refresh', doRefresh) as unknown as Promise<boolean>)
+      : doRefresh()
+  refreshing ??= exclusive().finally(() => {
     refreshing = null
   })
   return refreshing

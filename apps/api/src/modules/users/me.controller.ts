@@ -15,6 +15,7 @@ import { UpdateProfileDto } from './dto/profile.dto'
 import { UpdatePrivacyDto } from './dto/privacy.dto'
 import { DeleteAccountDto } from './dto/delete-account.dto'
 import { UsersService } from './users.service'
+import { RateLimit, UPLOAD_PER_USER } from '../../common/rate-limit'
 
 @Controller('me')
 export class MeController {
@@ -43,6 +44,7 @@ export class MeController {
 
   @Post('avatar')
   @HttpCode(200)
+  @RateLimit(UPLOAD_PER_USER)
   @UseInterceptors(ImageFileInterceptor())
   avatar(@CurrentUser() user: AuthUser, @UploadedFile() file?: Express.Multer.File) {
     return this.users.setPhoto(user.id, 'avatar', file)
@@ -50,6 +52,7 @@ export class MeController {
 
   @Post('cover')
   @HttpCode(200)
+  @RateLimit(UPLOAD_PER_USER)
   @UseInterceptors(ImageFileInterceptor())
   cover(@CurrentUser() user: AuthUser, @UploadedFile() file?: Express.Multer.File) {
     return this.users.setPhoto(user.id, 'cover', file)

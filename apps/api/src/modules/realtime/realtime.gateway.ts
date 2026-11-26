@@ -77,6 +77,11 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     this.server.to(userRoom(userId)).emit(event, payload)
   }
 
+  /** Putus semua socket satu user (ban atau suspend): token dicek hanya saat connect, jadi harus diputus manual. */
+  disconnectUser(userId: string) {
+    this.server.in(userRoom(userId)).disconnectSockets(true)
+  }
+
   /** Koneksi aktif dan labelnya (Web atau Mobile) untuk satu user. */
   async clientsOf(userId: string): Promise<ClientKind[]> {
     const sockets = await this.server.in(userRoom(userId)).fetchSockets()

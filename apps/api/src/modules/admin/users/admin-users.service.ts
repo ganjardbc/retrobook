@@ -4,6 +4,7 @@ import { Prisma, Role, UserStatus } from '@prisma/client'
 import * as argon2 from 'argon2'
 import { AppException } from '../../../common/app-exception'
 import { PrismaService } from '../../../prisma/prisma.service'
+import { RealtimeGateway } from '../../realtime/realtime.gateway'
 import { AdminAuditService } from '../admin-audit.service'
 import type {
   AdminUsersQuery,
@@ -31,6 +32,7 @@ export class AdminUsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AdminAuditService,
+    private readonly realtime: RealtimeGateway,
   ) {}
 
   async list(query: AdminUsersQuery) {
@@ -84,7 +86,13 @@ export class AdminUsersService {
     return { ...user, postCount, commentCount, reportCount }
   }
 
-  updateStatus(adminId: string, id: string, dto: UpdateAdminUserStatusDto, ip?: string) {
+  async updateStatus(adminId: string, id: string, dto: UpdateAdminUserStatusDto, ip?: string) {
+    const result = await this.applyStatus(adminId, id, dto, ip)
+    if (dto.status !== UserStatus.ACTIVE) this.realtime.disconnectUser(id)
+    return result
+  }
+
+  private applyStatus(adminId: string, id: string, dto: UpdateAdminUserStatusDto, ip?: string) {
     return this.audit.execute(
       {
         adminId,

@@ -15,6 +15,7 @@ import { AuthUser, CurrentUser } from '../auth/current-user.decorator'
 import { MAX_IMAGE_BYTES } from '../uploads/image-type'
 import { AlbumsService } from './albums.service'
 import { CreateAlbumDto } from './dto/album.dto'
+import { RateLimit, UPLOAD_PER_USER } from '../../common/rate-limit'
 
 @Controller('albums')
 export class AlbumsController {
@@ -52,6 +53,7 @@ export class AlbumsController {
   }
 
   @Post(':id/photos')
+  @RateLimit(UPLOAD_PER_USER)
   @UseInterceptors(
     FilesInterceptor('files', 10, { limits: { fileSize: MAX_IMAGE_BYTES, files: 10 } }),
   )

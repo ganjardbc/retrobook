@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { Prisma, ReportTargetType, Role, UserStatus } from '@prisma/client'
 import { AppException } from '../../../common/app-exception'
 import { PrismaService } from '../../../prisma/prisma.service'
+import { RealtimeGateway } from '../../realtime/realtime.gateway'
 import { AdminAuditService } from '../admin-audit.service'
 import {
   AdminReportAction,
@@ -17,6 +18,7 @@ export class AdminReportsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AdminAuditService,
+    private readonly realtime: RealtimeGateway,
   ) {}
 
   async list(query: AdminReportsQuery) {
@@ -59,7 +61,7 @@ export class AdminReportsService {
   }
 
   /** ADM-10: satu panggilan memutuskan laporan, menjalankan aksi pada target, dan menulis audit dalam satu transaksi. */
-  decide(adminId: string, id: string, dto: DecideReportDto, ip?: string) {
+  async decide(adminId: string, id: string, dto: DecideReportDto, ip?: string) {
     if (dto.status === 'DISMISSED' && dto.action) {
       throw new AppException(
         422,
@@ -68,7 +70,8 @@ export class AdminReportsService {
       )
     }
     const note = dto.note?.trim() || undefined
-    return this.audit.execute(
+    let suspendedId: string | undefined
+    const result = await this.audit.execute(
       {
         adminId,
         action: `REPORT_${dto.status}${dto.action ? `_${dto.action}` : ''}`,
@@ -82,7 +85,8 @@ export class AdminReportsService {
         if (!report) throw new AppException(404, 'NOT_FOUND', 'Laporan tidak ditemukan')
         if (report.status !== 'PENDING')
           throw new AppException(409, 'ALREADY_HANDLED', 'Laporan sudah diputuskan')
-        if (dto.action) await this.apply(tx, report.targetType, report.targetId, dto.action)
+        if (dto.action)
+          suspendedId = await this.apply(tx, report.targetType, report.targetId, dto.action)
         const handledAt = new Date()
         await tx.report.update({
           where: { id },
@@ -96,6 +100,8 @@ export class AdminReportsService {
         }
       },
     )
+    if (suspendedId) this.realtime.disconnectUser(suspendedId)
+    return result
   }
 
   private async apply(
@@ -103,7 +109,7 @@ export class AdminReportsService {
     type: ReportTargetType,
     targetId: string,
     action: AdminReportAction,
-  ) {
+  ): Promise<string | undefined> {
     const gone = () => new AppException(404, 'NOT_FOUND', 'Target laporan tidak ditemukan')
     if (action === AdminReportAction.SUSPEND_USER) {
       const userId =
@@ -130,7 +136,7 @@ export class AdminReportsService {
         where: { userId: user.id, revokedAt: null },
         data: { revokedAt: new Date() },
       })
-      return
+      return user.id
     }
     if (type === 'USER')
       throw new AppException(
@@ -146,5 +152,6 @@ export class AdminReportsService {
         ? await tx.post.updateMany({ where, data })
         : await tx.comment.updateMany({ where, data })
     if (!updated.count) throw gone()
+    return undefined
   }
 }
