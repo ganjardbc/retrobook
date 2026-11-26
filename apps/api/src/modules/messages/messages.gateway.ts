@@ -36,14 +36,14 @@ export class MessagesGateway {
     return this.ack(async () => {
       // Bucket yang sama dengan REST (BR-10): socket bukan jalan pintas melewati batas.
       this.limiter.check(MESSAGE_PER_USER, socket.data.userId)
-      if (!isId(b.toUserId)) throw bad('toUserId tidak valid')
+      if (!isId(b.toUserId)) throw bad('Invalid toUserId')
       if (typeof b.content !== 'string' || b.content.length > MAX_MESSAGE_LENGTH * 2)
-        throw bad('Pesan tidak valid')
+        throw bad('Invalid message')
       if (
         b.clientId !== undefined &&
         (typeof b.clientId !== 'string' || !CLIENT_ID.test(b.clientId))
       ) {
-        throw bad('clientId tidak valid')
+        throw bad('Invalid clientId')
       }
       const { message } = await this.messages.send(
         socket.data.userId,
@@ -62,7 +62,7 @@ export class MessagesGateway {
   ): Promise<Ack<{ updated: number }>> {
     const fromUserId = (body as { fromUserId?: unknown } | null)?.fromUserId
     return this.ack(async () => {
-      if (!isId(fromUserId)) throw bad('fromUserId tidak valid')
+      if (!isId(fromUserId)) throw bad('Invalid fromUserId')
       return this.messages.markRead(socket.data.userId, fromUserId)
     })
   }

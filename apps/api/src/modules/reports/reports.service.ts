@@ -6,7 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service'
 import { VisibilityService } from '../visibility/visibility.service'
 import type { CreateReportDto } from './dto/report.dto'
 
-const notFound = () => new AppException(404, 'NOT_FOUND', 'Konten tidak ditemukan')
+const notFound = () => new AppException(404, 'NOT_FOUND', 'Content not found')
 
 @Injectable()
 export class ReportsService {
@@ -23,7 +23,7 @@ export class ReportsService {
   async create(reporterId: string, dto: CreateReportDto): Promise<ReportReceipt> {
     const ownerId = await this.ownerOf(reporterId, dto.targetType, dto.targetId)
     if (ownerId === reporterId) {
-      throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'Tidak bisa melaporkan diri sendiri')
+      throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'You cannot report yourself')
     }
     try {
       const row = await this.prisma.report.create({
@@ -45,7 +45,7 @@ export class ReportsService {
     } catch (e) {
       // Satu laporan per pelapor per target: kendala UNIQUE yang memutuskan (aman dari dua permintaan bersamaan).
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new AppException(409, 'ALREADY_REPORTED', 'Kamu sudah melaporkan ini')
+        throw new AppException(409, 'ALREADY_REPORTED', 'You have already reported this')
       }
       throw e
     }

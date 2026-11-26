@@ -38,7 +38,7 @@ export class AdminHashtagsService {
       },
       async (tx) => {
         const updated = await tx.hashtag.updateMany({ where: { id }, data: { hidden } })
-        if (!updated.count) throw new AppException(404, 'NOT_FOUND', 'Hashtag tidak ditemukan')
+        if (!updated.count) throw new AppException(404, 'NOT_FOUND', 'Hashtag not found')
         return { id, hidden }
       },
     )

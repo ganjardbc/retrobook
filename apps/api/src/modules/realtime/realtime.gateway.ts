@@ -68,7 +68,7 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       await this.prisma.user.update({ where: { id: userId }, data: { lastSeenAt: new Date() } })
       await this.broadcastPresence(userId, false)
     } catch (e) {
-      this.log.warn(`presence offline gagal untuk user ${userId}: ${String(e)}`)
+      this.log.warn(`offline presence failed for user ${userId}: ${String(e)}`)
     }
   }
 

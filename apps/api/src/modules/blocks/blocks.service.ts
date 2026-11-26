@@ -22,13 +22,13 @@ export class BlocksService {
 
   async block(blockerId: string, blockedId: string): Promise<{ userId: string }> {
     if (blockerId === blockedId) {
-      throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'Tidak bisa memblokir diri sendiri')
+      throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'You cannot block yourself')
     }
     const target = await this.prisma.user.findFirst({
       where: { id: blockedId, deletedAt: null, status: { not: 'BANNED' } },
       select: { id: true },
     })
-    if (!target) throw new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemukan')
+    if (!target) throw new AppException(404, 'NOT_FOUND', 'User not found')
 
     const pair = pairOf(blockerId, blockedId)
     await this.prisma.$transaction(async (tx) => {
@@ -44,7 +44,7 @@ export class BlocksService {
 
   async unblock(blockerId: string, blockedId: string): Promise<void> {
     const { count } = await this.prisma.block.deleteMany({ where: { blockerId, blockedId } })
-    if (!count) throw new AppException(404, 'NOT_FOUND', 'Blokir tidak ditemukan')
+    if (!count) throw new AppException(404, 'NOT_FOUND', 'Block not found')
   }
 
   async list(blockerId: string, limit: number, cursor?: string): Promise<Paged<UserSummary>> {

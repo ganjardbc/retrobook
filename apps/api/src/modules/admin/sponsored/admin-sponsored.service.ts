@@ -16,7 +16,7 @@ const select = {
   endsAt: true,
   createdAt: true,
 } as const
-const notFound = () => new AppException(404, 'NOT_FOUND', 'Promosi tidak ditemukan')
+const notFound = () => new AppException(404, 'NOT_FOUND', 'Promo not found')
 const toDate = (v: string | null | undefined) =>
   v === undefined ? undefined : v === null ? null : new Date(v)
 
@@ -105,7 +105,7 @@ export class AdminSponsoredService {
 
   private assertWindow(startsAt: Date | null, endsAt: Date | null) {
     if (startsAt && endsAt && endsAt <= startsAt) {
-      throw new AppException(400, 'VALIDATION_FAILED', 'Waktu selesai harus setelah waktu mulai')
+      throw new AppException(400, 'VALIDATION_FAILED', 'End time must be after start time')
     }
   }
 }

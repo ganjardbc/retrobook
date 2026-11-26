@@ -18,6 +18,6 @@ export class RolesGuard implements CanActivate {
 
     const user = context.switchToHttp().getRequest<{ user?: AuthUser }>().user
     if (user && roles.includes(user.role)) return true
-    throw new AppException(403, 'FORBIDDEN', 'Akses hanya untuk administrator')
+    throw new AppException(403, 'FORBIDDEN', 'Administrators only')
   }
 }

@@ -33,7 +33,7 @@ const toDto = (r: Row): ChatMessage => ({
   createdAt: r.createdAt.toISOString(),
 })
 
-const noUser = () => new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemukan')
+const noUser = () => new AppException(404, 'NOT_FOUND', 'User not found')
 
 /**
  * Chat 1-ke-1 (CHT-01). Hanya antar teman ACCEPTED yang tidak saling blokir; pemeriksaan dilakukan di
@@ -67,9 +67,9 @@ export class MessagesService {
     clientId?: string,
   ): Promise<{ message: ChatMessage; duplicate: boolean }> {
     const content = rawContent.trim()
-    if (!content) throw new AppException(400, 'VALIDATION_FAILED', 'Pesan tidak boleh kosong')
+    if (!content) throw new AppException(400, 'VALIDATION_FAILED', 'Message must not be empty')
     if (content.length > MAX_MESSAGE_LENGTH) {
-      throw new AppException(400, 'VALIDATION_FAILED', 'Pesan maksimal 2.000 karakter')
+      throw new AppException(400, 'VALIDATION_FAILED', 'Message must be at most 2,000 characters')
     }
     await this.assertPartner(senderId, toUserId)
 
@@ -364,11 +364,7 @@ export class MessagesService {
 
   private async assertPartner(viewerId: string, otherId: string) {
     if (viewerId === otherId) {
-      throw new AppException(
-        422,
-        'SELF_ACTION_NOT_ALLOWED',
-        'Tidak bisa mengirim pesan ke diri sendiri',
-      )
+      throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'You cannot message yourself')
     }
     const ok = await this.prisma.user.count({
       where: {

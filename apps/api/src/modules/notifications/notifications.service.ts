@@ -105,7 +105,7 @@ export class NotificationsService {
     try {
       this.push(input.userId, await this.create(input))
     } catch (e) {
-      this.log.warn(`notifikasi ${input.type} untuk user ${input.userId} gagal: ${String(e)}`)
+      this.log.warn(`notification ${input.type} for user ${input.userId} failed: ${String(e)}`)
     }
   }
 
@@ -118,7 +118,7 @@ export class NotificationsService {
       })
       for (const { userId, ...row } of rows) this.push(userId, this.toDto(row))
     } catch (e) {
-      this.log.warn(`push pengumuman ${announcementId} gagal: ${String(e)}`)
+      this.log.warn(`announcement push ${announcementId} failed: ${String(e)}`)
     }
   }
 

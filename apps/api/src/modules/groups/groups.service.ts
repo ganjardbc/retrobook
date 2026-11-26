@@ -47,7 +47,7 @@ export class GroupsService {
 
   async create(userId: string, dto: CreateGroupDto): Promise<GroupSummary> {
     const name = dto.name.trim()
-    if (!name) throw new AppException(400, 'VALIDATION_FAILED', 'Nama grup wajib diisi')
+    if (!name) throw new AppException(400, 'VALIDATION_FAILED', 'Group name is required')
     const group = await this.prisma.$transaction(async (tx) => {
       const created = await tx.group.create({
         data: {
@@ -90,7 +90,7 @@ export class GroupsService {
     await this.assertAdmin(userId, groupId)
     const name = dto.name?.trim()
     if (dto.name !== undefined && !name)
-      throw new AppException(400, 'VALIDATION_FAILED', 'Nama grup wajib diisi')
+      throw new AppException(400, 'VALIDATION_FAILED', 'Group name is required')
     await this.prisma.group.update({
       where: { id: groupId },
       data: {
@@ -145,7 +145,7 @@ export class GroupsService {
         throw new AppException(
           409,
           'CONFLICT',
-          'Admin terakhir tidak bisa keluar selama masih ada anggota lain',
+          'The last admin cannot leave while other members remain',
         )
     }
     await this.prisma.groupMember.delete({ where: { groupId_userId: { groupId, userId } } })
@@ -181,11 +181,11 @@ export class GroupsService {
     })
     if (!member) throw this.notFound()
     if (member.role !== 'ADMIN')
-      throw new AppException(403, 'FORBIDDEN', 'Hanya admin grup yang bisa mengubah grup')
+      throw new AppException(403, 'FORBIDDEN', 'Only group admins can edit the group')
   }
 
   private notFound() {
-    return new AppException(404, 'NOT_FOUND', 'Grup tidak ditemukan')
+    return new AppException(404, 'NOT_FOUND', 'Group not found')
   }
 }
 

@@ -40,7 +40,7 @@ export class AdminBotsService {
   /** ADM-15: buat akun bot (isBot, tanpa login: kata sandi acak yang tidak diketahui siapa pun) beserta profilnya. */
   async create(adminId: string, dto: CreateBotDto, ip?: string) {
     if (RESERVED.has(dto.username.toLowerCase()))
-      throw new AppException(409, 'USERNAME_TAKEN', 'Username sudah dipakai')
+      throw new AppException(409, 'USERNAME_TAKEN', 'Username is already taken')
     const passwordHash = await argon2.hash(randomBytes(32).toString('hex'))
     try {
       return await this.audit.execute(
@@ -70,7 +70,7 @@ export class AdminBotsService {
       )
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new AppException(409, 'USERNAME_TAKEN', 'Username sudah dipakai')
+        throw new AppException(409, 'USERNAME_TAKEN', 'Username is already taken')
       }
       throw e
     }
@@ -88,7 +88,7 @@ export class AdminBotsService {
       },
       async (tx) => {
         const updated = await tx.botProfile.updateMany({ where: { userId }, data: dto })
-        if (!updated.count) throw new AppException(404, 'NOT_FOUND', 'Bot tidak ditemukan')
+        if (!updated.count) throw new AppException(404, 'NOT_FOUND', 'Bot not found')
         return tx.botProfile.findUniqueOrThrow({ where: { userId }, select })
       },
     )

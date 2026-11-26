@@ -24,7 +24,7 @@ export class OutboxMailer extends Mailer {
 
   async send(mail: Mail): Promise<void> {
     if (process.env.NODE_ENV === 'production') {
-      this.log.warn('Penyedia email belum dikonfigurasi; email tidak terkirim')
+      this.log.warn('Email provider is not configured; email was not sent')
       return
     }
     const dir = join(process.cwd(), 'outbox')

@@ -27,7 +27,7 @@ export class BotsService implements OnModuleInit, OnModuleDestroy {
     if (process.env.NODE_ENV === 'test' || process.env.BOTS_DISABLED === 'true') return
     const seconds = Number(process.env.BOT_TICK_SECONDS) || 60
     this.timer = setInterval(
-      () => void this.tick().catch((e) => this.log.warn(`tick gagal: ${String(e)}`)),
+      () => void this.tick().catch((e) => this.log.warn(`tick failed: ${String(e)}`)),
       seconds * 1000,
     )
     this.timer.unref()

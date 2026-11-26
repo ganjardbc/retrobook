@@ -7,7 +7,7 @@ import type { CreateAnnouncementDto, UpdateAnnouncementDto } from './admin-annou
 import { NEWEST_FIRST } from '../../../common/keyset'
 
 const select = { id: true, title: true, body: true, active: true, createdAt: true } as const
-const notFound = () => new AppException(404, 'NOT_FOUND', 'Pengumuman tidak ditemukan')
+const notFound = () => new AppException(404, 'NOT_FOUND', 'Announcement not found')
 
 @Injectable()
 export class AdminAnnouncementsService {

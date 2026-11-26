@@ -26,7 +26,7 @@ export class JwtAuthGuard implements CanActivate {
     const req = ctx.switchToHttp().getRequest()
     const [scheme, token] = String(req.headers.authorization ?? '').split(' ')
     if (scheme !== 'Bearer' || !token) {
-      throw new AppException(401, 'UNAUTHORIZED', 'Silakan login terlebih dahulu')
+      throw new AppException(401, 'UNAUTHORIZED', 'Please log in first')
     }
 
     let sub: string
@@ -37,7 +37,7 @@ export class JwtAuthGuard implements CanActivate {
       throw new AppException(
         401,
         expired ? 'TOKEN_EXPIRED' : 'UNAUTHORIZED',
-        expired ? 'Sesi kedaluwarsa' : 'Token tidak valid',
+        expired ? 'Session expired' : 'Invalid token',
       )
     }
 
@@ -45,16 +45,16 @@ export class JwtAuthGuard implements CanActivate {
       where: { id: sub },
       select: { id: true, role: true, status: true, deletedAt: true },
     })
-    if (!user || user.deletedAt) throw new AppException(401, 'UNAUTHORIZED', 'Token tidak valid')
+    if (!user || user.deletedAt) throw new AppException(401, 'UNAUTHORIZED', 'Invalid token')
     if (user.status === 'SUSPENDED') {
-      throw new AppException(403, 'ACCOUNT_SUSPENDED', 'Akun kamu ditangguhkan')
+      throw new AppException(403, 'ACCOUNT_SUSPENDED', 'Your account is suspended')
     }
     if (user.status === 'BANNED') {
-      throw new AppException(403, 'ACCOUNT_BANNED', 'Akun kamu diblokir')
+      throw new AppException(403, 'ACCOUNT_BANNED', 'Your account has been banned')
     }
     // BR-12: saat maintenance hanya admin yang lolos; status akun diperiksa lebih dulu.
     if (user.role !== 'ADMIN' && (await this.settings.get()).maintenanceMode) {
-      throw new AppException(403, 'MAINTENANCE_MODE', 'Sedang dalam pemeliharaan')
+      throw new AppException(403, 'MAINTENANCE_MODE', 'Down for maintenance')
     }
     req.user = { id: user.id, role: user.role }
     return true

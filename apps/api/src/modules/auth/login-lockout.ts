@@ -28,7 +28,7 @@ export class LoginLockout {
     const e = this.entries.get(this.key(identifier))
     const t = this.limiter.now()
     if (e && e.lockedUntil > t) {
-      throw tooMany(e.lockedUntil - t, 'Terlalu banyak percobaan masuk. Coba lagi nanti.')
+      throw tooMany(e.lockedUntil - t, 'Too many login attempts. Please try again later.')
     }
   }
 

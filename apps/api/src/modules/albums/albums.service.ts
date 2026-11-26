@@ -30,7 +30,7 @@ export class AlbumsService {
       where: { username, ...this.visibility.userWhere(viewerId) },
       select: { id: true },
     })
-    if (!owner) throw new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemukan')
+    if (!owner) throw new AppException(404, 'NOT_FOUND', 'User not found')
     return this.prisma.album.findMany({
       where: { AND: [{ ownerId: owner.id }, this.visibility.albumWhere(viewerId)] },
       orderBy: { createdAt: 'desc' },
@@ -43,7 +43,7 @@ export class AlbumsService {
 
   async create(ownerId: string, dto: CreateAlbumDto) {
     const name = dto.name.trim()
-    if (!name) throw new AppException(400, 'VALIDATION_FAILED', 'Nama album wajib diisi')
+    if (!name) throw new AppException(400, 'VALIDATION_FAILED', 'Album name is required')
     return this.prisma.album.create({ data: { ownerId, name, privacy: dto.privacy ?? 'FRIENDS' } })
   }
 
@@ -52,7 +52,7 @@ export class AlbumsService {
       where: { AND: [{ id: albumId }, this.visibility.albumWhere(viewerId)] },
       include: { photos: { orderBy: NEWEST_FIRST } },
     })
-    if (!album) throw new AppException(404, 'NOT_FOUND', 'Album tidak ditemukan')
+    if (!album) throw new AppException(404, 'NOT_FOUND', 'Album not found')
     return album
   }
 
@@ -60,8 +60,9 @@ export class AlbumsService {
     const album = await this.prisma.album.findFirst({
       where: { id: albumId, ownerId, deletedAt: null },
     })
-    if (!album) throw new AppException(404, 'NOT_FOUND', 'Album tidak ditemukan')
-    if (!files?.length) throw new AppException(400, 'VALIDATION_FAILED', 'Pilih minimal satu foto')
+    if (!album) throw new AppException(404, 'NOT_FOUND', 'Album not found')
+    if (!files?.length)
+      throw new AppException(400, 'VALIDATION_FAILED', 'Choose at least one photo')
     const urls = await Promise.all(files.map((file) => this.uploads.saveImage(file)))
     return this.prisma.photo
       .createMany({ data: urls.map((url) => ({ albumId, ownerId, url, caption: '' })) })
@@ -80,13 +81,13 @@ export class AlbumsService {
       where: { id: albumId, ownerId, deletedAt: null },
       data: { deletedAt: new Date() },
     })
-    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Album tidak ditemukan')
+    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Album not found')
   }
 
   async removePhoto(ownerId: string, albumId: string, photoId: string) {
     const { count } = await this.prisma.photo.deleteMany({
       where: { id: photoId, albumId, ownerId, album: { deletedAt: null } },
     })
-    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Foto tidak ditemukan')
+    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Photo not found')
   }
 }

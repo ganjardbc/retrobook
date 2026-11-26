@@ -12,9 +12,9 @@ import type {
   UpdateAdminUserStatusDto,
 } from './admin-users.dto'
 
-const userNotFound = () => new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemukan')
+const userNotFound = () => new AppException(404, 'NOT_FOUND', 'User not found')
 const lastAdmin = () =>
-  new AppException(422, 'LAST_ADMIN', 'Tidak bisa menghapus atau menonaktifkan admin terakhir')
+  new AppException(422, 'LAST_ADMIN', 'Cannot delete or deactivate the last admin')
 
 const listSelect = {
   id: true,

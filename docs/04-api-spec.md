@@ -25,10 +25,10 @@ Dokumen ini adalah kontrak antara `apps/api` (NestJS) dan dua frontend (`apps/we
 Semua error memakai bentuk yang sama:
 
 ```json
-{ "statusCode": 400, "message": "Password minimal 8 karakter", "code": "VALIDATION_FAILED" }
+{ "statusCode": 400, "message": "Password must be at least 8 characters", "code": "VALIDATION_FAILED" }
 ```
 
-`message` aman ditampilkan ke pengguna. Untuk validasi banyak field, `message` boleh berupa array string.
+`message` selalu berbahasa Inggris (bahasa antarmuka mengikuti `code`, bukan teks ini) dan aman ditampilkan ke pengguna. Untuk validasi banyak field, `message` boleh berupa array string.
 
 | Status | Kapan | Kode contoh |
 |---|---|---|

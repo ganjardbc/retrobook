@@ -66,7 +66,7 @@ export class AdminReportsService {
       throw new AppException(
         422,
         'VALIDATION_FAILED',
-        'Laporan yang diabaikan tidak boleh disertai aksi',
+        'A dismissed report must not include an action',
       )
     }
     const note = dto.note?.trim() || undefined
@@ -82,9 +82,9 @@ export class AdminReportsService {
       },
       async (tx) => {
         const report = await tx.report.findUnique({ where: { id } })
-        if (!report) throw new AppException(404, 'NOT_FOUND', 'Laporan tidak ditemukan')
+        if (!report) throw new AppException(404, 'NOT_FOUND', 'Report not found')
         if (report.status !== 'PENDING')
-          throw new AppException(409, 'ALREADY_HANDLED', 'Laporan sudah diputuskan')
+          throw new AppException(409, 'ALREADY_HANDLED', 'Report has already been decided')
         if (dto.action)
           suspendedId = await this.apply(tx, report.targetType, report.targetId, dto.action)
         const handledAt = new Date()
@@ -110,7 +110,7 @@ export class AdminReportsService {
     targetId: string,
     action: AdminReportAction,
   ): Promise<string | undefined> {
-    const gone = () => new AppException(404, 'NOT_FOUND', 'Target laporan tidak ditemukan')
+    const gone = () => new AppException(404, 'NOT_FOUND', 'Report target not found')
     if (action === AdminReportAction.SUSPEND_USER) {
       const userId =
         type === 'USER'
@@ -128,7 +128,7 @@ export class AdminReportsService {
         throw new AppException(
           422,
           'ADMIN_TARGET_NOT_ALLOWED',
-          'Admin tidak bisa diskors lewat laporan; ubah role lebih dulu',
+          'An admin cannot be suspended through a report; change the role first',
         )
       }
       await tx.user.update({ where: { id: user.id }, data: { status: UserStatus.SUSPENDED } })
@@ -142,7 +142,7 @@ export class AdminReportsService {
       throw new AppException(
         422,
         'VALIDATION_FAILED',
-        'Aksi konten tidak berlaku untuk laporan profil',
+        'Content actions do not apply to profile reports',
       )
     const data =
       action === AdminReportAction.HIDE_CONTENT ? { hidden: true } : { deletedAt: new Date() }

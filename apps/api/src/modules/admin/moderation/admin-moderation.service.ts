@@ -9,7 +9,7 @@ import {
   type AdminModerationQuery,
 } from './admin-moderation.dto'
 
-const notFound = (kind: string) => new AppException(404, 'NOT_FOUND', `${kind} tidak ditemukan`)
+const notFound = (kind: string) => new AppException(404, 'NOT_FOUND', `${kind} not found`)
 const postSelect = {
   id: true,
   content: true,
@@ -205,7 +205,7 @@ export class AdminModerationService {
           kind === 'POST'
             ? await tx.post.updateMany({ where, data: { hidden } })
             : await tx.comment.updateMany({ where, data: { hidden } })
-        if (!updated.count) throw notFound(kind === 'POST' ? 'Post' : 'Komentar')
+        if (!updated.count) throw notFound(kind === 'POST' ? 'Post' : 'Comment')
         return { id, hidden }
       },
     )
@@ -228,7 +228,7 @@ export class AdminModerationService {
           kind === 'POST'
             ? await tx.post.updateMany({ where, data: { deletedAt } })
             : await tx.comment.updateMany({ where, data: { deletedAt } })
-        if (!updated.count) throw notFound(kind === 'POST' ? 'Post' : 'Komentar')
+        if (!updated.count) throw notFound(kind === 'POST' ? 'Post' : 'Comment')
         return { id, deletedAt: deletedAt.toISOString() }
       },
     )
@@ -260,7 +260,7 @@ export class AdminModerationService {
           kind === 'POST'
             ? await tx.post.updateMany({ where, data })
             : await tx.comment.updateMany({ where, data })
-        if (updated.count !== ids.length) throw notFound(kind === 'POST' ? 'Post' : 'Komentar')
+        if (updated.count !== ids.length) throw notFound(kind === 'POST' ? 'Post' : 'Comment')
         return { affected: updated.count, action }
       },
     )

@@ -39,7 +39,7 @@ export class AdminBlockedWordsService {
       )
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new AppException(409, 'CONFLICT', 'Kata sudah ada')
+        throw new AppException(409, 'CONFLICT', 'Word already exists')
       }
       throw e
     }
@@ -51,7 +51,7 @@ export class AdminBlockedWordsService {
       { adminId, action: 'BLOCKED_WORD_REMOVE', targetType: 'BLOCKED_WORD', targetId: id, ip },
       async (tx) => {
         const deleted = await tx.blockedWord.deleteMany({ where: { id } })
-        if (!deleted.count) throw new AppException(404, 'NOT_FOUND', 'Kata tidak ditemukan')
+        if (!deleted.count) throw new AppException(404, 'NOT_FOUND', 'Word not found')
         return { id }
       },
     )

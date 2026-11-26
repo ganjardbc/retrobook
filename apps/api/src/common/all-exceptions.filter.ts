@@ -39,7 +39,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     )
     res.status(500).json({
       statusCode: 500,
-      message: 'Terjadi kesalahan pada server',
+      message: 'Internal server error',
       code: 'INTERNAL_ERROR',
     })
   }

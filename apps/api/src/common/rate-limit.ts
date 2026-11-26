@@ -83,7 +83,7 @@ export class RateLimiter {
   }
 }
 
-export const tooMany = (waitMs: number, message = 'Terlalu banyak permintaan. Coba lagi nanti.') =>
+export const tooMany = (waitMs: number, message = 'Too many requests. Please try again later.') =>
   new AppException(429, 'RATE_LIMITED', message, Math.max(1, Math.ceil(waitMs / 1000)))
 
 const RULE = 'rate-rule'

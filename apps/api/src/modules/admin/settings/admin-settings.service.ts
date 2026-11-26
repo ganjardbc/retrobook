@@ -17,7 +17,7 @@ export class AdminSettingsService {
   async update(adminId: string, dto: UpdateAdminSettingsDto, ip?: string): Promise<SystemSettings> {
     const changes = (Object.keys(KEYS) as (keyof typeof KEYS)[]).filter((k) => dto[k] !== undefined)
     if (!changes.length)
-      throw new AppException(400, 'VALIDATION_FAILED', 'Tidak ada pengaturan yang diubah')
+      throw new AppException(400, 'VALIDATION_FAILED', 'No settings were changed')
     await this.audit.execute(
       {
         adminId,

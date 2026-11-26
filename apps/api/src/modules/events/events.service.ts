@@ -58,16 +58,16 @@ export class EventsService {
       where: { id: eventId, creator: this.visibility.userWhere(userId) },
       include: this.include(userId),
     })
-    if (!event) throw new AppException(404, 'NOT_FOUND', 'Event tidak ditemukan')
+    if (!event) throw new AppException(404, 'NOT_FOUND', 'Event not found')
     return this.view(event)
   }
 
   async create(userId: string, dto: CreateEventDto) {
     if (!dto.title.trim())
-      throw new AppException(400, 'VALIDATION_FAILED', 'Nama event wajib diisi')
+      throw new AppException(400, 'VALIDATION_FAILED', 'Event name is required')
     const startsAt = new Date(dto.startsAt)
     if (Number.isNaN(startsAt.getTime()) || startsAt.getTime() <= Date.now()) {
-      throw new AppException(400, 'VALIDATION_FAILED', 'Waktu event harus berada di masa depan')
+      throw new AppException(400, 'VALIDATION_FAILED', 'Event time must be in the future')
     }
     const row = await this.prisma.event.create({
       data: {
@@ -96,7 +96,7 @@ export class EventsService {
       },
       select: { id: true },
     })
-    if (!event) throw new AppException(404, 'NOT_FOUND', 'Event tidak ditemukan')
+    if (!event) throw new AppException(404, 'NOT_FOUND', 'Event not found')
     await this.prisma.eventRsvp.upsert({
       where: { eventId_userId: { eventId, userId } },
       create: { eventId, userId, status },

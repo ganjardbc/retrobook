@@ -20,7 +20,7 @@ const commentSelect = {
 
 type Row = Prisma.CommentGetPayload<{ select: typeof commentSelect }>
 
-const postNotFound = () => new AppException(404, 'NOT_FOUND', 'Post tidak ditemukan')
+const postNotFound = () => new AppException(404, 'NOT_FOUND', 'Post not found')
 
 @Injectable()
 export class CommentsService {
@@ -73,9 +73,9 @@ export class CommentsService {
     const content = dto.content ?? ''
     const imageUrl = dto.imageUrl ?? null
     if (!content.trim() && !imageUrl)
-      throw new AppException(400, 'VALIDATION_FAILED', 'Komentar tidak boleh kosong')
+      throw new AppException(400, 'VALIDATION_FAILED', 'Comment must not be empty')
     if (imageUrl && !(await this.uploads.exists(imageUrl))) {
-      throw new AppException(400, 'VALIDATION_FAILED', 'Gambar tidak ditemukan; unggah ulang')
+      throw new AppException(400, 'VALIDATION_FAILED', 'Image not found; please upload it again')
     }
     const row = await this.prisma.comment.create({
       data: {
@@ -103,11 +103,11 @@ export class CommentsService {
       where: { AND: [{ id: commentId }, this.visibility.commentWhere(viewerId)] },
       select: { id: true, postId: true, authorId: true, post: { select: { authorId: true } } },
     })
-    if (!comment) throw new AppException(404, 'NOT_FOUND', 'Komentar tidak ditemukan')
+    if (!comment) throw new AppException(404, 'NOT_FOUND', 'Comment not found')
     // Komentar di post yang tidak terlihat oleh viewer diperlakukan seperti tidak ada.
-    await this.assertPostVisible(viewerId, comment.postId, 'Komentar tidak ditemukan')
+    await this.assertPostVisible(viewerId, comment.postId, 'Comment not found')
     if (comment.authorId !== viewerId && comment.post.authorId !== viewerId) {
-      throw new AppException(403, 'FORBIDDEN', 'Tidak boleh menghapus komentar ini')
+      throw new AppException(403, 'FORBIDDEN', 'You may not delete this comment')
     }
     await this.prisma.comment.update({ where: { id: commentId }, data: { deletedAt: new Date() } })
   }

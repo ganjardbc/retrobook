@@ -113,7 +113,7 @@ export class LikesService {
       where: { AND: [{ id: postId }, this.visibility.postWhere(viewerId, true)] },
       select: { id: true, authorId: true },
     })
-    if (!post) throw new AppException(404, 'NOT_FOUND', 'Post tidak ditemukan')
+    if (!post) throw new AppException(404, 'NOT_FOUND', 'Post not found')
     return post
   }
 
@@ -125,7 +125,7 @@ export class LikesService {
       },
       select: { id: true },
     })
-    if (!comment) throw new AppException(404, 'NOT_FOUND', 'Komentar tidak ditemukan')
+    if (!comment) throw new AppException(404, 'NOT_FOUND', 'Comment not found')
   }
 
   private async commentState(viewerId: string, commentId: string): Promise<LikeState> {

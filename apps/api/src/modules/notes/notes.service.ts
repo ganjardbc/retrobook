@@ -54,7 +54,7 @@ export class NotesService {
     const title = dto.title.trim()
     const body = dto.body.trim()
     if (!title || !body)
-      throw new AppException(400, 'VALIDATION_FAILED', 'Judul dan isi note wajib diisi')
+      throw new AppException(400, 'VALIDATION_FAILED', 'Note title and body are required')
     return this.prisma.note.create({
       data: { authorId, title, body, privacy: dto.privacy ?? 'FRIENDS' },
     })
@@ -65,11 +65,12 @@ export class NotesService {
     const data: Prisma.NoteUpdateInput = {}
     if (dto.title !== undefined) {
       if (!dto.title.trim())
-        throw new AppException(400, 'VALIDATION_FAILED', 'Judul note wajib diisi')
+        throw new AppException(400, 'VALIDATION_FAILED', 'Note title is required')
       data.title = dto.title.trim()
     }
     if (dto.body !== undefined) {
-      if (!dto.body.trim()) throw new AppException(400, 'VALIDATION_FAILED', 'Isi note wajib diisi')
+      if (!dto.body.trim())
+        throw new AppException(400, 'VALIDATION_FAILED', 'Note body is required')
       data.body = dto.body.trim()
     }
     if (dto.privacy !== undefined) data.privacy = dto.privacy
@@ -105,6 +106,6 @@ export class NotesService {
   }
 
   private notFound() {
-    return new AppException(404, 'NOT_FOUND', 'Note tidak ditemukan')
+    return new AppException(404, 'NOT_FOUND', 'Note not found')
   }
 }

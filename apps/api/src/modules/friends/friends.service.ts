@@ -24,7 +24,7 @@ const userSummary = {
   isBot: true,
 } satisfies Prisma.UserSelect
 
-const noUser = () => new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemukan')
+const noUser = () => new AppException(404, 'NOT_FOUND', 'User not found')
 
 /**
  * Pertemanan (BR-01): SATU baris per pasangan, kunci (pair_low_id, pair_high_id) = (min, max).
@@ -43,11 +43,7 @@ export class FriendsService {
   /** FRD-01. Permintaan silang (lawan sudah mengirim) langsung menjadi ACCEPTED. */
   async sendRequest(viewerId: string, targetId: string): Promise<FriendshipResult> {
     if (viewerId === targetId) {
-      throw new AppException(
-        422,
-        'SELF_ACTION_NOT_ALLOWED',
-        'Tidak bisa berteman dengan diri sendiri',
-      )
+      throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'You cannot friend yourself')
     }
     const target = await this.prisma.user.findFirst({
       where: { id: targetId, ...this.visibility.userWhere(viewerId) },
@@ -77,7 +73,7 @@ export class FriendsService {
         if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002')) throw e
       }
     }
-    throw new AppException(409, 'CONFLICT', 'Permintaan bertabrakan, coba lagi')
+    throw new AppException(409, 'CONFLICT', 'Requests collided; please try again')
   }
 
   /** FRD-02: hanya penerima yang bisa menerima. Diulang tetap aman. */
@@ -89,7 +85,7 @@ export class FriendsService {
         requester: this.visibility.userWhere(viewerId),
       },
     })
-    if (!row) throw new AppException(404, 'NOT_FOUND', 'Permintaan tidak ditemukan')
+    if (!row) throw new AppException(404, 'NOT_FOUND', 'Request not found')
     if (row.status === 'ACCEPTED') return { userId: requesterId, status: 'ACCEPTED' }
     await this.acceptRow(row.id, requesterId, viewerId)
     return { userId: requesterId, status: 'ACCEPTED' }
@@ -100,7 +96,7 @@ export class FriendsService {
     const { count } = await this.prisma.friendship.deleteMany({
       where: { ...pairOf(viewerId, otherId), status: 'PENDING' },
     })
-    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Permintaan tidak ditemukan')
+    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Request not found')
   }
 
   /** FRD-03: menghapus baris untuk kedua arah. */
@@ -108,7 +104,7 @@ export class FriendsService {
     const { count } = await this.prisma.friendship.deleteMany({
       where: { ...pairOf(viewerId, otherId), status: 'ACCEPTED' },
     })
-    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Bukan teman')
+    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Not a friend')
   }
 
   /** Permintaan masuk yang PENDING, terbaru dulu; pengirim yang BANNED/terhapus disembunyikan. */
@@ -217,10 +213,10 @@ export class FriendsService {
     targetId: string,
   ): Promise<FriendshipResult> {
     if (row.status === 'ACCEPTED') {
-      throw new AppException(409, 'ALREADY_FRIENDS', 'Kalian sudah berteman')
+      throw new AppException(409, 'ALREADY_FRIENDS', 'You are already friends')
     }
     if (row.requesterId === viewerId) {
-      throw new AppException(409, 'REQUEST_PENDING', 'Permintaan sudah dikirim')
+      throw new AppException(409, 'REQUEST_PENDING', 'Request already sent')
     }
     await this.acceptRow(row.id, targetId, viewerId)
     return { userId: targetId, status: 'ACCEPTED' }

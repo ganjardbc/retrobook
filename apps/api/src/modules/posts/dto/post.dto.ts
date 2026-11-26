@@ -22,20 +22,20 @@ export const UPLOAD_URL = /^\/uploads\/[0-9a-f]{32}\.(jpg|png|webp)$/
 
 export class UpdatePostDto {
   @IsOptional()
-  @IsIn(POST_FEELINGS, { message: 'Feeling tidak tersedia' })
+  @IsIn(POST_FEELINGS, { message: 'Feeling is not available' })
   feeling?: (typeof POST_FEELINGS)[number] | null
 
   @IsOptional()
   @IsString()
-  @MaxLength(5000, { message: 'Post maksimal 5.000 karakter' })
+  @MaxLength(5000, { message: 'Post must be at most 5,000 characters' })
   content?: string
 
   @IsOptional()
-  @Matches(UPLOAD_URL, { message: 'imageUrl harus berasal dari unggahan' })
+  @Matches(UPLOAD_URL, { message: 'imageUrl must come from an upload' })
   imageUrl?: string | null
 
   @IsOptional()
-  @IsEnum(Privacy, { message: 'Privasi harus PUBLIC, FRIENDS, atau ONLY_ME' })
+  @IsEnum(Privacy, { message: 'Privacy must be PUBLIC, FRIENDS, or ONLY_ME' })
   privacy?: Privacy
 }
 
@@ -53,7 +53,7 @@ export class CreatePostDto extends UpdatePostDto {
   /** WAL-02: teman yang di-tag (maksimal 10). */
   @IsOptional()
   @IsArray()
-  @ArrayMaxSize(10, { message: 'Maksimal 10 teman yang di-tag' })
+  @ArrayMaxSize(10, { message: 'At most 10 friends can be tagged' })
   @ArrayUnique()
   @IsUUID('4', { each: true })
   taggedUserIds?: string[]
@@ -63,11 +63,11 @@ export class CreatePostDto extends UpdatePostDto {
 export class SharePostDto {
   @IsOptional()
   @IsString()
-  @MaxLength(5000, { message: 'Post maksimal 5.000 karakter' })
+  @MaxLength(5000, { message: 'Post must be at most 5,000 characters' })
   content?: string
 
   @IsOptional()
-  @IsEnum(Privacy, { message: 'Privasi harus PUBLIC, FRIENDS, atau ONLY_ME' })
+  @IsEnum(Privacy, { message: 'Privacy must be PUBLIC, FRIENDS, or ONLY_ME' })
   privacy?: Privacy
 }
 
@@ -87,7 +87,7 @@ export class CursorQueryDto {
 /** GET /feed: `sort=recent` (bawaan) atau `sort=top` (Top Stories, urut jumlah like; POST-09). */
 export class FeedQueryDto extends CursorQueryDto {
   @IsOptional()
-  @IsIn(FEED_SORTS, { message: 'sort harus recent atau top' })
+  @IsIn(FEED_SORTS, { message: 'sort must be recent or top' })
   sort: FeedSort = 'recent'
 }
 

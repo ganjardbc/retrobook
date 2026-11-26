@@ -9,7 +9,7 @@ import { VisibilityService } from '../visibility/visibility.service'
 
 export type PokeItem = { user: UserSummary; createdAt: string }
 
-const noUser = () => new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemukan')
+const noUser = () => new AppException(404, 'NOT_FOUND', 'User not found')
 
 /**
  * POK-01. Poke hanya antar teman (keputusan D-6, usulan dokumen). Satu baris per arah
@@ -27,7 +27,7 @@ export class PokesService {
   /** Poke atau poke balik. Bukan teman, diblokir, atau tidak ada: 404 yang sama (tidak membocorkan). */
   async poke(viewerId: string, targetId: string): Promise<{ userId: string; createdAt: string }> {
     if (viewerId === targetId) {
-      throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'Tidak bisa mem-poke diri sendiri')
+      throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'You cannot poke yourself')
     }
     const target = await this.prisma.user.findFirst({
       where: {
@@ -96,7 +96,7 @@ export class PokesService {
       where: { fromUserId: fromId, toUserId: viewerId, seenAt: null },
       data: { seenAt: new Date() },
     })
-    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Poke tidak ditemukan')
+    if (count === 0) throw new AppException(404, 'NOT_FOUND', 'Poke not found')
   }
 
   /** Dua poke serentak bisa berlomba membuat baris yang sama; yang kalah mengulang sebagai update. */

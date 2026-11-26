@@ -9,6 +9,6 @@ const UNIT_MS = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 } as const
 /** '15m' | '30d' | '45s' | '12h' -> milidetik. */
 export function ttlToMs(ttl: string): number {
   const m = /^(\d+)([smhd])$/.exec(ttl)
-  if (!m) throw new Error(`TTL tidak valid: ${ttl}`)
+  if (!m) throw new Error(`Invalid TTL: ${ttl}`)
   return Number(m[1]) * UNIT_MS[m[2] as keyof typeof UNIT_MS]
 }

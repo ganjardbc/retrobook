@@ -13,7 +13,7 @@ import {
 export class SearchQueryDto {
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
-  @MinLength(2, { message: 'Kata kunci minimal 2 karakter' })
+  @MinLength(2, { message: 'Search query must be at least 2 characters' })
   @MaxLength(80)
   q!: string
 

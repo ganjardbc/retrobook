@@ -48,9 +48,9 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
       where: { id: userId, deletedAt: null },
       select: { passwordHash: true },
     })
-    if (!user) throw new AppException(404, 'NOT_FOUND', 'Akun tidak ditemukan')
+    if (!user) throw new AppException(404, 'NOT_FOUND', 'Account not found')
     if (!(await argon2.verify(user.passwordHash, password))) {
-      throw new AppException(403, 'INVALID_CREDENTIALS', 'Password tidak cocok')
+      throw new AppException(403, 'INVALID_CREDENTIALS', 'Password does not match')
     }
     const now = new Date()
     await this.prisma.$transaction([
@@ -123,7 +123,7 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
     const data: Prisma.UserUpdateInput = {}
     if (dto.displayName !== undefined) {
       const name = dto.displayName.trim()
-      if (!name) throw new AppException(400, 'VALIDATION_FAILED', 'Nama tidak boleh kosong')
+      if (!name) throw new AppException(400, 'VALIDATION_FAILED', 'Name must not be empty')
       data.displayName = name
     }
     for (const key of ['bio', 'hometown', 'currentCity', 'workplace', 'school'] as const) {
@@ -271,7 +271,7 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
     const user = await this.prisma.user.findFirst({
       where: { username, ...this.visibility.userWhere(viewerId) },
     })
-    if (!user) throw new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemukan')
+    if (!user) throw new AppException(404, 'NOT_FOUND', 'User not found')
     return user
   }
 }
@@ -296,7 +296,7 @@ function parseBirthday(v: string | null | undefined): Date | null {
   const date = new Date(`${v}T00:00:00.000Z`)
   const valid = !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === v
   if (!valid || v < '1900-01-01' || date.getTime() > Date.now()) {
-    throw new AppException(400, 'VALIDATION_FAILED', 'Tanggal lahir tidak valid')
+    throw new AppException(400, 'VALIDATION_FAILED', 'Invalid birthday')
   }
   return date
 }

@@ -49,7 +49,7 @@ export class LifeEventsService {
       date.toISOString().slice(0, 10) !== dto.happenedOn ||
       date.getTime() > Date.now()
     ) {
-      throw new AppException(400, 'VALIDATION_FAILED', 'Data Life Event tidak valid')
+      throw new AppException(400, 'VALIDATION_FAILED', 'Invalid Life Event data')
     }
     return this.prisma.lifeEvent.create({
       data: { userId, kind: dto.kind, title, happenedOn: date, privacy: dto.privacy ?? 'FRIENDS' },
@@ -66,6 +66,6 @@ export class LifeEventsService {
   }
 
   private notFound() {
-    return new AppException(404, 'NOT_FOUND', 'Life Event tidak ditemukan')
+    return new AppException(404, 'NOT_FOUND', 'Life Event not found')
   }
 }

@@ -52,7 +52,7 @@ const postInclude = (likerWhere: Prisma.LikeWhereInput, userWhere: Prisma.UserWh
 
 type PostRow = Prisma.PostGetPayload<{ include: ReturnType<typeof postInclude> }>
 
-const notFound = () => new AppException(404, 'NOT_FOUND', 'Post tidak ditemukan')
+const notFound = () => new AppException(404, 'NOT_FOUND', 'Post not found')
 const TRENDING_SIZE = 10
 const TOP_WINDOW = 2000
 const SEARCH_BATCH = 500
@@ -61,7 +61,7 @@ const TRENDING_WINDOW_MS = 24 * 60 * 60 * 1000
 // SRC-02 dan hashtag publik: hanya post publik biasa (bukan wall post) yang tidak disembunyikan admin.
 const publicPost: Prisma.PostWhereInput = { privacy: 'PUBLIC', wallOwnerId: null, hidden: false }
 
-const empty = () => new AppException(400, 'VALIDATION_FAILED', 'Post tidak boleh kosong')
+const empty = () => new AppException(400, 'VALIDATION_FAILED', 'Post must not be empty')
 
 const yearRange = (year: number): Prisma.PostWhereInput => ({
   createdAt: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) },
@@ -90,13 +90,13 @@ export class PostsService {
       throw new AppException(
         400,
         'VALIDATION_FAILED',
-        'Post grup tidak dapat ditulis di dinding teman',
+        "A group post cannot be written on a friend's wall",
       )
     }
     if (dto.groupId) await this.assertGroupMember(viewerId, dto.groupId)
     // Tag mengirim notifikasi ke orang yang bisa saja bukan anggota grup: tidak diizinkan di post grup.
     if (dto.groupId && dto.taggedUserIds?.length) {
-      throw new AppException(400, 'VALIDATION_FAILED', 'Post grup tidak dapat men-tag teman')
+      throw new AppException(400, 'VALIDATION_FAILED', 'A group post cannot tag friends')
     }
     const wallOwner = dto.wallOwnerUsername
       ? await this.resolveWallOwner(viewerId, dto.wallOwnerUsername)
@@ -111,7 +111,11 @@ export class PostsService {
       ).defaultPostPrivacy
     // Wall post terlihat oleh teman penulis dan pemilik dinding (BR-04); ONLY_ME tidak masuk akal di sini.
     if (wallOwner && dto.privacy === 'ONLY_ME') {
-      throw new AppException(400, 'VALIDATION_FAILED', 'Post di dinding teman tidak bisa ONLY_ME')
+      throw new AppException(
+        400,
+        'VALIDATION_FAILED',
+        "A post on a friend's wall cannot be ONLY_ME",
+      )
     }
     const tagIds = await this.resolveTags(viewerId, dto.taggedUserIds ?? [])
 
@@ -155,7 +159,7 @@ export class PostsService {
       where: { groupId_userId: { groupId, userId } },
       select: { groupId: true },
     })
-    if (!member) throw new AppException(404, 'NOT_FOUND', 'Grup tidak ditemukan')
+    if (!member) throw new AppException(404, 'NOT_FOUND', 'Group not found')
   }
 
   async get(viewerId: string, id: string): Promise<PostDto> {
@@ -202,14 +206,14 @@ export class PostsService {
   async update(viewerId: string, id: string, dto: UpdatePostDto): Promise<PostDto> {
     const current = await this.findVisible(viewerId, id)
     if (current.authorId !== viewerId) {
-      throw new AppException(403, 'FORBIDDEN', 'Hanya pemilik yang bisa mengubah post')
+      throw new AppException(403, 'FORBIDDEN', 'Only the owner can edit the post')
     }
     const content = dto.content ?? current.content
     // `imageUrl: null` menghapus foto; tidak dikirim berarti tidak berubah.
     const imageUrl = dto.imageUrl === undefined ? current.imageUrl : dto.imageUrl
     const isShare = current.sharedFromId !== null
     if (isShare && dto.imageUrl) {
-      throw new AppException(400, 'VALIDATION_FAILED', 'Share tidak bisa memiliki foto')
+      throw new AppException(400, 'VALIDATION_FAILED', 'A share cannot have a photo')
     }
     // Share boleh tanpa teks: isinya adalah post asal.
     if (!content.trim() && !imageUrl && !isShare) throw empty()
@@ -245,7 +249,7 @@ export class PostsService {
   async remove(viewerId: string, id: string): Promise<void> {
     const current = await this.findVisible(viewerId, id)
     if (current.authorId !== viewerId && current.wallOwnerId !== viewerId) {
-      throw new AppException(403, 'FORBIDDEN', 'Hanya pemilik yang bisa menghapus post')
+      throw new AppException(403, 'FORBIDDEN', 'Only the owner can delete the post')
     }
     await this.prisma.post.update({ where: { id }, data: { deletedAt: new Date() } })
   }
@@ -264,7 +268,7 @@ export class PostsService {
         select: { id: true },
       })
       if (!root) {
-        throw new AppException(422, 'UNPROCESSABLE', 'Post asal tidak tersedia untuk dibagikan')
+        throw new AppException(422, 'UNPROCESSABLE', 'The original post is not available to share')
       }
       rootId = root.id
     }
@@ -658,13 +662,9 @@ export class PostsService {
       // Diri sendiri bukan teman: jawab spesifik supaya klien tahu itu salah pakai, bukan 404.
       const self = await this.prisma.user.count({ where: { id: viewerId, username } })
       if (self) {
-        throw new AppException(
-          422,
-          'SELF_ACTION_NOT_ALLOWED',
-          'Tidak bisa menulis di dinding sendiri',
-        )
+        throw new AppException(422, 'SELF_ACTION_NOT_ALLOWED', 'You cannot write on your own wall')
       }
-      throw new AppException(404, 'NOT_FOUND', 'Pengguna tidak ditemukan')
+      throw new AppException(404, 'NOT_FOUND', 'User not found')
     }
     return owner
   }
@@ -680,7 +680,7 @@ export class PostsService {
       select: { id: true },
     })
     if (friends.length !== ids.length) {
-      throw new AppException(422, 'UNPROCESSABLE', 'Hanya teman yang bisa di-tag')
+      throw new AppException(422, 'UNPROCESSABLE', 'Only friends can be tagged')
     }
     return friends.map((f) => f.id)
   }
@@ -722,7 +722,7 @@ export class PostsService {
 
   private async assertUpload(imageUrl: string | null) {
     if (imageUrl && !(await this.uploads.exists(imageUrl))) {
-      throw new AppException(400, 'VALIDATION_FAILED', 'Gambar tidak ditemukan; unggah ulang')
+      throw new AppException(400, 'VALIDATION_FAILED', 'Image not found; please upload it again')
     }
   }
 

@@ -37,7 +37,7 @@ export class SuggestionsQueryDto {
 /** Tanggal kalender di zona pengguna (klien yang tahu "hari ini"-nya); bawaan hari ini UTC. */
 export class BirthdaysQueryDto {
   @IsOptional()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date harus berformat YYYY-MM-DD' })
-  @IsISO8601({ strict: true }, { message: 'date bukan tanggal kalender yang valid' })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be in YYYY-MM-DD format' })
+  @IsISO8601({ strict: true }, { message: 'date is not a valid calendar date' })
   date?: string
 }

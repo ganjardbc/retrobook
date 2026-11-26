@@ -35,15 +35,11 @@ export class UploadsService implements OnModuleInit {
    */
   async saveImage(file: { buffer: Buffer } | undefined): Promise<string> {
     if (!file || file.buffer.length === 0) {
-      throw new AppException(400, 'VALIDATION_FAILED', 'File gambar wajib diisi')
+      throw new AppException(400, 'VALIDATION_FAILED', 'An image file is required')
     }
     const ext = detectImageExt(file.buffer)
     if (!ext) {
-      throw new AppException(
-        415,
-        'UNSUPPORTED_MEDIA_TYPE',
-        'Hanya JPG, PNG, atau WebP yang diizinkan',
-      )
+      throw new AppException(415, 'UNSUPPORTED_MEDIA_TYPE', 'Only JPG, PNG, or WebP are allowed')
     }
     const name = `${randomBytes(16).toString('hex')}.${ext}`
     await writeFile(join(this.dir, name), file.buffer, { flag: 'wx' })

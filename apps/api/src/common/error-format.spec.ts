@@ -79,7 +79,7 @@ describe('format error dan validasi global', () => {
 
 describe('validateEnv', () => {
   it('menolak env tanpa JWT_SECRET', () => {
-    expect(() => validateEnv({ DATABASE_URL: 'mysql://x' })).toThrow(/tidak valid/)
+    expect(() => validateEnv({ DATABASE_URL: 'mysql://x' })).toThrow(/Invalid .env/)
   })
   it('memberi default port dan mengonversi angka', () => {
     const env = validateEnv({ DATABASE_URL: 'mysql://x', JWT_SECRET: 'abcdefgh', API_PORT: '4000' })

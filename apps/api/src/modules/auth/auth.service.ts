@@ -37,12 +37,12 @@ const RESERVED_USERNAMES = new Set([
 ])
 
 const INVALID_CREDENTIALS = () =>
-  new AppException(401, 'INVALID_CREDENTIALS', 'Email/username atau password salah')
+  new AppException(401, 'INVALID_CREDENTIALS', 'Incorrect email/username or password')
 
 type TokenUser = Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl' | 'role'>
 
 const RESET_TTL_MS = 60 * 60 * 1000
-const maintenance = () => new AppException(403, 'MAINTENANCE_MODE', 'Sedang dalam pemeliharaan')
+const maintenance = () => new AppException(403, 'MAINTENANCE_MODE', 'Down for maintenance')
 
 @Injectable()
 export class AuthService {
@@ -61,10 +61,10 @@ export class AuthService {
     const { maintenanceMode, registrationOpen } = await this.settings.get()
     if (maintenanceMode) throw maintenance()
     if (!registrationOpen) {
-      throw new AppException(403, 'REGISTRATION_CLOSED', 'Pendaftaran sedang ditutup')
+      throw new AppException(403, 'REGISTRATION_CLOSED', 'Registration is currently closed')
     }
     if (RESERVED_USERNAMES.has(dto.username.toLowerCase())) {
-      throw new AppException(409, 'USERNAME_TAKEN', 'Username sudah dipakai')
+      throw new AppException(409, 'USERNAME_TAKEN', 'Username is already taken')
     }
     const passwordHash = await argon2.hash(dto.password)
     try {
@@ -81,8 +81,8 @@ export class AuthService {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
         const target = String(e.meta?.target ?? '')
         if (target.includes('email'))
-          throw new AppException(409, 'EMAIL_TAKEN', 'Email sudah dipakai')
-        throw new AppException(409, 'USERNAME_TAKEN', 'Username sudah dipakai')
+          throw new AppException(409, 'EMAIL_TAKEN', 'Email is already in use')
+        throw new AppException(409, 'USERNAME_TAKEN', 'Username is already taken')
       }
       throw e
     }
@@ -104,7 +104,7 @@ export class AuthService {
     if (!(await argon2.verify(user.passwordHash, dto.password))) throw INVALID_CREDENTIALS()
     this.assertCanSignIn(user)
     if (requiredRole && user.role !== requiredRole) {
-      throw new AppException(403, 'FORBIDDEN', 'Akses hanya untuk administrator')
+      throw new AppException(403, 'FORBIDDEN', 'Administrators only')
     }
     await this.assertNotInMaintenance(user)
     return this.issue(user)
@@ -145,7 +145,7 @@ export class AuthService {
   async resetPassword(token: string, password: string): Promise<void> {
     const passwordHash = await argon2.hash(password)
     const invalid = () =>
-      new AppException(400, 'VALIDATION_FAILED', 'Tautan reset tidak valid atau sudah kedaluwarsa')
+      new AppException(400, 'VALIDATION_FAILED', 'This reset link is invalid or has expired')
     await this.prisma.$transaction(async (tx) => {
       const row = await tx.passwordResetToken.findUnique({ where: { tokenHash: hashToken(token) } })
       if (!row || row.usedAt || row.expiresAt < new Date()) throw invalid()
@@ -171,22 +171,22 @@ export class AuthService {
       where: { tokenHash: hashToken(refreshToken) },
       include: { user: true },
     })
-    if (!row) throw new AppException(401, 'UNAUTHORIZED', 'Token tidak valid')
+    if (!row) throw new AppException(401, 'UNAUTHORIZED', 'Invalid token')
 
     if (row.revokedAt) {
       // Token yang sudah dirotasi dipakai lagi: anggap dicuri, cabut semua sesi user ini.
       await this.revokeAll(row.userId)
-      throw new AppException(401, 'UNAUTHORIZED', 'Token tidak valid')
+      throw new AppException(401, 'UNAUTHORIZED', 'Invalid token')
     }
     if (row.expiresAt < new Date()) {
-      throw new AppException(401, 'TOKEN_EXPIRED', 'Sesi kedaluwarsa')
+      throw new AppException(401, 'TOKEN_EXPIRED', 'Session expired')
     }
     if (row.user.deletedAt || row.user.isBot) {
-      throw new AppException(401, 'UNAUTHORIZED', 'Token tidak valid')
+      throw new AppException(401, 'UNAUTHORIZED', 'Invalid token')
     }
     this.assertCanSignIn(row.user)
     if (requiredRole && row.user.role !== requiredRole) {
-      throw new AppException(403, 'FORBIDDEN', 'Akses hanya untuk administrator')
+      throw new AppException(403, 'FORBIDDEN', 'Administrators only')
     }
     await this.assertNotInMaintenance(row.user)
 
@@ -195,7 +195,7 @@ export class AuthService {
       where: { id: row.id, revokedAt: null },
       data: { revokedAt: new Date() },
     })
-    if (revoked.count !== 1) throw new AppException(401, 'UNAUTHORIZED', 'Token tidak valid')
+    if (revoked.count !== 1) throw new AppException(401, 'UNAUTHORIZED', 'Invalid token')
     return this.issue(row.user)
   }
 
@@ -221,10 +221,10 @@ export class AuthService {
 
   private assertCanSignIn(user: Pick<User, 'status'>) {
     if (user.status === 'SUSPENDED') {
-      throw new AppException(403, 'ACCOUNT_SUSPENDED', 'Akun kamu ditangguhkan')
+      throw new AppException(403, 'ACCOUNT_SUSPENDED', 'Your account is suspended')
     }
     if (user.status === 'BANNED') {
-      throw new AppException(403, 'ACCOUNT_BANNED', 'Akun kamu diblokir')
+      throw new AppException(403, 'ACCOUNT_BANNED', 'Your account has been banned')
     }
   }
 
