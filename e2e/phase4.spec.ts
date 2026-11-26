@@ -154,7 +154,7 @@ test('EVT-01 create an event and RSVP Going', async ({ page }) => {
     .getByRole('link', { name: new RegExp(title) })
     .first()
     .click()
-  await expect(page).toHaveURL(/\/events\/\d+/)
+  await expect(page).toHaveURL(/\/events\/[0-9a-f-]{36}/)
   const main = page.getByRole('main') // kartu Events today di kolom kanan juga punya tombol Going
   await main.getByRole('button', { name: 'Going', exact: true }).click()
   await expect(main.getByText('1 going')).toBeVisible()
