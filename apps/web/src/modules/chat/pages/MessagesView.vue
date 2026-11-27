@@ -495,6 +495,13 @@ onMounted(() => {
 .messages__exit:hover {
   background: var(--c-hover-bg);
 }
+/* Ponsel (≤640 px): bar tab di atas sudah memuat Feed dan Messages, jadi panah keluar tidak dipakai.
+   Panah di header percakapan (.messages__back, kembali ke daftar) tetap tampil. */
+@media (max-width: 640px) {
+  .messages__exit {
+    display: none;
+  }
+}
 .messages h1 {
   flex: 1;
   margin: 0;
