@@ -1,4 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises'
+import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 import { ADMIN_URL, createPost, loginAsNewAdmin, register } from './helpers'
@@ -88,26 +89,28 @@ test('SPN-01 admin publishes a Sponsored card that members see, and removes it',
 
 test('ADM-17 hiding a hashtag removes it from trending', async ({ browser, page }) => {
   await register(page)
-  const tag = `tag${Date.now()}`
-  await createPost(page, `Halo #${tag}`, 'PUBLIC')
-  await page.goto('/')
-  await expect(page.getByRole('link', { name: `#${tag}`, exact: true }).first()).toBeVisible()
+  // Tag acak (bukan Date.now yang bisa jadi potongan tag lain) dan lima pemakaian: trending hanya memuat
+  // 10 tag teratas dalam 24 jam, jadi tag sekali pakai dari tes lain bisa mengalahkannya.
+  const tag = `tag${randomBytes(5).toString('hex')}`
+  for (let i = 0; i < 5; i++) await createPost(page, `Halo ${i} #${tag}`, 'PUBLIC')
+  const trending = () => page.locator('.pcard').filter({ hasText: 'Trending' })
+  await page.reload()
+  // Awal harus terbukti ada; tanpa ini pemeriksaan "hilang" di bawah bisa lolos tanpa makna.
+  await expect(trending().getByText(`#${tag}`)).toBeVisible()
 
   const admin = await loginAsNewAdmin(browser)
   await admin.page.goto(`${ADMIN_URL}/trending`)
   await admin.page.getByLabel('Cari hashtag').fill(tag)
   await admin.page.getByRole('button', { name: 'Cari' }).click()
-  await admin.page
+  // Baris dipilih lewat teks tag yang persis sama, supaya baris tag lain dari run sebelumnya tidak ikut.
+  const row = admin.page
     .locator('.announce-list li')
-    .filter({ hasText: `#${tag}` })
-    .getByRole('button', { name: 'Sembunyikan' })
-    .click()
-  await expect(admin.page.getByText('Disembunyikan dari trending')).toBeVisible()
+    .filter({ has: admin.page.getByText(`#${tag}`, { exact: true }) })
+  await row.getByRole('button', { name: 'Sembunyikan' }).click()
+  await expect(row.getByText('Disembunyikan dari trending')).toBeVisible()
 
   await page.reload()
-  await expect(
-    page.locator('.pcard').filter({ hasText: 'Trending' }).getByText(`#${tag}`),
-  ).toHaveCount(0)
+  await expect(trending().getByText(`#${tag}`)).toHaveCount(0)
   await admin.context.close()
 })
 

@@ -125,6 +125,8 @@ test('GRP-01 create a group, post in it, and a non-member joins to read', async 
   await page.getByLabel('Group name').fill(name)
   await page.getByRole('button', { name: 'Create', exact: true }).click()
   await page.getByRole('link', { name }).click()
+  await expect(page).toHaveURL(/\/groups\/[0-9a-f-]{36}$/)
+  const groupUrl = page.url()
   const content = `Group post ${randomBytes(3).toString('hex')}`
   await page.getByLabel('Write something to the group...').fill(content)
   await page.getByRole('button', { name: 'Post', exact: true }).click()
@@ -133,10 +135,13 @@ test('GRP-01 create a group, post in it, and a non-member joins to read', async 
   const otherContext = await browser.newContext()
   const other = await otherContext.newPage()
   await register(other)
-  await other.goto('/groups')
-  const row = other.locator('li').filter({ hasText: name })
-  await row.getByRole('button', { name: 'Join' }).click()
-  await other.getByRole('link', { name }).click()
+  // Langsung ke URL grup, bukan lewat daftar saran: daftar itu dibatasi 12 teratas menurut jumlah anggota,
+  // sehingga grup baru bisa tidak muncul di database uji yang sudah berisi banyak grup.
+  await other.goto(groupUrl)
+  await expect(other.getByText('Join this group to see and write posts.')).toBeVisible()
+  await expect(other.locator('.post').filter({ hasText: content })).toHaveCount(0)
+  // Dibatasi ke konten utama: kartu saran grup di sidebar juga punya tombol Join.
+  await other.locator('#main-content').getByRole('button', { name: 'Join', exact: true }).click()
   await expect(other.locator('.post').filter({ hasText: content })).toBeVisible()
   await otherContext.close()
 })
