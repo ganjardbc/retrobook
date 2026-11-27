@@ -3,13 +3,13 @@ import { t } from '@retrobook/shared/i18n'
 import { computed, onBeforeUnmount, onMounted, ref, watch, type ComponentPublicInstance } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { useMediaQuery, useMobile } from '@/composables/mobile'
+import SearchBox from '@/modules/search/components/SearchBox.vue'
 import EventsTodayCard from '@/modules/events/components/EventsTodayCard.vue'
 import SuggestedGroupsCard from '@/modules/groups/components/SuggestedGroupsCard.vue'
 import BirthdaysCard from '@/modules/friends/components/BirthdaysCard.vue'
 import PeopleYouMayKnow from '@/modules/friends/components/PeopleYouMayKnow.vue'
 import ChatDock from '@/modules/chat/components/ChatDock.vue'
 import ChatSidebar from '@/modules/chat/components/ChatSidebar.vue'
-import SearchBox from '@/modules/search/components/SearchBox.vue'
 import SponsoredCard from '@/modules/feed/components/SponsoredCard.vue'
 import TrendingCard from '@/modules/search/components/TrendingCard.vue'
 import { useChatStore } from '@/modules/chat/stores'
@@ -25,6 +25,8 @@ const menuOpen = ref(false)
 const mobile = useMobile()
 const isProfile = computed(() => route.meta.layout === 'profile')
 const isMessages = computed(() => route.name === 'messages')
+// Ponsel: kotak cari di pita bawah navbar (Messages punya pencarian sendiri).
+const showSearchBand = computed(() => mobile.value && !isMessages.value)
 // Halaman form dan pengaturan: kolom kanan hanya berisi footer, tanpa kartu yang mengalihkan perhatian.
 const isFocus = computed(() => route.meta.focus === true)
 
@@ -68,8 +70,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <NavBar
       :menu-open="menuOpen"
       :drawer="isProfile || isMessages"
+      :joined="showSearchBand"
       @toggle-menu="menuOpen = !menuOpen"
     />
+    <!-- Ponsel: kotak cari tetap tampil di bawah header (ikut bergulir). Messages punya pencarian sendiri. -->
+    <div v-if="showSearchBand" class="layout__search"><SearchBox /></div>
     <div class="layout__body">
       <div class="layout__cols">
         <div
@@ -86,8 +91,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           class="layout__left"
           :class="{ 'layout__left--open': menuOpen }"
         >
-          <!-- Ponsel: kotak cari pindah dari navbar ke laci (dirender hanya saat laci terbuka). -->
-          <SearchBox v-if="mobile && menuOpen" class="layout__drawer-search" />
           <LeftMenu />
           <!-- Strip chat tersembunyi di bawah 900 px; daftar teman tersedia di laci yang terbuka. -->
           <ChatSidebar v-if="menuOpen" inline @picked="menuOpen = false" />
@@ -172,6 +175,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     display: none;
   }
 }
+/* Ponsel: baris kotak cari di bawah navbar, dalam alur halaman (bukan overlay). */
+.layout__search {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-brand); /* sama dengan header */
+  border-bottom: 1px solid var(--c-brand-edge);
+}
+.layout__search :deep(.search) {
+  flex: none;
+  width: 100%;
+  max-width: none;
+}
 /* Laci menu: menu kiri yang dibuka lewat tombol hamburger menjadi panel tetap (fixed) di bawah navbar,
    tidak ikut alur grid, jadi konten tidak menimpanya. Tombol hamburger hanya ada di ≤640 px, dan di
    ≤900 px pada profil dan messages (halaman yang tidak punya kolom menu kiri); kelas `--open` hanya
@@ -182,7 +196,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 @media (max-width: 900px) {
   /* `.layout` menaikkan spesifisitas supaya laci juga menang atas `.layout--profile .layout__left`. */
   .layout .layout__left--open {
-    /* Kolom flex tanpa scroll sendiri: tinggi sisa diberikan ke daftar chat, yang menggulir di dalamnya. */
+    /* Satu area gulir: profil menempel di atas, kotak cari chat menempel di bawah, isi di antaranya
+       (menu dan daftar teman) menggulir bersama. Menu dan chat memakai `display: contents` supaya anak-anaknya
+       menjadi anak langsung laci dan `sticky` bekerja terhadap laci. */
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -192,16 +208,25 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     z-index: 9;
     align-self: stretch; /* tetap anak grid: tanpa ini `start` memendekkan laci */
     width: min(280px, 85vw);
-    padding: var(--sp-2);
-    overflow: hidden;
+    padding: 0 var(--sp-2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     background: var(--c-card);
     border-right: var(--card-border);
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
   }
-  /* Kotak cari dan menu setinggi isinya (flex-basis SearchBox untuk lebar navbar tak boleh jadi tinggi). */
-  .layout__left--open > .layout__drawer-search,
   .layout__left--open > :deep(.menu) {
-    flex: none;
+    display: contents;
+  }
+  /* Profil menempel di atas laci (menutup isi yang menggulir di bawahnya). */
+  .layout__left--open :deep(.menu__me) {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: 0 calc(-1 * var(--sp-2));
+    padding: var(--sp-3) var(--sp-3) var(--sp-2);
+    background: var(--c-card);
+    box-shadow: 0 1px 0 var(--c-border-soft);
   }
   .layout__backdrop {
     display: block;
@@ -218,9 +243,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   .layout__left {
     display: none;
   }
-  .layout__drawer-search {
-    max-width: none;
-    margin-bottom: var(--sp-3);
+  /* Ponsel: laci selebar layar di bawah navbar (ikon menu ada di ujung kanan bar, jadi laci sisi kiri
+     dengan celah backdrop terasa janggal); tanpa backdrop dan bayangan, baris menu 40 px (cukup untuk jari, menyisakan ruang bagi daftar chat). */
+  .layout .layout__left--open {
+    width: 100%;
+    border-right: 0;
+    box-shadow: none;
+  }
+  .layout__backdrop {
+    display: none;
+  }
+  .layout__left--open > :deep(.menu .menu__row) {
+    min-height: 40px;
   }
 }
 </style>

@@ -2,7 +2,7 @@
 import { Icon } from '@iconify/vue'
 import { t } from '@retrobook/shared/i18n'
 import { computed, inject, onBeforeUnmount, onMounted, ref, useId } from 'vue'
-import { RouterLink, routerKey } from 'vue-router'
+import { RouterLink, routeLocationKey, routerKey } from 'vue-router'
 import { useMobile } from '@/composables/mobile'
 
 const props = defineProps<{
@@ -18,6 +18,9 @@ const open = defineModel<boolean>('open', { default: false })
 
 // Tanpa router terpasang (mis. tes komponen) tombol tetap berupa popup.
 const router = inject(routerKey, null)
+const route = inject(routeLocationKey, null)
+// Sedang berada di halaman lengkapnya (dipakai bar tab ponsel untuk menandai tab aktif).
+const current = computed(() => !!props.allTo && route?.path === props.allTo)
 const mobile = useMobile()
 // Di ponsel popup tidak muat: klik langsung membuka halaman lengkapnya.
 const direct = computed(() => mobile.value && !!props.allTo && !!router)
@@ -60,7 +63,8 @@ onBeforeUnmount(() => {
     <button
       ref="button"
       class="jewel__btn"
-      :class="{ 'jewel__btn--on': badge }"
+      :class="{ 'jewel__btn--on': badge, 'jewel__btn--current': current }"
+      :aria-current="current ? 'page' : undefined"
       type="button"
       :aria-haspopup="direct ? undefined : 'true'"
       :aria-expanded="direct ? undefined : open"

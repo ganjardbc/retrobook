@@ -11,45 +11,72 @@ import FriendRequestsJewel from '@/modules/friends/components/FriendRequestsJewe
 import NotificationsJewel from '@/modules/notifications/components/NotificationsJewel.vue'
 import WordMark from '@/components/WordMark.vue'
 
-defineProps<{ menuOpen?: boolean; drawer?: boolean }>()
+defineProps<{ menuOpen?: boolean; drawer?: boolean; joined?: boolean }>()
 defineEmits<{ 'toggle-menu': [] }>()
 const auth = useAuthStore()
-// Di ponsel kotak cari ada di laci menu (AppLayout), bukan di navbar.
+// Ponsel: navbar menjadi bar tab ikon rata; kotak cari ada di baris di bawah navbar (AppLayout).
 const mobile = useMobile()
 </script>
 
 <template>
-  <header class="navbar" :class="{ 'navbar--drawer': drawer }">
+  <header class="navbar" :class="{ 'navbar--drawer': drawer, 'navbar--joined': joined }">
     <nav class="navbar__inner" :aria-label="t('nav.main')">
-      <button
-        class="navbar__menu"
-        type="button"
-        :aria-label="t('nav.menu')"
-        aria-controls="left-menu"
-        :aria-expanded="menuOpen"
-        @click="$emit('toggle-menu')"
-      >
-        <Icon icon="mdi:menu" aria-hidden="true" />
-      </button>
-      <RouterLink class="navbar__brand" to="/"><WordMark variant="mark" /></RouterLink>
-      <SearchBox v-if="auth.user && !mobile" />
-      <span class="navbar__spacer" />
-      <template v-if="auth.user">
-        <RouterLink class="navbar__link navbar__me" :to="`/${auth.user.username}`">
-          <Avatar
-            :name="auth.user.displayName"
-            :src="auth.user.avatarUrl"
-            size="s"
-            class="navbar__avatar"
-          />
-          <span>{{ auth.user.displayName }}</span>
+      <!-- Ponsel (gaya 2015): enam ikon dibagi rata selebar bar; tab aktif bergaris bawah putih. -->
+      <template v-if="mobile && auth.user">
+        <RouterLink
+          class="navbar__tab"
+          to="/"
+          exact-active-class="navbar__tab--current"
+          :aria-label="t('menu.newsFeed')"
+        >
+          <Icon icon="mdi:newspaper-variant-outline" aria-hidden="true" />
         </RouterLink>
-        <RouterLink class="navbar__link navbar__home" to="/">{{ t('nav.home') }}</RouterLink>
-        <div class="navbar__jewels">
-          <FriendRequestsJewel />
-          <MessagesJewel />
-          <NotificationsJewel />
-        </div>
+        <FriendRequestsJewel />
+        <MessagesJewel />
+        <NotificationsJewel />
+        <button
+          class="navbar__tab"
+          :class="{ 'navbar__tab--current': menuOpen }"
+          type="button"
+          :aria-label="t('nav.menu')"
+          aria-controls="left-menu"
+          :aria-expanded="menuOpen"
+          @click="$emit('toggle-menu')"
+        >
+          <Icon :icon="menuOpen ? 'mdi:close' : 'mdi:menu'" aria-hidden="true" />
+        </button>
+      </template>
+      <template v-else>
+        <button
+          class="navbar__menu"
+          type="button"
+          :aria-label="t('nav.menu')"
+          aria-controls="left-menu"
+          :aria-expanded="menuOpen"
+          @click="$emit('toggle-menu')"
+        >
+          <Icon :icon="menuOpen ? 'mdi:close' : 'mdi:menu'" aria-hidden="true" />
+        </button>
+        <RouterLink class="navbar__brand" to="/"><WordMark variant="mark" /></RouterLink>
+        <SearchBox v-if="auth.user" />
+        <span class="navbar__spacer" />
+        <template v-if="auth.user">
+          <RouterLink class="navbar__link navbar__me" :to="`/${auth.user.username}`">
+            <Avatar
+              :name="auth.user.displayName"
+              :src="auth.user.avatarUrl"
+              size="s"
+              class="navbar__avatar"
+            />
+            <span>{{ auth.user.displayName }}</span>
+          </RouterLink>
+          <RouterLink class="navbar__link navbar__home" to="/">{{ t('nav.home') }}</RouterLink>
+          <div class="navbar__jewels">
+            <FriendRequestsJewel />
+            <MessagesJewel />
+            <NotificationsJewel />
+          </div>
+        </template>
       </template>
     </nav>
   </header>
@@ -64,6 +91,10 @@ const mobile = useMobile()
   background: linear-gradient(var(--c-brand-top), var(--c-brand));
   border-bottom: 1px solid var(--c-brand-edge);
   box-shadow: 0 1px 0 var(--c-border);
+}
+/* Ada pita berwarna sama tepat di bawah navbar (kotak cari ponsel): tanpa garis terang pemisah. */
+.navbar--joined {
+  box-shadow: none;
 }
 .navbar__inner {
   display: flex;
@@ -140,21 +171,52 @@ const mobile = useMobile()
     line-height: 1;
   }
 }
-/* Ponsel: menu dan logo di kiri, jewel di kanan (spacer mendorongnya). Kotak cari pindah ke laci
-   menu (AppLayout); Home tetap lewat logo. */
+/* Ponsel: bar tab ikon rata. Ikon feed, tiga jewel (langsung membuka halamannya), dan menu masing-masing
+   mengisi seperlima lebar; tab aktif diberi garis bawah putih. */
 @media (max-width: 640px) {
-  .navbar__menu {
-    display: inline-flex;
-    align-items: center;
-    height: 100%;
-    line-height: 1;
-  }
-  .navbar__me,
-  .navbar__home {
-    display: none;
-  }
   .navbar__inner {
-    gap: var(--sp-2);
+    gap: 0;
+    padding: 0;
+  }
+  .navbar__inner > .navbar__tab,
+  .navbar__inner > .jewel {
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    height: 100%;
+  }
+  .navbar__tab {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 24px;
+    cursor: pointer;
+  }
+  .navbar__tab:hover,
+  .navbar__tab--current {
+    color: var(--c-text-on-brand);
+  }
+  .navbar__tab--current,
+  .navbar__inner :deep(.jewel__btn--current) {
+    box-shadow: inset 0 -3px 0 var(--c-text-on-brand);
+  }
+  .navbar__inner :deep(.jewel__btn) {
+    height: 100%;
+    padding: 0 var(--sp-3);
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 24px;
+  }
+  .navbar__inner :deep(.jewel__btn:hover),
+  .navbar__inner :deep(.jewel__btn--on),
+  .navbar__inner :deep(.jewel__btn--current) {
+    color: var(--c-text-on-brand);
+  }
+  .navbar__inner :deep(.jewel__badge) {
+    top: 4px;
+    right: 4px;
   }
 }
 </style>

@@ -108,22 +108,32 @@ import { formatShortAgo } from '@/helpers/time'
     display: none;
   }
 }
-/* Varian di dalam laci menu: hanya tampil di laci yang terbuka (≤900 px), mengalir di bawah menu
-   (bukan strip tetap). */
+/* Varian di dalam laci menu: hanya tampil di laci yang terbuka (≤900 px). Tanpa kotak sendiri
+   (`display: contents`): judul, daftar teman, dan kotak cari menjadi anak langsung laci, yang menggulir
+   sebagai satu area; kotak cari menempel di dasar laci (lihat AppLayout). */
 .chat.chat--inline {
   display: none;
 }
 @media (max-width: 900px) {
   .layout__left--open .chat.chat--inline {
-    display: flex;
-    position: static;
-    flex: 1 1 0; /* mengisi sisa tinggi laci; .chat__scroll yang menggulir */
-    min-height: 0;
-    width: auto;
+    display: contents;
+  }
+  .layout__left--open .chat--inline .chat__heading {
     margin-top: var(--sp-2);
-    padding-top: 0;
+    padding-top: var(--sp-3);
     border-top: var(--card-border);
-    border-left: 0;
+  }
+  /* Daftar teman tidak menggulir sendiri; laci yang menggulir. */
+  .layout__left--open .chat--inline .chat__scroll {
+    flex: none;
+    overflow: visible;
+  }
+  .layout__left--open .chat--inline .chat__search {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin: auto calc(-1 * var(--sp-2)) 0; /* auto di atas: terdorong ke dasar bila isi pendek */
+    background: var(--c-card);
   }
   /* Baris sejajar dengan baris menu di atasnya (padding kiri dan ukuran avatar yang sama). */
   .layout__left--open .chat--inline :is(.chat__row, .chat__item, .chat__note, .chat__offline) {
