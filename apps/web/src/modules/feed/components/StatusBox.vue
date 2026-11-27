@@ -16,7 +16,10 @@ import { postsApi } from '@/modules/posts/services/api'
 import { useFeedStore } from '@/modules/feed/stores'
 import { imageProblem } from '@/helpers/image'
 import { PRIVACY_ICONS } from '@/helpers/privacy'
+import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
+import { useMobile } from '@/composables/mobile'
+import { useAuthStore } from '@/modules/auth/stores'
 import TagSuggestions from '@/modules/feed/components/TagSuggestions.vue'
 
 /** Bila diisi, post ditulis di dinding teman ini (WAL-01) dan privasi tidak dipilih (BR-04). */
@@ -30,6 +33,22 @@ const emit = defineEmits<{ posted: [post: Post] }>()
 const router = inject(routerKey, null)
 const MAX_TAGS = 10
 const feed = useFeedStore()
+const auth = useAuthStore()
+// Ponsel: label tab diperpendek supaya ketiganya muat satu baris.
+const mobile = useMobile()
+const tabLabel = computed(() =>
+  mobile.value
+    ? {
+        status: t('statusBox.tab.status.short'),
+        photo: t('statusBox.tab.photo.short'),
+        album: t('statusBox.tab.album.short'),
+      }
+    : {
+        status: t('statusBox.tab.status'),
+        photo: t('statusBox.tab.photo'),
+        album: t('statusBox.tab.album'),
+      },
+)
 const content = ref('')
 const privacy = ref<Privacy | ''>('')
 const feeling = ref<PostFeeling | ''>('')
@@ -150,17 +169,23 @@ async function submit() {
 </script>
 
 <template>
-  <form class="status" @submit.prevent="submit" @focusin="focused = true" @focusout="onFocusout">
+  <form
+    class="status"
+    :class="{ 'status--expanded': expanded }"
+    @submit.prevent="submit"
+    @focusin="focused = true"
+    @focusout="onFocusout"
+  >
     <div class="status__tabs">
-      <span class="status__tab status__tab--active">
+      <span class="status__tab status__tab--active" @click="draftInput?.focus()">
         <span class="status__ico status__ico--blue"
           ><Icon icon="mdi:pencil" aria-hidden="true" /></span
-        >{{ t('statusBox.tab.status') }}
+        >{{ tabLabel.status }}
       </span>
       <button class="status__tab" type="button" @click="fileInput?.click()">
         <span class="status__ico status__ico--orange"
           ><Icon icon="mdi:image-outline" aria-hidden="true" /></span
-        >{{ t('statusBox.tab.photo') }}
+        >{{ tabLabel.photo }}
       </button>
       <a
         v-if="!wallOwner && groupId === undefined"
@@ -170,7 +195,7 @@ async function submit() {
       >
         <span class="status__ico status__ico--blue"
           ><Icon icon="mdi:image-multiple-outline" aria-hidden="true" /></span
-        >{{ t('statusBox.tab.album') }}
+        >{{ tabLabel.album }}
       </a>
       <input
         ref="fileInput"
@@ -182,6 +207,14 @@ async function submit() {
     </div>
 
     <div class="status__body">
+      <Avatar
+        v-if="auth.user"
+        class="status__me"
+        :name="auth.user.displayName"
+        :src="auth.user.avatarUrl"
+        size="s"
+        aria-hidden="true"
+      />
       <textarea
         ref="draftInput"
         v-model="content"
@@ -403,45 +436,92 @@ async function submit() {
   border-radius: var(--radius);
   background: var(--c-card);
 }
-/* Ponsel: tiga tab sama lebar, ikon di atas label, supaya label tidak terpotong dua baris yang tak rata
-   dan area sentuh cukup besar; footer boleh turun baris. */
+/* Ponsel (≤640 px): komposer ringkas. Avatar dan kotak tulis satu baris di atas (membesar saat difokus),
+   tab aksi satu baris di bawahnya, footer berupa chip kecil dan tombol Post selebar kartu. Hanya urutan
+   visual (order) dan gaya yang berubah; markup dan perilaku sama dengan desktop. */
+.status__me {
+  display: none;
+}
 @media (max-width: 640px) {
+  .status {
+    display: flex;
+    flex-direction: column;
+  }
+  .status__body {
+    order: 1;
+    position: relative;
+    padding-left: calc(var(--sp-3) + var(--avatar-s) + var(--sp-2));
+  }
+  .status__me {
+    display: inline-flex; /* sama dengan Avatar: memusatkan inisial */
+    position: absolute;
+    top: var(--sp-3);
+    left: var(--sp-3);
+  }
+  .status__text {
+    height: var(--avatar-s);
+    min-height: 0;
+    padding-top: 6px;
+    transition: height 0.15s;
+  }
+  .status--expanded .status__text {
+    height: 84px;
+  }
   .status__tabs {
-    margin: 0 var(--sp-2);
+    order: 2;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--c-border-soft);
+    border-bottom: 0;
   }
   .status__tab,
   .status__tab:first-child {
     flex: 1 1 0;
     min-width: 0;
-    flex-direction: column;
-    justify-content: flex-start;
+    min-height: 44px;
+    justify-content: center;
     gap: var(--sp-1);
     padding: 0 var(--sp-1);
     font-size: var(--fs-small);
-    line-height: 1.25;
-    text-align: center;
+    white-space: nowrap;
   }
   .status__tab:first-child {
     border-left: 0;
   }
+  .status__tab--active {
+    cursor: pointer;
+  }
   .status__tab--active::after {
-    left: 50%;
-    margin-left: -4px;
+    display: none;
   }
   .status__foot {
+    order: 3;
     flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  /* Perasaan dan privasi sebagai chip kecil; Post di baris sendiri selebar kartu. */
+  .status__foot > .status__privacy,
+  .status__privacy-wrap .status__privacy {
+    min-width: 0;
+    min-height: 32px;
+    padding: 0 var(--sp-2);
+    border-radius: 16px;
+    background: var(--c-card-subtle);
+    font-size: var(--fs-small);
   }
   .status__foot > .status__privacy {
-    flex: 1 1 110px;
-    min-width: 0;
+    flex: 1 1 0;
   }
   .status__privacy-wrap {
-    flex: 1 1 170px;
+    flex: 1.5 1 0;
     min-width: 0;
   }
   .status__privacy-wrap .status__privacy {
     flex: 1;
-    min-width: 0;
+  }
+  .status__foot > :deep(.btn) {
+    flex: 1 1 100%;
+    min-height: 40px;
   }
 }
 .status__tagged {
