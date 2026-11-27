@@ -40,29 +40,43 @@ const chat = useChatStore()
 const reporting = ref(false)
 const poked = ref(false)
 const pokeFailed = ref(false)
+const acting = ref(false)
 async function poke() {
+  if (acting.value) return
+  acting.value = true
   pokeFailed.value = false
   try {
     await pokesApi.poke(props.profile.id)
     poked.value = true
   } catch {
     pokeFailed.value = true
+  } finally {
+    acting.value = false
   }
 }
 const router = useRouter()
 const auth = useAuthStore()
 async function logout() {
-  await auth.logout()
+  try {
+    await auth.logout()
+  } catch {
+    /* sesi lokal sudah dibersihkan oleh store; tetap arahkan ke login */
+  }
   await router.replace({ name: 'login' })
 }
 async function block() {
   if (!window.confirm(t('profile.action.block.confirm', { name: props.profile.displayName })))
     return
+  if (acting.value) return
+  acting.value = true
+  pokeFailed.value = false
   try {
     await blocksApi.block(props.profile.id)
     await router.push('/')
   } catch {
     pokeFailed.value = true
+  } finally {
+    acting.value = false
   }
 }
 </script>
@@ -162,16 +176,20 @@ async function block() {
         <Button variant="default" @click="chat.openWindow(profile)">{{
           t('profile.action.message')
         }}</Button>
-        <Button variant="default" @click="poke">{{
+        <Button variant="default" :disabled="acting" @click="poke">{{
           poked ? t('profile.action.poked') : t('profile.action.poke')
         }}</Button>
       </template>
       <Button v-if="profile.relationship !== 'SELF'" variant="default" @click="reporting = true">{{
         t('report.action')
       }}</Button>
-      <Button v-if="profile.relationship !== 'SELF'" variant="default" @click="block">{{
-        t('profile.action.block')
-      }}</Button>
+      <Button
+        v-if="profile.relationship !== 'SELF'"
+        variant="default"
+        :disabled="acting"
+        @click="block"
+        >{{ t('profile.action.block') }}</Button
+      >
     </div>
     <ReportDialog
       v-if="reporting"

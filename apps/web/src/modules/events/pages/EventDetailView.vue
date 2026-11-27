@@ -2,6 +2,7 @@
 import { t, intlLocale } from '@retrobook/shared/i18n'
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import LoadingRows from '@/components/LoadingRows.vue'
 import PageCard from '@/components/PageCard.vue'
 import { ApiRequestError } from '@/plugins/http'
 import DateBadge from '../components/DateBadge.vue'
@@ -11,6 +12,8 @@ import { eventsApi, type EventItem, type RsvpStatus } from '../services/api'
 const route = useRoute()
 const event = ref<EventItem | null>(null)
 const error = ref('')
+const loading = ref(true)
+const busy = ref(false)
 
 onMounted(async () => {
   try {
@@ -21,17 +24,23 @@ onMounted(async () => {
       cause instanceof ApiRequestError && cause.status !== 404
         ? cause.messages.join(' ')
         : t('event.notFound')
+  } finally {
+    loading.value = false
   }
 })
 
 async function setRsvp(status: RsvpStatus) {
-  if (!event.value) return
+  if (!event.value || busy.value) return
+  busy.value = true
+  error.value = ''
   try {
     const result = await eventsApi.rsvp(event.value.id, status)
     event.value.myRsvp = result.status
     event.value.rsvpCount = result.rsvpCount
   } catch (cause) {
     error.value = cause instanceof ApiRequestError ? cause.messages.join(' ') : t('error.network')
+  } finally {
+    busy.value = false
   }
 }
 </script>
@@ -42,7 +51,8 @@ async function setRsvp(status: RsvpStatus) {
       <RouterLink to="/events">{{ t('events.title') }}</RouterLink>
     </template>
     <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-    <div v-if="event" class="event">
+    <LoadingRows v-if="loading" :rows="1" />
+    <div v-else-if="event" class="event">
       <DateBadge :iso="event.startsAt" />
       <div class="event__main">
         <p class="event__meta">
@@ -55,7 +65,7 @@ async function setRsvp(status: RsvpStatus) {
         </p>
         <p v-if="event.description" class="event__desc">{{ event.description }}</p>
         <p class="event__meta">{{ t('event.rsvpCount', { count: event.rsvpCount }) }}</p>
-        <RsvpButtons :current="event.myRsvp" @set="setRsvp" />
+        <RsvpButtons :current="event.myRsvp" :disabled="busy" @set="setRsvp" />
       </div>
     </div>
   </PageCard>

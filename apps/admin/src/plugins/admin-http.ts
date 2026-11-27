@@ -1,5 +1,5 @@
 import { adminSession } from '@/helpers/session'
-import { adminAuthApi, AdminApiError } from '@/modules/auth/services/api'
+import { adminAuthApi, adminFetch, AdminApiError } from '@/modules/auth/services/api'
 import { t } from '@retrobook/shared/i18n'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
@@ -7,7 +7,7 @@ type RequestOptions = { method?: string; body?: unknown }
 
 async function send<T>(path: string, options: RequestOptions): Promise<T> {
   const sendRequest = () =>
-    fetch(`${BASE}${path}`, {
+    adminFetch(`${BASE}${path}`, {
       method: options.method ?? 'GET',
       headers: {
         ...(options.body === undefined ? {} : { 'Content-Type': 'application/json' }),
@@ -26,7 +26,8 @@ async function send<T>(path: string, options: RequestOptions): Promise<T> {
       adminSession.set(refreshed)
       response = await sendRequest()
     } catch (error) {
-      if (error instanceof AdminApiError && error.status >= 500) throw error
+      // status 0 = jaringan/timeout: sesi tetap utuh
+      if (error instanceof AdminApiError && (error.status === 0 || error.status >= 500)) throw error
       adminSession.clear()
       window.dispatchEvent(new Event('admin:session-expired'))
       throw error

@@ -5,6 +5,8 @@ import { adminBotsApi, type Bot } from '@/modules/bots/services/api'
 
 const bots = ref<Bot[]>([])
 const form = reactive({ username: '', displayName: '', persona: '', postsPerDay: 2 })
+const loading = ref(true)
+const busy = ref(false)
 const error = ref('')
 const notice = ref('')
 const fail = (e: unknown, fallback: string) => {
@@ -15,9 +17,13 @@ async function load() {
     bots.value = (await adminBotsApi.list()).items
   } catch (e) {
     fail(e, t('admin.bots.loadError'))
+  } finally {
+    loading.value = false
   }
 }
 async function create() {
+  if (busy.value) return
+  busy.value = true
   error.value = ''
   notice.value = ''
   try {
@@ -27,9 +33,13 @@ async function create() {
     await load()
   } catch (e) {
     fail(e, t('admin.bots.createError'))
+  } finally {
+    busy.value = false
   }
 }
 async function update(bot: Bot, body: Parameters<typeof adminBotsApi.update>[1]) {
+  if (busy.value) return
+  busy.value = true
   error.value = ''
   notice.value = ''
   try {
@@ -37,6 +47,8 @@ async function update(bot: Bot, body: Parameters<typeof adminBotsApi.update>[1])
     await load()
   } catch (e) {
     fail(e, t('admin.bots.updateError'))
+  } finally {
+    busy.value = false
   }
 }
 function editPersona(bot: Bot) {
@@ -72,11 +84,12 @@ onMounted(load)
         ><span>{{ t('admin.bots.postsPerDay') }}</span
         ><input v-model.number="form.postsPerDay" type="number" min="1" max="24" required
       /></label>
-      <button class="button" type="submit">{{ t('admin.bots.create') }}</button>
+      <button class="button" type="submit" :disabled="busy">{{ t('admin.bots.create') }}</button>
     </form>
     <p v-if="error" class="user-error" role="alert">{{ error }}</p>
     <p v-if="notice" class="user-notice" role="status">{{ notice }}</p>
-    <p v-if="!bots.length" class="reports-empty">{{ t('admin.bots.empty') }}</p>
+    <p v-if="loading" class="reports-empty" role="status">{{ t('admin.table.loading') }}</p>
+    <p v-else-if="!bots.length" class="reports-empty">{{ t('admin.bots.empty') }}</p>
     <ul class="announce-list">
       <li v-for="b in bots" :key="b.userId">
         <div>
@@ -90,9 +103,14 @@ onMounted(load)
           </p>
         </div>
         <div class="reports-actions">
-          <button class="button button--quiet" @click="update(b, { active: !b.active })">
+          <button
+            class="button button--quiet"
+            :disabled="busy"
+            @click="update(b, { active: !b.active })"
+          >
             {{ b.active ? t('admin.common.disable') : t('admin.common.enable') }}</button><button
             class="button button--quiet"
+            :disabled="busy"
             @click="editPersona(b)"
           >
             {{ t('admin.bots.editPersona') }}

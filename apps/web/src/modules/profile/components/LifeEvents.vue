@@ -6,6 +6,7 @@ import { computed, ref, watch } from 'vue'
 import Button from '@/components/Button.vue'
 import FormRow from '@/components/FormRow.vue'
 import IconSelect, { type IconOption } from '@/components/IconSelect.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
 import PageCard from '@/components/PageCard.vue'
 import { PRIVACY_ICONS } from '@/helpers/privacy'
 import { useAuthStore } from '@/modules/auth/stores'
@@ -40,16 +41,21 @@ const kind = ref<LifeEventKind>('OTHER')
 const happenedOn = ref('')
 const privacy = ref<LifeEvent['privacy']>('FRIENDS')
 const error = ref('')
+const loading = ref(true)
+const busy = ref(false)
 const isMine = computed(() => auth.user?.id === profile.profile?.id)
 
 const message = (cause: unknown, fallback: string) =>
   cause instanceof ApiRequestError ? cause.messages.join(' ') : fallback
 
 async function load(username: string) {
+  loading.value = true
   try {
     items.value = (await lifeEventsApi.forProfile(username)).items
   } catch (cause) {
     error.value = message(cause, t('lifeEvents.loadError'))
+  } finally {
+    loading.value = false
   }
 }
 watch(
@@ -64,6 +70,8 @@ function closeForm() {
   title.value = happenedOn.value = ''
 }
 async function create() {
+  if (busy.value) return
+  busy.value = true
   error.value = ''
   try {
     const saved = await lifeEventsApi.create({
@@ -77,14 +85,21 @@ async function create() {
     closeForm()
   } catch (cause) {
     error.value = message(cause, t('lifeEvents.saveError'))
+  } finally {
+    busy.value = false
   }
 }
 async function remove(item: LifeEvent) {
+  if (busy.value) return
+  busy.value = true
+  error.value = ''
   try {
     await lifeEventsApi.remove(item.id)
     items.value = items.value.filter((event) => event.id !== item.id)
   } catch (cause) {
     error.value = message(cause, t('lifeEvents.deleteError'))
+  } finally {
+    busy.value = false
   }
 }
 </script>
@@ -108,14 +123,15 @@ async function remove(item: LifeEvent) {
         <IconSelect v-model="privacy" :options="privacyOptions" :label="t('lifeEvents.privacy')" />
       </FormRow>
       <div class="form__actions">
-        <Button type="submit" :disabled="!title.trim() || !happenedOn">{{
+        <Button type="submit" :disabled="busy || !title.trim() || !happenedOn">{{
           t('lifeEvents.save')
         }}</Button>
         <Button variant="default" @click="closeForm">{{ t('page.cancel') }}</Button>
       </div>
     </form>
     <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-    <ul v-if="items.length" class="list">
+    <LoadingRows v-if="loading" :rows="2" />
+    <ul v-else-if="items.length" class="list">
       <li v-for="item in items" :key="item.id" class="item">
         <Icon :icon="KIND_ICONS[item.kind]" class="item__icon" aria-hidden="true" />
         <div class="item__main">
@@ -134,7 +150,7 @@ async function remove(item: LifeEvent) {
           role="img"
           :aria-label="t(`privacy.${item.privacy}`)"
         />
-        <Button v-if="isMine" variant="default" @click="remove(item)">{{
+        <Button v-if="isMine" variant="default" :disabled="busy" @click="remove(item)">{{
           t('lifeEvents.delete')
         }}</Button>
       </li>

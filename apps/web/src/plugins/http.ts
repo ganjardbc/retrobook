@@ -1,4 +1,5 @@
 import type { ApiError, AuthSession } from '@retrobook/shared'
+import { t } from '@retrobook/shared/i18n'
 import { session } from '@/helpers/session'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
@@ -12,6 +13,19 @@ export class ApiRequestError extends Error {
     public readonly retryAfter?: number,
   ) {
     super(messages.join(' '))
+  }
+}
+
+const TIMEOUT_MS = 30_000
+const UPLOAD_TIMEOUT_MS = 120_000
+
+/** Jaringan putus atau timeout menjadi ApiRequestError status 0, bukan TypeError mentah. */
+async function fetchApi(url: string, init: RequestInit): Promise<Response> {
+  const timeout = init.body instanceof FormData ? UPLOAD_TIMEOUT_MS : TIMEOUT_MS
+  try {
+    return await fetch(url, { ...init, signal: AbortSignal.timeout(timeout) })
+  } catch {
+    throw new ApiRequestError(0, 'NETWORK_ERROR', [t('error.network')])
   }
 }
 
@@ -54,7 +68,7 @@ let refreshing: Promise<boolean> | null = null
 async function doRefresh(): Promise<boolean> {
   const refreshToken = session.refreshToken
   if (!refreshToken) return false
-  const res = await fetch(`${BASE}/auth/refresh`, jsonInit('POST', { refreshToken }))
+  const res = await fetchApi(`${BASE}/auth/refresh`, jsonInit('POST', { refreshToken }))
   // Hanya penolakan eksplisit yang mengakhiri sesi; error jaringan/500 dilempar apa adanya.
   if (res.status === 401 || res.status === 403) return false
   if (!res.ok) throw await toError(res)
@@ -84,7 +98,7 @@ export async function request<T>(path: string, opts: Options = {}): Promise<T> {
   const { method = 'GET', body, auth = true } = opts
 
   const send = () =>
-    fetch(`${BASE}${path}`, jsonInit(method, body, auth ? session.accessToken : null))
+    fetchApi(`${BASE}${path}`, jsonInit(method, body, auth ? session.accessToken : null))
 
   let res = await send()
   if (res.status === 401 && auth && session.refreshToken) {

@@ -172,6 +172,7 @@ export const en = {
   'postDetail.title': 'Post',
   'postDetail.notFound': 'This post is not available.',
   'postDetail.related': 'More posts',
+  'postDetail.deleteError': 'Could not delete this post. Please try again.',
   'events.title': 'Events',
   'events.create': 'Create Event',
   'events.name': 'Event name',

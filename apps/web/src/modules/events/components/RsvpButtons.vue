@@ -4,7 +4,7 @@ import Button from '@/components/Button.vue'
 import type { RsvpStatus } from '../services/api'
 
 const STATUSES: RsvpStatus[] = ['GOING', 'MAYBE', 'DECLINED']
-defineProps<{ current: RsvpStatus | null }>()
+defineProps<{ current: RsvpStatus | null; disabled?: boolean }>()
 defineEmits<{ set: [status: RsvpStatus] }>()
 </script>
 
@@ -15,6 +15,7 @@ defineEmits<{ set: [status: RsvpStatus] }>()
       :key="status"
       :variant="current === status ? 'primary' : 'default'"
       :aria-pressed="current === status"
+      :disabled="disabled"
       @click="$emit('set', status)"
       >{{ t(`event.rsvp.${status}`) }}</Button
     >

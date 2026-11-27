@@ -7,6 +7,7 @@ import Button from '@/components/Button.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import FormRow from '@/components/FormRow.vue'
 import IconSelect, { type IconOption } from '@/components/IconSelect.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
 import PageCard from '@/components/PageCard.vue'
 import { PRIVACY_ICONS } from '@/helpers/privacy'
 import { useAuthStore } from '@/modules/auth/stores'
@@ -26,6 +27,8 @@ const body = ref('')
 const privacy = ref<NoteItem['privacy']>('FRIENDS')
 const editingId = ref<string | null>(null)
 const error = ref('')
+const loading = ref(true)
+const busy = ref(false)
 const expanded = ref(new Set<string>())
 const LONG_NOTE = 200
 function toggle(id: string) {
@@ -39,10 +42,13 @@ const message = (cause: unknown, fallback: string) =>
   cause instanceof ApiRequestError ? cause.messages.join(' ') : fallback
 
 async function load(username: string) {
+  loading.value = true
   try {
     items.value = (await notesApi.forProfile(username)).items
   } catch (cause) {
     error.value = message(cause, t('notes.loadError'))
+  } finally {
+    loading.value = false
   }
 }
 watch(
@@ -67,6 +73,8 @@ function reset() {
   privacy.value = 'FRIENDS'
 }
 async function save() {
+  if (busy.value) return
+  busy.value = true
   error.value = ''
   try {
     const input = { title: title.value.trim(), body: body.value.trim(), privacy: privacy.value }
@@ -79,14 +87,21 @@ async function save() {
     reset()
   } catch (cause) {
     error.value = message(cause, t('notes.saveError'))
+  } finally {
+    busy.value = false
   }
 }
 async function remove(note: NoteItem) {
+  if (busy.value) return
+  busy.value = true
+  error.value = ''
   try {
     await notesApi.remove(note.id)
     items.value = items.value.filter((item) => item.id !== note.id)
   } catch (cause) {
     error.value = message(cause, t('notes.deleteError'))
+  } finally {
+    busy.value = false
   }
 }
 </script>
@@ -107,14 +122,15 @@ async function remove(note: NoteItem) {
         <IconSelect v-model="privacy" :options="privacyOptions" :label="t('notes.privacy')" />
       </FormRow>
       <div class="form__actions">
-        <Button type="submit" :disabled="!title.trim() || !body.trim()">{{
+        <Button type="submit" :disabled="busy || !title.trim() || !body.trim()">{{
           editingId ? t('notes.save') : t('notes.publish')
         }}</Button>
         <Button variant="default" @click="reset">{{ t('page.cancel') }}</Button>
       </div>
     </form>
     <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-    <ul v-if="items.length" class="list">
+    <LoadingRows v-if="loading" :rows="2" />
+    <ul v-else-if="items.length" class="list">
       <li v-for="note in items" :key="note.id" class="item">
         <div class="item__head">
           <strong class="item__title">{{ note.title }}</strong>
@@ -144,8 +160,12 @@ async function remove(note: NoteItem) {
           {{ expanded.has(note.id) ? t('notes.less') : t('notes.more') }}
         </button>
         <div v-if="isMine" class="item__actions">
-          <Button variant="default" @click="edit(note)">{{ t('notes.edit') }}</Button>
-          <Button variant="default" @click="remove(note)">{{ t('notes.delete') }}</Button>
+          <Button variant="default" :disabled="busy" @click="edit(note)">{{
+            t('notes.edit')
+          }}</Button>
+          <Button variant="default" :disabled="busy" @click="remove(note)">{{
+            t('notes.delete')
+          }}</Button>
         </div>
       </li>
     </ul>

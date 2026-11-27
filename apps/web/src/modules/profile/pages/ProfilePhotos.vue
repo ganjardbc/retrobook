@@ -20,7 +20,12 @@ onMounted(() => void list.loadMore())
 watch(
   () => store.profile?.username,
   (owner) => {
-    if (owner) void albumsApi.forProfile(owner).then((items) => (albums.value = items))
+    // album hanyalah pelengkap: bila gagal, tab foto tetap tampil tanpa tautan album
+    if (owner)
+      void albumsApi
+        .forProfile(owner)
+        .then((items) => (albums.value = items))
+        .catch(() => (albums.value = []))
   },
   { immediate: true },
 )

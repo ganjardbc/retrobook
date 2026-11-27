@@ -24,6 +24,7 @@ export const idAdmin: Record<keyof typeof enAdmin, string> = {
 
   'admin.language': 'Bahasa',
   'admin.http.failed': 'Permintaan gagal.',
+  'admin.http.network': 'Tidak dapat menjangkau server. Silakan coba lagi.',
   'admin.http.adminOnly': 'Akses hanya untuk administrator.',
   'admin.auth.noAccess': 'Akun ini tidak memiliki akses admin.',
 

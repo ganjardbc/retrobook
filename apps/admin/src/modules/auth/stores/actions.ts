@@ -25,7 +25,8 @@ export const actions = {
     try {
       this.start(await adminAuthApi.refresh(token))
     } catch (error) {
-      if (error instanceof AdminApiError && error.status < 500) adminSession.clear()
+      if (error instanceof AdminApiError && error.status > 0 && error.status < 500)
+        adminSession.clear()
     }
   },
   async login(this: AuthStoreContext, identifier: string, password: string) {

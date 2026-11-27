@@ -6,6 +6,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
 import Button from '@/components/Button.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
 import PageCard from '@/components/PageCard.vue'
 import StatusBox from '@/modules/feed/components/StatusBox.vue'
 import PostCard from '@/modules/posts/components/PostCard.vue'
@@ -16,6 +17,8 @@ const route = useRoute()
 const group = ref<GroupSummary | null>(null)
 const posts = ref<Post[]>([])
 const error = ref('')
+const loading = ref(true)
+const busy = ref(false)
 
 const message = (cause: unknown, fallback: string) =>
   cause instanceof ApiRequestError ? cause.messages.join(' ') : fallback
@@ -27,24 +30,35 @@ async function load() {
     if (group.value.isMember) posts.value = (await groupsApi.posts(id)).items
   } catch (cause) {
     error.value = message(cause, t('groups.notFound'))
+  } finally {
+    loading.value = false
   }
 }
 async function join() {
+  if (busy.value) return
+  busy.value = true
+  error.value = ''
   try {
     group.value = await groupsApi.join(String(route.params.id))
     posts.value = (await groupsApi.posts(group.value.id)).items
   } catch (cause) {
     error.value = message(cause, t('groups.joinError'))
+  } finally {
+    busy.value = false
   }
 }
 async function leave() {
-  if (!group.value) return
+  if (!group.value || busy.value) return
+  busy.value = true
+  error.value = ''
   try {
     await groupsApi.leave(group.value.id)
     group.value = { ...group.value, isMember: false }
     posts.value = []
   } catch (cause) {
     error.value = message(cause, t('groups.leaveError'))
+  } finally {
+    busy.value = false
   }
 }
 function onPosted(post: Post) {
@@ -62,16 +76,20 @@ onMounted(() => void load())
           <RouterLink v-if="group.isAdmin" :to="`/groups/${group.id}/edit`">{{
             t('groups.edit')
           }}</RouterLink>
-          <Button v-if="!group.isMember && group.privacy === 'PUBLIC'" @click="join">{{
-            t('groups.join')
-          }}</Button>
-          <Button v-else-if="group.isMember" variant="default" @click="leave">{{
+          <Button
+            v-if="!group.isMember && group.privacy === 'PUBLIC'"
+            :disabled="busy"
+            @click="join"
+            >{{ t('groups.join') }}</Button
+          >
+          <Button v-else-if="group.isMember" variant="default" :disabled="busy" @click="leave">{{
             t('groups.leave')
           }}</Button>
         </template>
       </template>
       <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-      <div v-if="group" class="about">
+      <LoadingRows v-if="loading" :rows="1" />
+      <div v-else-if="group" class="about">
         <Avatar :name="group.name" :src="group.avatarUrl" size="ml" />
         <div class="about__text">
           <span class="about__meta"

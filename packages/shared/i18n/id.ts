@@ -172,6 +172,7 @@ export const id: Record<keyof typeof en, string> = {
   'jewel.seeAll': 'Lihat Semua',
   'postDetail.title': 'Post',
   'postDetail.notFound': 'Post ini tidak tersedia.',
+  'postDetail.deleteError': 'Tidak dapat menghapus post ini. Silakan coba lagi.',
   'postDetail.related': 'Post lainnya',
   'events.title': 'Acara',
   'events.create': 'Buat Acara',

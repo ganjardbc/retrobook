@@ -5,6 +5,8 @@ import { adminSponsoredApi, type Sponsored } from '@/modules/sponsored/services/
 
 const items = ref<Sponsored[]>([])
 const form = reactive({ title: '', body: '', linkUrl: '', startsAt: '', endsAt: '' })
+const loading = ref(true)
+const busy = ref(false)
 const error = ref('')
 const notice = ref('')
 const fail = (e: unknown, fallback: string) => {
@@ -17,9 +19,13 @@ async function load() {
     items.value = (await adminSponsoredApi.list()).items
   } catch (e) {
     fail(e, t('admin.sponsored.loadError'))
+  } finally {
+    loading.value = false
   }
 }
 async function create() {
+  if (busy.value) return
+  busy.value = true
   error.value = ''
   notice.value = ''
   try {
@@ -35,25 +41,34 @@ async function create() {
     await load()
   } catch (e) {
     fail(e, t('admin.sponsored.createError'))
+  } finally {
+    busy.value = false
   }
 }
 async function toggle(s: Sponsored) {
+  if (busy.value) return
+  busy.value = true
   error.value = ''
   try {
     await adminSponsoredApi.update(s.id, { active: !s.active })
     await load()
   } catch (e) {
     fail(e, t('admin.sponsored.updateError'))
+  } finally {
+    busy.value = false
   }
 }
 async function remove(s: Sponsored) {
-  if (!window.confirm(t('admin.sponsored.confirmDelete', { title: s.title }))) return
+  if (busy.value || !window.confirm(t('admin.sponsored.confirmDelete', { title: s.title }))) return
+  busy.value = true
   error.value = ''
   try {
     await adminSponsoredApi.remove(s.id)
     await load()
   } catch (e) {
     fail(e, t('admin.sponsored.deleteError'))
+  } finally {
+    busy.value = false
   }
 }
 onMounted(load)
@@ -92,12 +107,15 @@ onMounted(load)
         ><label class="moderation-control"
           ><span>{{ t('admin.sponsored.end') }}</span
           ><input v-model="form.endsAt" type="datetime-local" /></label
-        ><button class="button" type="submit">{{ t('admin.sponsored.create') }}</button>
+        ><button class="button" type="submit" :disabled="busy">
+          {{ t('admin.sponsored.create') }}
+        </button>
       </div>
     </form>
     <p v-if="error" class="user-error" role="alert">{{ error }}</p>
     <p v-if="notice" class="user-notice" role="status">{{ notice }}</p>
-    <p v-if="!items.length" class="reports-empty">{{ t('admin.sponsored.empty') }}</p>
+    <p v-if="loading" class="reports-empty" role="status">{{ t('admin.table.loading') }}</p>
+    <p v-else-if="!items.length" class="reports-empty">{{ t('admin.sponsored.empty') }}</p>
     <ul class="announce-list">
       <li v-for="s in items" :key="s.id">
         <div>
@@ -107,9 +125,10 @@ onMounted(load)
           <p class="report-meta">{{ s.linkUrl }} · {{ when(s.startsAt) }} → {{ when(s.endsAt) }}</p>
         </div>
         <div class="reports-actions">
-          <button class="button button--quiet" @click="toggle(s)">
+          <button class="button button--quiet" :disabled="busy" @click="toggle(s)">
             {{ s.active ? t('admin.common.disable') : t('admin.common.enable') }}</button><button
             class="button button--danger"
+            :disabled="busy"
             @click="remove(s)"
           >
             {{ t('admin.common.delete') }}

@@ -22,6 +22,7 @@ export const enAdmin = {
 
   'admin.language': 'Language',
   'admin.http.failed': 'Request failed.',
+  'admin.http.network': 'Cannot reach the server. Please try again.',
   'admin.http.adminOnly': 'Administrators only.',
   'admin.auth.noAccess': 'This account does not have admin access.',
 

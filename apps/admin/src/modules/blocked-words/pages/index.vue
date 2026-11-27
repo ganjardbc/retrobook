@@ -5,6 +5,8 @@ import { adminBlockedWordsApi, type BlockedWord } from '@/modules/blocked-words/
 
 const words = ref<BlockedWord[]>([])
 const input = ref('')
+const loading = ref(true)
+const busy = ref(false)
 const error = ref('')
 const notice = ref('')
 async function load() {
@@ -12,9 +14,13 @@ async function load() {
     words.value = (await adminBlockedWordsApi.list()).items
   } catch (e) {
     error.value = e instanceof Error ? e.message : t('admin.words.loadError')
+  } finally {
+    loading.value = false
   }
 }
 async function add() {
+  if (busy.value) return
+  busy.value = true
   error.value = ''
   notice.value = ''
   try {
@@ -28,9 +34,13 @@ async function add() {
     await load()
   } catch (e) {
     error.value = e instanceof Error ? e.message : t('admin.words.addError')
+  } finally {
+    busy.value = false
   }
 }
 async function remove(word: BlockedWord) {
+  if (busy.value) return
+  busy.value = true
   error.value = ''
   notice.value = ''
   try {
@@ -38,6 +48,8 @@ async function remove(word: BlockedWord) {
     await load()
   } catch (e) {
     error.value = e instanceof Error ? e.message : t('admin.words.deleteError')
+  } finally {
+    busy.value = false
   }
 }
 onMounted(load)
@@ -56,15 +68,17 @@ onMounted(load)
       <label class="moderation-control"
         ><span>{{ t('admin.words.new') }}</span
         ><input v-model="input" minlength="2" maxlength="60" required /></label
-      ><button class="button" type="submit">{{ t('admin.words.add') }}</button>
+      ><button class="button" type="submit" :disabled="busy">{{ t('admin.words.add') }}</button>
     </form>
     <p v-if="error" class="user-error" role="alert">{{ error }}</p>
     <p v-if="notice" class="user-notice" role="status">{{ notice }}</p>
-    <p v-if="!words.length" class="reports-empty">{{ t('admin.words.empty') }}</p>
+    <p v-if="loading" class="reports-empty" role="status">{{ t('admin.table.loading') }}</p>
+    <p v-else-if="!words.length" class="reports-empty">{{ t('admin.words.empty') }}</p>
     <ul class="words-list">
       <li v-for="w in words" :key="w.id">
         <span>{{ w.word }}</span><button
           class="row-action row-action--delete"
+          :disabled="busy"
           :aria-label="t('admin.words.remove', { word: w.word })"
           @click="remove(w)"
         >

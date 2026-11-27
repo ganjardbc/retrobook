@@ -56,7 +56,11 @@ const currentLabel = computed(
 const initials = computed(() => auth.user?.displayName?.slice(0, 1).toUpperCase() ?? 'A')
 
 async function logout() {
-  await auth.logout()
+  try {
+    await auth.logout()
+  } catch {
+    /* sesi lokal sudah dibersihkan oleh store; tetap arahkan ke login */
+  }
   await router.replace({ name: 'admin-login' })
 }
 </script>

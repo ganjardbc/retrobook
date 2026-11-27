@@ -14,8 +14,19 @@ export class AdminApiError extends Error {
   }
 }
 
+const TIMEOUT_MS = 30_000
+
+/** Jaringan putus atau timeout menjadi AdminApiError status 0, bukan TypeError mentah. */
+export async function adminFetch(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) })
+  } catch {
+    throw new AdminApiError(0, t('admin.http.network'))
+  }
+}
+
 async function send<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${BASE}${path}`, {
+  const response = await adminFetch(`${BASE}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

@@ -34,6 +34,14 @@ describe('http client', () => {
     expect(fetchMock.mock.calls[0]![1].headers.Authorization).toBe('Bearer access-1')
   })
 
+  it('jaringan putus atau timeout menjadi ApiRequestError status 0 (bukan TypeError)', async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    const err = await request('/x').catch((e) => e)
+    expect(err).toBeInstanceOf(ApiRequestError)
+    expect(err).toMatchObject({ status: 0, code: 'NETWORK_ERROR' })
+    expect(fetchMock.mock.calls[0]![1].signal).toBeInstanceOf(AbortSignal)
+  })
+
   it('401 -> refresh -> ulangi request dengan token baru', async () => {
     session.set(tokens(1))
     fetchMock
