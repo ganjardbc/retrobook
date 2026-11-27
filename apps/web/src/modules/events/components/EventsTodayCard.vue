@@ -6,6 +6,7 @@ import { RouterLink } from 'vue-router'
 import { eventsApi, type EventItem } from '@/modules/events/services/api'
 
 const events = ref<EventItem[]>([])
+const loading = ref(true)
 
 onMounted(async () => {
   // Hari menurut zona waktu pengguna (sama seperti kartu Birthdays).
@@ -16,21 +17,25 @@ onMounted(async () => {
     events.value = (await eventsApi.list({ from: from.toISOString(), to: to.toISOString() })).items
   } catch {
     events.value = []
+  } finally {
+    loading.value = false
   }
 })
+import LoadingRows from '@/components/LoadingRows.vue'
 import PageCard from '@/components/PageCard.vue'
 </script>
 
 <template>
   <PageCard
-    v-if="events.length"
+    v-if="loading || events.length"
     class="etoday"
     quiet
     :title="t('eventsToday.title')"
     heading="h2"
     flush
   >
-    <ul class="list">
+    <LoadingRows v-if="loading" :rows="1" />
+    <ul v-else class="list">
       <li v-for="e in events" :key="e.id" class="item">
         <Icon icon="mdi:calendar" class="item__icon" aria-hidden="true" />
         <span>

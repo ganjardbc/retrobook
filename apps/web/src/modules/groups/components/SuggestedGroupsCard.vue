@@ -8,12 +8,15 @@ import { groupsApi } from '@/modules/groups/services/api'
 
 const groups = ref<GroupSummary[]>([])
 const busy = ref<string | null>(null)
+const loading = ref(true)
 
 onMounted(async () => {
   try {
     groups.value = (await groupsApi.list()).suggested.slice(0, 3)
   } catch {
     groups.value = []
+  } finally {
+    loading.value = false
   }
 })
 
@@ -28,20 +31,22 @@ async function join(group: GroupSummary) {
     busy.value = null
   }
 }
+import LoadingRows from '@/components/LoadingRows.vue'
 import PageCard from '@/components/PageCard.vue'
 import GroupRow from '@/modules/groups/components/GroupRow.vue'
 </script>
 
 <template>
   <PageCard
-    v-if="groups.length"
+    v-if="loading || groups.length"
     class="sgroups"
     quiet
     :title="t('suggestedGroups.title')"
     heading="h2"
     flush
   >
-    <ul class="list">
+    <LoadingRows v-if="loading" :rows="2" />
+    <ul v-else class="list">
       <GroupRow v-for="g in groups" :key="g.id" compact :group="g">
         <Button class="join" variant="default" :disabled="busy === g.id" @click="join(g)">
           <Icon icon="mdi:plus" aria-hidden="true" />{{ t('groups.join') }}

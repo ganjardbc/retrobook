@@ -4,6 +4,7 @@ import { t } from '@retrobook/shared/i18n'
 import { onMounted, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import Button from '@/components/Button.vue'
+import LoadingRows from '@/components/LoadingRows.vue'
 import PageCard from '@/components/PageCard.vue'
 import FriendRow from '@/modules/friends/components/FriendRow.vue'
 import { friendsApi } from '@/modules/friends/services/api'
@@ -12,6 +13,7 @@ import { ApiRequestError } from '@/plugins/http'
 type Row = FriendSuggestion & { sent: boolean; busy: boolean }
 const rows = ref<Row[]>([])
 const failed = ref(false)
+const loading = ref(true)
 
 // Kartu hanya muncul bila ada saran; gagal memuat tidak mengganggu halaman.
 onMounted(async () => {
@@ -23,6 +25,8 @@ onMounted(async () => {
     }))
   } catch {
     rows.value = []
+  } finally {
+    loading.value = false
   }
 })
 
@@ -53,9 +57,17 @@ const mutual = (n: number) => (n === 1 ? t('pymk.mutual.one') : t('pymk.mutual.m
 </script>
 
 <template>
-  <PageCard v-if="rows.length" class="pymk" quiet :title="t('pymk.title')" heading="h2" flush>
+  <PageCard
+    v-if="loading || rows.length"
+    class="pymk"
+    quiet
+    :title="t('pymk.title')"
+    heading="h2"
+    flush
+  >
     <p v-if="failed" class="form-error pymk__error" role="alert">{{ t('friends.error.action') }}</p>
-    <ul class="pymk__list">
+    <LoadingRows v-if="loading" :rows="2" />
+    <ul v-else class="pymk__list">
       <FriendRow
         v-for="r in rows"
         :key="r.user.id"

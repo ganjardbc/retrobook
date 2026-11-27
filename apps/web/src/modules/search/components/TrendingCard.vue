@@ -6,28 +6,33 @@ import { RouterLink } from 'vue-router'
 import { searchApi } from '@/modules/search/services/api'
 
 const tags = ref<TrendingTag[]>([])
+const loading = ref(true)
 
 onMounted(async () => {
   try {
     tags.value = (await searchApi.trending()).items
   } catch {
     tags.value = []
+  } finally {
+    loading.value = false
   }
 })
+import LoadingRows from '@/components/LoadingRows.vue'
 import PageCard from '@/components/PageCard.vue'
 import { Icon } from '@iconify/vue'
 </script>
 
 <template>
   <PageCard
-    v-if="tags.length"
+    v-if="loading || tags.length"
     class="trending"
     quiet
     :title="t('trending.title')"
     heading="h2"
     flush
   >
-    <ul class="list">
+    <LoadingRows v-if="loading" :rows="2" />
+    <ul v-else class="list">
       <li v-for="item in tags" :key="item.tag" class="item">
         <Icon icon="mdi:trending-up" class="item__icon" aria-hidden="true" />
         <span class="item__text">

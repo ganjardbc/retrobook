@@ -8,27 +8,32 @@ import { localDate } from '@/helpers/date'
 import { friendsApi } from '@/modules/friends/services/api'
 
 const people = ref<UserSummary[]>([])
+const loading = ref(true)
 
 onMounted(async () => {
   try {
     people.value = (await friendsApi.birthdays(localDate())).items
   } catch {
     people.value = []
+  } finally {
+    loading.value = false
   }
 })
+import LoadingRows from '@/components/LoadingRows.vue'
 import PageCard from '@/components/PageCard.vue'
 </script>
 
 <template>
   <PageCard
-    v-if="people.length"
+    v-if="loading || people.length"
     class="bday"
     quiet
     :title="t('birthdays.title')"
     heading="h2"
     flush
   >
-    <ul class="list">
+    <LoadingRows v-if="loading" :rows="1" />
+    <ul v-else class="list">
       <li v-for="p in people" :key="p.id" class="item">
         <Icon icon="mdi:cake-variant" class="item__icon" aria-hidden="true" />
         <span>
