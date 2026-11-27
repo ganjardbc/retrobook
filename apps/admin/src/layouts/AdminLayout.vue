@@ -106,15 +106,30 @@ async function logout() {
               }}<small>{{ t('admin.layout.administrator') }}</small></span
             >
           </div>
-          <LanguageSwitcher />
-          <button
-            class="logout-button"
-            :title="t('common.logOut')"
-            :aria-label="t('common.logOut')"
-            @click="logout"
-          >
-            ↗
-          </button>
+          <div class="topbar-actions">
+            <LanguageSwitcher />
+            <button
+              class="logout-button"
+              :title="t('common.logOut')"
+              :aria-label="t('common.logOut')"
+              @click="logout"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="17"
+                height="17"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="M16 17l5-5-5-5M21 12H9" />
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
       <main class="page-content"><RouterView /></main>
