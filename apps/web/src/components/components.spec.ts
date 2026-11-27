@@ -82,13 +82,42 @@ describe('AppLayout', () => {
     expect(w.text()).toContain('Fun project / parody')
   })
 
-  it('tombol menu membuka dan menutup panel menu kiri', async () => {
+  const asPhone = (matches: boolean) =>
+    vi.stubGlobal('matchMedia', () => ({
+      matches,
+      addEventListener() {},
+      removeEventListener() {},
+    }))
+
+  it('ponsel: tombol menu di bar tab membuka laci, berubah jadi tutup, dan menutupnya lagi', async () => {
+    asPhone(true)
     const router = makeRouter()
     await router.push('/')
     const w = mount(AppLayout, { global: { plugins: [router] } })
     await flushPromises()
+    const toggle = () => w.find('button[aria-controls="left-menu"]')
     expect(w.find('.layout__left--open').exists()).toBe(false)
-    await w.find('.navbar__menu').trigger('click')
+    expect(toggle().attributes('aria-expanded')).toBe('false')
+
+    await toggle().trigger('click')
     expect(w.find('.layout__left--open').exists()).toBe(true)
+    expect(toggle().attributes('aria-expanded')).toBe('true')
+
+    await toggle().trigger('click')
+    expect(w.find('.layout__left--open').exists()).toBe(false)
+    vi.unstubAllGlobals()
+  })
+
+  it('desktop: tanpa hamburger di halaman biasa dan satu daftar chat per layout', async () => {
+    asPhone(false)
+    const router = makeRouter()
+    await router.push('/')
+    const w = mount(AppLayout, { global: { plugins: [router] } })
+    await flushPromises()
+    expect(w.find('button[aria-controls="left-menu"]').exists()).toBe(false)
+    // Rute uji memakai AppLayout sebagai komponen, jadi layout ter-render bersarang: hitung per layout.
+    expect(w.findAll('section.chat')).toHaveLength(w.findAll('.layout').length)
+    expect(w.find('.chat--inline').exists()).toBe(false)
+    vi.unstubAllGlobals()
   })
 })

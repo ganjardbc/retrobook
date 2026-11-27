@@ -2,7 +2,7 @@
 import { t } from '@retrobook/shared/i18n'
 import { computed, onBeforeUnmount, onMounted, ref, watch, type ComponentPublicInstance } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
-import { useMediaQuery, useMobile } from '@/composables/mobile'
+import { NARROW_QUERY, useMediaQuery, useMobile } from '@/composables/mobile'
 import SearchBox from '@/modules/search/components/SearchBox.vue'
 import EventsTodayCard from '@/modules/events/components/EventsTodayCard.vue'
 import SuggestedGroupsCard from '@/modules/groups/components/SuggestedGroupsCard.vue'
@@ -51,7 +51,7 @@ const onKey = (e: KeyboardEvent) => {
   if (e.key === 'Escape') menuOpen.value = false
 }
 // Layar melebar melewati 900 px: tombol hamburger hilang, jadi laci yang masih terbuka ditutup.
-const narrow = useMediaQuery('(max-width: 900px)')
+const narrow = useMediaQuery(NARROW_QUERY)
 watch(narrow, (isNarrow) => {
   if (!isNarrow) menuOpen.value = false
 })
@@ -92,8 +92,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           :class="{ 'layout__left--open': menuOpen }"
         >
           <LeftMenu />
-          <!-- Strip chat tersembunyi di bawah 900 px; daftar teman tersedia di laci yang terbuka. -->
-          <ChatSidebar v-if="menuOpen" inline @picked="menuOpen = false" />
+          <!-- Daftar teman hanya dirender di satu tempat: di laci saat sempit, selain itu sebagai strip kanan. -->
+          <ChatSidebar v-if="narrow && menuOpen" inline @picked="menuOpen = false" />
         </aside>
         <main id="main-content" class="layout__main" tabindex="-1"><RouterView /></main>
         <!-- Kartu di atas, info footer di dasar kolom. -->
@@ -112,7 +112,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       </div>
     </div>
     <!-- Strip chat menempel di tepi kanan layar, di luar kolom (referensi profil Maret 2015). -->
-    <ChatSidebar />
+    <ChatSidebar v-if="!narrow" />
     <ChatDock />
   </div>
 </template>

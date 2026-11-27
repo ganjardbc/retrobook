@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 import { useMobile } from '@/composables/mobile'
 import { useAuthStore } from '@/modules/auth/stores'
 import Avatar from '@/components/Avatar.vue'
+import MenuToggle from '@/components/MenuToggle.vue'
 import SearchBox from '@/modules/search/components/SearchBox.vue'
 import MessagesJewel from '@/modules/chat/components/MessagesJewel.vue'
 import FriendRequestsJewel from '@/modules/friends/components/FriendRequestsJewel.vue'
@@ -34,29 +35,21 @@ const mobile = useMobile()
         <FriendRequestsJewel />
         <MessagesJewel />
         <NotificationsJewel />
-        <button
+        <MenuToggle
           class="navbar__tab"
           :class="{ 'navbar__tab--current': menuOpen }"
-          type="button"
-          :aria-label="t('nav.menu')"
-          aria-controls="left-menu"
-          :aria-expanded="menuOpen"
+          :open="menuOpen"
           @click="$emit('toggle-menu')"
-        >
-          <Icon :icon="menuOpen ? 'mdi:close' : 'mdi:menu'" aria-hidden="true" />
-        </button>
+        />
       </template>
       <template v-else>
-        <button
+        <!-- Hanya halaman tanpa kolom menu kiri (profil, messages) yang butuh hamburger di tablet. -->
+        <MenuToggle
+          v-if="drawer"
           class="navbar__menu"
-          type="button"
-          :aria-label="t('nav.menu')"
-          aria-controls="left-menu"
-          :aria-expanded="menuOpen"
+          :open="menuOpen"
           @click="$emit('toggle-menu')"
-        >
-          <Icon :icon="menuOpen ? 'mdi:close' : 'mdi:menu'" aria-hidden="true" />
-        </button>
+        />
         <RouterLink class="navbar__brand" to="/"><WordMark variant="mark" /></RouterLink>
         <SearchBox v-if="auth.user" />
         <span class="navbar__spacer" />
@@ -204,8 +197,10 @@ const mobile = useMobile()
     box-shadow: inset 0 -3px 0 var(--c-text-on-brand);
   }
   .navbar__inner :deep(.jewel__btn) {
+    justify-content: center;
+    width: 100%; /* selebar sel, seperti tab lain: garis bawah tab aktif sama panjang */
     height: 100%;
-    padding: 0 var(--sp-3);
+    padding: 0;
     color: rgba(255, 255, 255, 0.72);
     font-size: 24px;
   }
@@ -216,7 +211,8 @@ const mobile = useMobile()
   }
   .navbar__inner :deep(.jewel__badge) {
     top: 4px;
-    right: 4px;
+    right: auto;
+    left: calc(50% + 2px); /* di pojok kanan atas ikon */
   }
 }
 </style>

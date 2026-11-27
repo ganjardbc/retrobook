@@ -8,7 +8,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
 import { formatClock, formatDayLabel, formatShortAgo, formatTime } from '@/helpers/time'
 import { useDismissOnOutside } from '@/composables/dismissOnOutside'
-import { useMediaQuery } from '@/composables/mobile'
+import { COMPACT_QUERY, useMediaQuery } from '@/composables/mobile'
 import { chatApi } from '@/modules/chat/services/api'
 import { type LocalMessage, useChatStore } from '@/modules/chat/stores'
 import { useAuthStore } from '@/modules/auth/stores'
@@ -46,7 +46,7 @@ const menuOpen = ref(false)
 const menuRoot = ref<HTMLElement | null>(null)
 const actionError = ref(false)
 useDismissOnOutside(menuRoot, menuOpen)
-const compact = useMediaQuery('(max-width: 700px)')
+const compact = useMediaQuery(COMPACT_QUERY)
 
 const contacts = computed<Contact[]>(() => {
   const friends = new Map(chat.friends.map((friend) => [friend.user.id, friend]))
