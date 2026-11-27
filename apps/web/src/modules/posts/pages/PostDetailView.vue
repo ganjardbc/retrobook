@@ -86,6 +86,7 @@ const onUpdated = (list: typeof main, post: Post) => list.replace(post)
           @updated="(p) => onUpdated(related, p)"
         />
       </template>
+      <p class="post-detail__note">{{ t('feed.end') }}</p>
     </template>
   </div>
 </template>
@@ -95,5 +96,11 @@ const onUpdated = (list: typeof main, post: Post) => list.replace(post)
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
+}
+.post-detail__note {
+  margin: 0;
+  padding: var(--sp-3);
+  color: var(--c-text-muted);
+  text-align: center;
 }
 </style>

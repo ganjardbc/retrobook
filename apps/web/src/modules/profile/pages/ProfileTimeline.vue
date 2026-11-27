@@ -78,6 +78,7 @@ function onWallPosted(post: Parameters<typeof list.prepend>[0]) {
       <div v-else-if="!list.done" class="timeline__more">
         <Button variant="default" @click="list.loadMore()">{{ t('feed.loadMore') }}</Button>
       </div>
+      <p v-else class="timeline__note">{{ t('feed.end') }}</p>
     </div>
     <YearScroller
       v-if="store.years.length > 1"

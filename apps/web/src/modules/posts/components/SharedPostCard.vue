@@ -2,7 +2,7 @@
 import type { Post } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { formatTime } from '@/helpers/time'
 import Avatar from '@/components/Avatar.vue'
 import HashtagText from '@/modules/posts/components/HashtagText.vue'
@@ -11,6 +11,16 @@ const props = defineProps<{ original: NonNullable<Post['sharedFrom']> }>()
 
 // `{ unavailable: true }` bila dihapus atau tidak boleh dilihat pembaca ini; sebabnya tidak dibedakan.
 const post = computed(() => ('unavailable' in props.original ? null : props.original))
+
+const router = useRouter()
+const route = useRoute()
+// Klik teks atau gambar membuka post asal (hashtag/tautan tetap berfungsi, seleksi teks tidak memicu).
+function openOriginal(e: MouseEvent) {
+  if (!post.value || (e.target as HTMLElement).closest('a')) return
+  if (window.getSelection()?.toString()) return
+  const path = `/posts/${post.value.id}`
+  if (route.path !== path) void router.push(path)
+}
 </script>
 
 <template>
@@ -23,17 +33,22 @@ const post = computed(() => ('unavailable' in props.original ? null : props.orig
           <RouterLink class="shared__name" :to="`/${post.author.username}`">{{
             post.author.displayName
           }}</RouterLink>
-          <div class="shared__time">{{ formatTime(post.createdAt) }}</div>
+          <RouterLink class="shared__time" :to="`/posts/${post.id}`">{{
+            formatTime(post.createdAt)
+          }}</RouterLink>
         </div>
       </div>
       <!-- Isi asal selalu teks, tidak pernah HTML. -->
-      <p v-if="post.content" class="shared__text"><HashtagText :text="post.content" /></p>
+      <p v-if="post.content" class="shared__text shared__open" @click="openOriginal">
+        <HashtagText :text="post.content" />
+      </p>
       <img
         v-if="post.imageUrl"
-        class="shared__image"
+        class="shared__image shared__open"
         :src="post.imageUrl"
         :alt="t('post.image.alt', { name: post.author.displayName })"
         loading="lazy"
+        @click="openOriginal"
       />
     </template>
   </div>
@@ -59,6 +74,7 @@ const post = computed(() => ('unavailable' in props.original ? null : props.orig
   font-weight: bold;
 }
 .shared__time {
+  display: block;
   color: var(--c-text-muted);
 }
 .shared__text {
@@ -66,6 +82,9 @@ const post = computed(() => ('unavailable' in props.original ? null : props.orig
   padding: var(--sp-2) var(--sp-3) var(--sp-3);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+.shared__open {
+  cursor: pointer;
 }
 .shared__image {
   display: block;

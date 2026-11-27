@@ -79,6 +79,7 @@ watch(
       :icon="icon"
       :title="empty"
     />
+    <p v-else-if="list.done.value" class="post-list-page__note">{{ t('feed.end') }}</p>
     <div ref="sentinel" class="post-list-page__sentinel" />
   </div>
 </template>
