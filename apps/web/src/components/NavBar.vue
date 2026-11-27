@@ -2,6 +2,7 @@
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
 import { RouterLink } from 'vue-router'
+import { useMobile } from '@/composables/mobile'
 import { useAuthStore } from '@/modules/auth/stores'
 import Avatar from '@/components/Avatar.vue'
 import SearchBox from '@/modules/search/components/SearchBox.vue'
@@ -13,6 +14,8 @@ import WordMark from '@/components/WordMark.vue'
 defineProps<{ menuOpen?: boolean; drawer?: boolean }>()
 defineEmits<{ 'toggle-menu': [] }>()
 const auth = useAuthStore()
+// Di ponsel kotak cari ada di laci menu (AppLayout), bukan di navbar.
+const mobile = useMobile()
 </script>
 
 <template>
@@ -29,7 +32,7 @@ const auth = useAuthStore()
         <Icon icon="mdi:menu" aria-hidden="true" />
       </button>
       <RouterLink class="navbar__brand" to="/"><WordMark variant="mark" /></RouterLink>
-      <SearchBox v-if="auth.user" />
+      <SearchBox v-if="auth.user && !mobile" />
       <span class="navbar__spacer" />
       <template v-if="auth.user">
         <RouterLink class="navbar__link navbar__me" :to="`/${auth.user.username}`">
@@ -147,8 +150,7 @@ const auth = useAuthStore()
     line-height: 1;
   }
   .navbar__me,
-  .navbar__home,
-  .navbar :deep(.search) {
+  .navbar__home {
     display: none;
   }
   .navbar__inner {

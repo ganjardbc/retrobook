@@ -288,23 +288,71 @@ async function block() {
     margin: 0 var(--sp-3) var(--sp-2);
   }
 }
+/* Ponsel: cover lebih pendek, foto profil 64 px menimpa setengah tinggi dasar cover, nama di kanan foto
+   di bawah cover (teks gelap, terbaca di cover apa pun), dan tombol aksi satu blok selebar kartu. */
 @media (max-width: 640px) {
   .header {
-    --cover-h: 160px;
+    --cover-h: 140px;
+    --avatar-size: var(--avatar-ml);
+    --avatar-overhang: calc(var(--avatar-size) / 2 + 4px); /* setengah foto + padding dan border */
   }
   .header__cover {
     height: var(--cover-h);
   }
+  .header__avatar {
+    top: calc(var(--cover-h) - var(--avatar-overhang));
+    left: var(--sp-3);
+    bottom: auto;
+    transform: none;
+  }
   .header__avatar :deep(.avatar--l) {
-    width: var(--avatar-m);
-    height: var(--avatar-m);
+    width: var(--avatar-size);
+    height: var(--avatar-size);
   }
   .header__name {
-    left: calc(var(--avatar-m) + 2 * var(--sp-4) + var(--sp-2));
+    position: static;
+    min-height: calc(var(--avatar-overhang) - var(--sp-2));
+    margin: var(--sp-2) var(--sp-3) 0 calc(var(--avatar-size) + 2 * var(--sp-3) + 8px);
+    color: var(--c-text);
     font-size: var(--fs-title);
+    text-shadow: none;
+    transform: none;
   }
   .header__actions {
-    padding-left: calc(var(--avatar-m) + 2 * var(--sp-4));
+    justify-content: stretch;
+    padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  }
+  .header__actions > * {
+    flex: 1 1 auto;
+  }
+  .header__actions > .header__more {
+    flex: 0 0 auto;
+  }
+  .header__actions :deep(.btn) {
+    justify-content: center;
+    text-align: center;
+  }
+  /* Awalan `.header` menaikkan spesifisitas: aturan dasar tombol foto dan menu ada di bawah blok ini. */
+  .header .header__menu {
+    bottom: auto;
+    top: calc(100% + var(--sp-1));
+  }
+  /* Tombol kamera: lencana bulat di pojok kanan bawah foto, bukan menutupi inisial. */
+  .header .header__photo--avatar {
+    right: -2px;
+    bottom: -2px;
+    left: auto;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 15px;
+  }
+  .header .header__photo--cover {
+    top: var(--sp-2);
+    left: var(--sp-2);
+    font-size: var(--fs-small);
   }
 }
 .header__file {

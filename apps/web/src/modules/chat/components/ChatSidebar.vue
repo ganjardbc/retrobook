@@ -126,12 +126,7 @@ import { formatShortAgo } from '@/helpers/time'
     border-left: 0;
   }
   /* Baris sejajar dengan baris menu di atasnya (padding kiri dan ukuran avatar yang sama). */
-  .layout__left--open .chat--inline .chat__row,
-  .layout__left--open .chat--inline .chat__item {
-    padding-inline: var(--sp-2);
-  }
-  .layout__left--open .chat--inline .chat__note,
-  .layout__left--open .chat--inline .chat__offline {
+  .layout__left--open .chat--inline :is(.chat__row, .chat__item, .chat__note, .chat__offline) {
     padding-inline: var(--sp-2);
   }
 }

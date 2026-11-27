@@ -2,6 +2,7 @@
 import { t } from '@retrobook/shared/i18n'
 import { computed, onBeforeUnmount, onMounted, ref, watch, type ComponentPublicInstance } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
+import { useMediaQuery, useMobile } from '@/composables/mobile'
 import EventsTodayCard from '@/modules/events/components/EventsTodayCard.vue'
 import SuggestedGroupsCard from '@/modules/groups/components/SuggestedGroupsCard.vue'
 import BirthdaysCard from '@/modules/friends/components/BirthdaysCard.vue'
@@ -21,6 +22,7 @@ import NavBar from '@/components/NavBar.vue'
 const router = useRouter()
 const route = useRoute()
 const menuOpen = ref(false)
+const mobile = useMobile()
 const isProfile = computed(() => route.meta.layout === 'profile')
 const isMessages = computed(() => route.name === 'messages')
 // Halaman form dan pengaturan: kolom kanan hanya berisi footer, tanpa kartu yang mengalihkan perhatian.
@@ -47,6 +49,11 @@ router.afterEach(() => (menuOpen.value = false))
 const onKey = (e: KeyboardEvent) => {
   if (e.key === 'Escape') menuOpen.value = false
 }
+// Layar melebar melewati 900 px: tombol hamburger hilang, jadi laci yang masih terbuka ditutup.
+const narrow = useMediaQuery('(max-width: 900px)')
+watch(narrow, (isNarrow) => {
+  if (!isNarrow) menuOpen.value = false
+})
 watch(menuOpen, (open) =>
   open ? window.addEventListener('keydown', onKey) : window.removeEventListener('keydown', onKey),
 )
@@ -80,11 +87,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           class="layout__left"
           :class="{ 'layout__left--open': menuOpen }"
         >
-          <!-- Khusus ponsel: kotak cari pindah dari navbar ke laci. -->
-          <SearchBox class="layout__drawer-search" />
+          <!-- Ponsel: kotak cari pindah dari navbar ke laci (dirender hanya saat laci terbuka). -->
+          <SearchBox v-if="mobile && menuOpen" class="layout__drawer-search" />
           <LeftMenu />
-          <!-- Khusus ponsel: strip chat (daftar teman) tersembunyi di luar laci. -->
-          <ChatSidebar inline @picked="menuOpen = false" />
+          <!-- Strip chat tersembunyi di bawah 900 px; daftar teman tersedia di laci yang terbuka. -->
+          <ChatSidebar v-if="menuOpen" inline @picked="menuOpen = false" />
         </aside>
         <main id="main-content" class="layout__main" tabindex="-1"><RouterView /></main>
         <!-- Kartu di atas, info footer di dasar kolom. -->
@@ -136,9 +143,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   overflow: hidden;
 }
 .layout--profile .layout__left {
-  display: none;
-}
-.layout__drawer-search {
   display: none;
 }
 .layout__footer {
@@ -215,9 +219,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   .layout__left {
     display: none;
   }
-  /* Kotak cari pindah dari navbar ke laci hanya di ponsel. */
-  .layout__left--open .layout__drawer-search {
-    display: block;
+  .layout__drawer-search {
     max-width: none;
     margin-bottom: var(--sp-3);
   }

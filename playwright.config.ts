@@ -8,6 +8,9 @@ const adminPort = process.env.E2E_ADMIN_PORT ?? '5184'
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // Dua worker: dengan lima worker bawaan, tes paralel berebut satu database dan API sehingga muncul
+  // "write conflict or a deadlock" dan kegagalan acak; dengan dua worker 12 run berturut-turut hijau.
+  workers: Number(process.env.E2E_WORKERS ?? 2),
   retries: process.env.CI ? 1 : 0,
   reporter: 'list',
   use: {

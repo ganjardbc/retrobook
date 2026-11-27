@@ -102,6 +102,9 @@ test('ADM-17 hiding a hashtag removes it from trending', async ({ browser, page 
   await admin.page.goto(`${ADMIN_URL}/trending`)
   await admin.page.getByLabel('Cari hashtag').fill(tag)
   await admin.page.getByRole('button', { name: 'Cari' }).click()
+  // Tunggu hasil pencarian stabil (satu baris) sebelum mengklik: daftar awal yang belum difilter masih
+  // bisa tampil, dan baris dari daftar itu akan diganti oleh hasil pencarian.
+  await expect(admin.page.locator('.announce-list li')).toHaveCount(1)
   // Baris dipilih lewat teks tag yang persis sama, supaya baris tag lain dari run sebelumnya tidak ikut.
   const row = admin.page
     .locator('.announce-list li')

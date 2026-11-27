@@ -8,17 +8,23 @@ const nextCursor = ref<string | null>(null)
 const q = ref('')
 const error = ref('')
 const loading = ref(false)
+// Hanya respons permintaan terbaru yang dipakai: respons pencarian lama yang datang terlambat tidak boleh
+// menimpa daftar (dan membatalkan tampilan status "disembunyikan" yang baru diubah).
+let latest = 0
 async function load(more = false) {
+  const mine = ++latest
   loading.value = true
   error.value = ''
   try {
     const page = await adminTrendingApi.list(q.value, more ? nextCursor.value : null)
+    if (mine !== latest) return
     items.value = more ? [...items.value, ...page.items] : page.items
     nextCursor.value = page.nextCursor
   } catch (e) {
-    error.value = e instanceof Error ? e.message : t('admin.trending.loadError')
+    if (mine === latest)
+      error.value = e instanceof Error ? e.message : t('admin.trending.loadError')
   } finally {
-    loading.value = false
+    if (mine === latest) loading.value = false
   }
 }
 async function toggle(h: AdminHashtag) {

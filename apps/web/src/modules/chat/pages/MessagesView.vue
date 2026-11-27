@@ -3,11 +3,12 @@ import type { ChatFriend, ChatMessage, Conversation, UserSummary } from '@retrob
 import { isUuid } from '@retrobook/shared'
 import { t } from '@retrobook/shared/i18n'
 import { Icon } from '@iconify/vue'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import Avatar from '@/components/Avatar.vue'
 import { formatClock, formatDayLabel, formatShortAgo, formatTime } from '@/helpers/time'
 import { useDismissOnOutside } from '@/composables/dismissOnOutside'
+import { useMediaQuery } from '@/composables/mobile'
 import { chatApi } from '@/modules/chat/services/api'
 import { type LocalMessage, useChatStore } from '@/modules/chat/stores'
 import { useAuthStore } from '@/modules/auth/stores'
@@ -45,9 +46,7 @@ const menuOpen = ref(false)
 const menuRoot = ref<HTMLElement | null>(null)
 const actionError = ref(false)
 useDismissOnOutside(menuRoot, menuOpen)
-const compact = ref(
-  typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches,
-)
+const compact = useMediaQuery('(max-width: 700px)')
 
 const contacts = computed<Contact[]>(() => {
   const friends = new Map(chat.friends.map((friend) => [friend.user.id, friend]))
@@ -237,18 +236,10 @@ watch(
   },
 )
 
-function updateCompact() {
-  compact.value = window.matchMedia('(max-width: 700px)').matches
-}
-
 onMounted(() => {
-  window.addEventListener('resize', updateCompact)
-  updateCompact()
   if (!chat.friends.length && !chat.friendsLoading) void chat.loadFriends()
   void loadConversations()
 })
-
-onBeforeUnmount(() => window.removeEventListener('resize', updateCompact))
 </script>
 
 <template>
