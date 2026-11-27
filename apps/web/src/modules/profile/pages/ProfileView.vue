@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { t } from '@retrobook/shared/i18n'
-import { watch } from 'vue'
+import { onBeforeUnmount, watch, type ComponentPublicInstance } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import Button from '@/components/Button.vue'
+import { belowNavbar, stickyBottom } from '@/helpers/stickyBottom'
 import FriendsGrid from '@/modules/friends/components/FriendsGrid.vue'
 import ProfileNotes from '@/modules/profile/components/ProfileNotes.vue'
 import LifeEvents from '@/modules/profile/components/LifeEvents.vue'
@@ -20,6 +21,15 @@ function retry() {
   store.reset()
   void store.load(name)
 }
+
+// Kolom info menempel di bawah navbar (hanya ≥901 px, lihat CSS) dan ikut bergulir sampai dasarnya
+// terlihat bila lebih tinggi dari layar. Elemennya dibuat ulang tiap profil dimuat, jadi dipasang ulang.
+let stopSticky: (() => void) | null = null
+function sticky(el: Element | ComponentPublicInstance | null) {
+  stopSticky?.()
+  stopSticky = el instanceof HTMLElement ? stickyBottom(el, belowNavbar) : null
+}
+onBeforeUnmount(() => stopSticky?.())
 
 // Memuat saat username di URL berubah (termasuk dari profil satu ke profil lain).
 watch(
@@ -46,7 +56,7 @@ watch(
       <ProfileHeader :profile="store.profile" class="profile__header" />
       <ProfileTabs :profile="store.profile" />
       <div class="profile__body">
-        <aside class="profile__info">
+        <aside :ref="sticky" class="profile__info">
           <!-- Tab About sudah menampilkan info yang sama; kartu ini untuk tab lain. -->
           <InfoCards v-if="route.name !== 'profile-about'" :profile="store.profile" />
           <FriendsGrid :profile="store.profile" :friends="store.friends.items" />
@@ -95,6 +105,14 @@ watch(
 .profile__info,
 .profile__main {
   min-width: 0;
+}
+/* Desktop: kolom info menempel mengikuti gulir; --sticky-top diisi helpers/stickyBottom. */
+@media (min-width: 901px) {
+  .profile__info {
+    position: sticky;
+    top: var(--sticky-top, calc(var(--h-navbar) + var(--sp-3)));
+    align-self: start;
+  }
 }
 @media (max-width: 900px) {
   .profile__body {

@@ -3,6 +3,9 @@
  * `top` dibuat negatif sehingga elemen menempel setelah dasarnya mencapai dasar layar.
  * Mengisi variabel CSS `--sticky-top` pada elemen; CSS memakainya sebagai `top`.
  */
+/** Batas atas elemen yang menempel: tepat di bawah navbar ditambah satu jarak (12 = --sp-3). */
+export const belowNavbar = () => (document.querySelector('.navbar')?.clientHeight ?? 0) + 12
+
 export function stickyBottom(el: HTMLElement, base: () => number): () => void {
   const update = () => {
     const top = Math.min(base(), window.innerHeight - el.offsetHeight - 12)

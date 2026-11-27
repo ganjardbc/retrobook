@@ -13,7 +13,7 @@ import SearchBox from '@/modules/search/components/SearchBox.vue'
 import SponsoredCard from '@/modules/feed/components/SponsoredCard.vue'
 import TrendingCard from '@/modules/search/components/TrendingCard.vue'
 import { useChatStore } from '@/modules/chat/stores'
-import { stickyBottom } from '@/helpers/stickyBottom'
+import { belowNavbar, stickyBottom } from '@/helpers/stickyBottom'
 import { disconnectRealtime } from '@/plugins/realtime'
 import AppFooter from '@/components/AppFooter.vue'
 import LeftMenu from '@/components/LeftMenu.vue'
@@ -29,10 +29,9 @@ const isMessages = computed(() => route.name === 'messages')
 const isFocus = computed(() => route.meta.focus === true)
 
 // Kolom samping menempel di bawah navbar dan ikut bergulir sampai dasarnya terlihat.
-const stickyTop = () => (document.querySelector('.navbar')?.clientHeight ?? 0) + 12 // 12 = --sp-3
 const stops: Array<() => void> = []
 function sticky(el: Element | ComponentPublicInstance | null) {
-  if (el instanceof HTMLElement) stops.push(stickyBottom(el, stickyTop))
+  if (el instanceof HTMLElement) stops.push(stickyBottom(el, belowNavbar))
 }
 
 // Koneksi realtime hidup selama shell member tampil (logout atau pindah ke tamu memutusnya).
