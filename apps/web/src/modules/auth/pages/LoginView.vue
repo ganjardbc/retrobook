@@ -79,45 +79,51 @@ async function submitSignup() {
 <template>
   <AuthLayout>
     <template #header>
-      <form class="bar__form" @submit.prevent="submit">
-        <label for="login-identifier">
-          <span>{{ t('auth.login.identifier') }}</span>
-          <input
-            id="login-identifier"
-            v-model="identifier"
-            name="identifier"
-            autocomplete="username"
-            required
-          />
-        </label>
-        <div class="password-field">
-          <label for="login-password">{{ t('auth.login.password') }}</label>
-          <input
-            id="login-password"
-            v-model="password"
-            name="password"
-            type="password"
-            autocomplete="current-password"
-            required
-          />
-          <RouterLink class="forgot" to="/forgot-password">{{ t('auth.forgot.link') }}</RouterLink>
+      <div class="bar">
+        <form class="bar__form" @submit.prevent="submit">
+          <label for="login-identifier">
+            <span>{{ t('auth.login.identifier') }}</span>
+            <input
+              id="login-identifier"
+              v-model="identifier"
+              name="identifier"
+              autocomplete="username"
+              required
+            />
+          </label>
+          <div class="password-field">
+            <label for="login-password">{{ t('auth.login.password') }}</label>
+            <input
+              id="login-password"
+              v-model="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+            />
+            <RouterLink class="forgot" to="/forgot-password">{{
+              t('auth.forgot.link')
+            }}</RouterLink>
+          </div>
+          <Button
+            class="bar__submit"
+            variant="default"
+            type="submit"
+            :disabled="busy || wait.active.value"
+            >{{ t('auth.login.submit') }}</Button
+          >
+        </form>
+        <div v-if="notice || error || wait.active.value" class="bar__alert">
+          <p v-if="notice" role="status">{{ notice }}</p>
+          <p v-if="error" role="alert">{{ error }}</p>
+          <p v-if="wait.active.value" role="alert">
+            {{ t('error.rateLimited', { n: wait.remaining.value }) }}
+          </p>
         </div>
-        <Button
-          class="bar__submit"
-          variant="default"
-          type="submit"
-          :disabled="busy || wait.active.value"
-          >{{ t('auth.login.submit') }}</Button
-        >
-      </form>
+      </div>
     </template>
 
     <div class="main">
-      <p v-if="notice" class="form-error" role="status">{{ notice }}</p>
-      <p v-if="error" class="form-error" role="alert">{{ error }}</p>
-      <p v-if="wait.active.value" class="form-error" role="alert">
-        {{ t('error.rateLimited', { n: wait.remaining.value }) }}
-      </p>
       <div class="main__cols">
         <section class="tagline">
           <h1>{{ t('auth.login.tagline.title') }}</h1>
@@ -203,6 +209,42 @@ async function submitSignup() {
 </template>
 
 <style scoped>
+.bar {
+  position: relative;
+}
+.bar__alert {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(340px, 100vw - 2 * var(--auth-gutter));
+  padding: 9px 12px;
+  border: 1px solid var(--c-danger);
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 22%);
+  color: var(--c-danger);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.bar__alert p {
+  margin: 0;
+}
+.bar__alert p + p {
+  margin-top: 4px;
+}
+.bar__alert::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 40px;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid var(--c-danger);
+  border-left: 1px solid var(--c-danger);
+  background: #fff;
+  transform: rotate(45deg);
+}
 .bar__form {
   display: flex;
   align-items: flex-start;
@@ -419,6 +461,17 @@ async function submitSignup() {
   line-height: 1.45;
 }
 @media (max-width: 760px) {
+  .bar {
+    width: 100%;
+  }
+  .bar__alert {
+    right: auto;
+    left: 0;
+  }
+  .bar__alert::before {
+    right: auto;
+    left: 24px;
+  }
   .bar__form {
     width: 100%;
     align-items: flex-end;
