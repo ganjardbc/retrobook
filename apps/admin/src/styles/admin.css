@@ -2723,3 +2723,43 @@ h1,
   top: 16px;
   right: 16px;
 }
+
+/* Responsif (audit 2026-11): login dua kolom butuh ±900px; di bawahnya satu kolom. */
+@media (max-width: 960px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+  .login-aside {
+    display: none;
+  }
+}
+/* Topbar: breadcrumb boleh terpotong; tag lingkungan hilang saat sidebar menyempitkan topbar. */
+.breadcrumbs {
+  min-width: 0;
+}
+.breadcrumbs strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 1050px) {
+  .environment-tag {
+    display: none;
+  }
+}
+/* Layar sempit: sembunyikan crumb induk dan nama profil supaya tidak meluber. */
+@media (max-width: 540px) {
+  .breadcrumbs > span {
+    display: none;
+  }
+  .profile-name {
+    display: none;
+  }
+  .topbar-right {
+    gap: 8px;
+  }
+  .topbar-actions {
+    gap: 6px;
+    padding-left: 8px;
+  }
+}

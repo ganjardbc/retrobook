@@ -10,17 +10,20 @@ import FriendRequestsJewel from '@/modules/friends/components/FriendRequestsJewe
 import NotificationsJewel from '@/modules/notifications/components/NotificationsJewel.vue'
 import WordMark from '@/components/WordMark.vue'
 
+defineProps<{ menuOpen?: boolean; drawer?: boolean }>()
 defineEmits<{ 'toggle-menu': [] }>()
 const auth = useAuthStore()
 </script>
 
 <template>
-  <header class="navbar">
+  <header class="navbar" :class="{ 'navbar--drawer': drawer }">
     <nav class="navbar__inner" :aria-label="t('nav.main')">
       <button
         class="navbar__menu"
         type="button"
         :aria-label="t('nav.menu')"
+        aria-controls="left-menu"
+        :aria-expanded="menuOpen"
         @click="$emit('toggle-menu')"
       >
         <Icon icon="mdi:menu" aria-hidden="true" />
@@ -104,6 +107,12 @@ const auth = useAuthStore()
 .navbar__brand :deep(.wordmark) {
   font-size: 27px;
 }
+.navbar__me span {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .navbar__avatar {
   background: var(--c-brand-dark);
   width: 24px;
@@ -119,14 +128,28 @@ const auth = useAuthStore()
   font-size: var(--fs-title);
   cursor: pointer;
 }
+/* Halaman tanpa kolom menu kiri (profil, messages): hamburger ikut tampil di tablet supaya menu tetap terjangkau. */
+@media (max-width: 900px) {
+  .navbar--drawer .navbar__menu {
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    line-height: 1;
+  }
+}
+/* Ponsel: menu dan logo di kiri, jewel di kanan (spacer mendorongnya). Kotak cari pindah ke laci
+   menu (AppLayout); Home tetap lewat logo. */
 @media (max-width: 640px) {
   .navbar__menu {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    line-height: 1;
   }
-  .navbar__me span,
+  .navbar__me,
   .navbar__home,
-  .navbar__spacer {
-    display: none; /* Home tetap lewat logo; ruang diberikan ke kotak cari */
+  .navbar :deep(.search) {
+    display: none;
   }
   .navbar__inner {
     gap: var(--sp-2);

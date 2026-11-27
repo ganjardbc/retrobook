@@ -5,7 +5,13 @@ import { computed, ref } from 'vue'
 import Avatar from '@/components/Avatar.vue'
 import { useChatStore } from '@/modules/chat/stores'
 
+const props = defineProps<{ inline?: boolean }>()
+const emit = defineEmits<{ picked: [] }>()
 const chat = useChatStore()
+function pick(user: Parameters<typeof chat.openWindow>[0]) {
+  chat.openWindow(user)
+  emit('picked')
+}
 const query = ref('')
 const shown = computed(() => {
   const q = query.value.trim().toLowerCase()
@@ -15,7 +21,8 @@ import { formatShortAgo } from '@/helpers/time'
 </script>
 
 <template>
-  <section class="chat" :aria-label="t('chat.title')">
+  <section class="chat" :class="{ 'chat--inline': props.inline }" :aria-label="t('chat.title')">
+    <h2 v-if="props.inline" class="chat__heading">{{ t('chat.title') }}</h2>
     <p v-if="!chat.connected" class="chat__offline" role="status">{{ t('chat.offline') }}</p>
     <div class="chat__scroll">
       <ul v-if="chat.activity.length" class="chat__ticker" :aria-label="t('chat.activity.label')">
@@ -43,7 +50,7 @@ import { formatShortAgo } from '@/helpers/time'
       <ul v-else class="chat__list">
         <li v-if="!shown.length" class="chat__note" role="status">{{ t('chat.search.empty') }}</li>
         <li v-for="f in shown" :key="f.user.id">
-          <button class="chat__row" type="button" @click="chat.openWindow(f.user)">
+          <button class="chat__row" type="button" @click="pick(f.user)">
             <Avatar :name="f.user.displayName" :src="f.user.avatarUrl" size="s" />
             <span class="chat__name">{{ f.user.displayName }}</span>
             <span
@@ -100,6 +107,42 @@ import { formatShortAgo } from '@/helpers/time'
   .chat {
     display: none;
   }
+}
+/* Varian di dalam laci menu: hanya tampil di laci yang terbuka (≤900 px), mengalir di bawah menu
+   (bukan strip tetap). */
+.chat.chat--inline {
+  display: none;
+}
+@media (max-width: 900px) {
+  .layout__left--open .chat.chat--inline {
+    display: flex;
+    position: static;
+    flex: 1 1 0; /* mengisi sisa tinggi laci; .chat__scroll yang menggulir */
+    min-height: 0;
+    width: auto;
+    margin-top: var(--sp-2);
+    padding-top: 0;
+    border-top: var(--card-border);
+    border-left: 0;
+  }
+  /* Baris sejajar dengan baris menu di atasnya (padding kiri dan ukuran avatar yang sama). */
+  .layout__left--open .chat--inline .chat__row,
+  .layout__left--open .chat--inline .chat__item {
+    padding-inline: var(--sp-2);
+  }
+  .layout__left--open .chat--inline .chat__note,
+  .layout__left--open .chat--inline .chat__offline {
+    padding-inline: var(--sp-2);
+  }
+}
+.chat__heading {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-2) var(--sp-1);
+  color: var(--c-text-muted);
+  font-size: var(--fs-small);
+  font-weight: bold;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 .chat__offline {
   margin: 0;

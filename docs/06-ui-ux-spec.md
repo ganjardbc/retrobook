@@ -123,7 +123,7 @@ Tiga kolom pada lebar 1024 px ke atas, konten di tengah dengan lebar `--w-page`.
         chat dock: jendela kecil di dasar layar, maksimal 3 terbuka
 ```
 
-Perilaku responsif (UX-11): satu breakpoint sederhana di sekitar 900 px menyembunyikan kolom kanan dan menyisakan menu kiri dan feed. Di bawah 640 px menu kiri menjadi menu tarik di navbar. Tidak perlu desain mobile penuh; tujuannya tidak patah di ponsel.
+Perilaku responsif (UX-11): satu breakpoint sederhana di sekitar 900 px menyembunyikan kolom kanan dan menyisakan menu kiri dan feed. Menu kiri yang dibuka lewat tombol hamburger menjadi laci `position: fixed` di bawah navbar (lebar maks 280 px) dengan backdrop; tombol hamburger ada di bawah 640 px dan, di bawah 900 px, pada profil dan messages (halaman tanpa kolom menu kiri); di ponsel laci memuat kotak cari (pindah dari navbar), menu, dan daftar teman chat; laci tertutup lewat tombol menu, klik backdrop, Escape, atau pindah halaman, dan tombol menu membawa `aria-expanded`. Di bawah 900 px tombol aksi header profil pindah ke bawah cover dan boleh turun baris; di admin, login satu kolom di bawah 960 px dan topbar menyembunyikan tag lingkungan (di bawah 1050 px) serta nama profil (di bawah 540 px). Di bawah 640 px ikon jewel (teman, pesan, notifikasi) langsung membuka halamannya (`/friends`, `/messages`, `/notifications`) tanpa popup, dan jendela chat menjadi lembar selebar layar di bawah navbar (satu jendela; diciutkan menjadi bilah di dasar saat pindah halaman). Tidak perlu desain mobile penuh; tujuannya tidak patah di ponsel. Audit responsif 375 dan 768 px atas semua rute: tidak ada overflow horizontal halaman (tabel admin menggulir di wrapper-nya sendiri).
 
 ## 4. Komponen
 

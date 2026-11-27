@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { t } from '@retrobook/shared/i18n'
-import { computed, onBeforeUnmount, onMounted, ref, type ComponentPublicInstance } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, type ComponentPublicInstance } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import EventsTodayCard from '@/modules/events/components/EventsTodayCard.vue'
 import SuggestedGroupsCard from '@/modules/groups/components/SuggestedGroupsCard.vue'
@@ -8,6 +8,7 @@ import BirthdaysCard from '@/modules/friends/components/BirthdaysCard.vue'
 import PeopleYouMayKnow from '@/modules/friends/components/PeopleYouMayKnow.vue'
 import ChatDock from '@/modules/chat/components/ChatDock.vue'
 import ChatSidebar from '@/modules/chat/components/ChatSidebar.vue'
+import SearchBox from '@/modules/search/components/SearchBox.vue'
 import SponsoredCard from '@/modules/feed/components/SponsoredCard.vue'
 import TrendingCard from '@/modules/search/components/TrendingCard.vue'
 import { useChatStore } from '@/modules/chat/stores'
@@ -41,8 +42,15 @@ onBeforeUnmount(() => {
   disconnectRealtime()
 })
 
-// Menu kiri di layar sempit berupa panel tarik; tutup saat pindah halaman.
+// Menu kiri di layar sempit berupa panel tarik; tutup saat pindah halaman atau menekan Escape.
 router.afterEach(() => (menuOpen.value = false))
+const onKey = (e: KeyboardEvent) => {
+  if (e.key === 'Escape') menuOpen.value = false
+}
+watch(menuOpen, (open) =>
+  open ? window.addEventListener('keydown', onKey) : window.removeEventListener('keydown', onKey),
+)
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
@@ -51,16 +59,32 @@ router.afterEach(() => (menuOpen.value = false))
     :class="{ 'layout--profile': route.meta.layout === 'profile', 'layout--messages': isMessages }"
   >
     <a class="skip-link" href="#main-content">{{ t('nav.skip') }}</a>
-    <NavBar @toggle-menu="menuOpen = !menuOpen" />
+    <NavBar
+      :menu-open="menuOpen"
+      :drawer="isProfile || isMessages"
+      @toggle-menu="menuOpen = !menuOpen"
+    />
     <div class="layout__body">
       <div class="layout__cols">
+        <div
+          v-if="menuOpen"
+          class="layout__backdrop"
+          aria-hidden="true"
+          @click="menuOpen = false"
+        />
+        <!-- Messages tidak punya menu kiri di desktop; di ponsel laci tetap bisa dibuka dari navbar. -->
         <aside
-          v-if="!isMessages"
+          v-if="!isMessages || menuOpen"
+          id="left-menu"
           :ref="sticky"
           class="layout__left"
           :class="{ 'layout__left--open': menuOpen }"
         >
+          <!-- Khusus ponsel: kotak cari pindah dari navbar ke laci. -->
+          <SearchBox class="layout__drawer-search" />
           <LeftMenu />
+          <!-- Khusus ponsel: strip chat (daftar teman) tersembunyi di luar laci. -->
+          <ChatSidebar inline @picked="menuOpen = false" />
         </aside>
         <main id="main-content" class="layout__main" tabindex="-1"><RouterView /></main>
         <!-- Kartu di atas, info footer di dasar kolom. -->
@@ -114,6 +138,9 @@ router.afterEach(() => (menuOpen.value = false))
 .layout--profile .layout__left {
   display: none;
 }
+.layout__drawer-search {
+  display: none;
+}
 .layout__footer {
   flex-direction: column;
   align-items: flex-start;
@@ -142,7 +169,45 @@ router.afterEach(() => (menuOpen.value = false))
     display: none;
   }
 }
-/* Di bawah 640 px menu kiri menjadi panel yang dibuka dari navbar. */
+/* Laci menu: menu kiri yang dibuka lewat tombol hamburger menjadi panel tetap (fixed) di bawah navbar,
+   tidak ikut alur grid, jadi konten tidak menimpanya. Tombol hamburger hanya ada di ≤640 px, dan di
+   ≤900 px pada profil dan messages (halaman yang tidak punya kolom menu kiri); kelas `--open` hanya
+   muncul lewat tombol itu, jadi aturan ini aman dipasang sampai 900 px. */
+.layout__backdrop {
+  display: none;
+}
+@media (max-width: 900px) {
+  /* `.layout` menaikkan spesifisitas supaya laci juga menang atas `.layout--profile .layout__left`. */
+  .layout .layout__left--open {
+    /* Kolom flex tanpa scroll sendiri: tinggi sisa diberikan ke daftar chat, yang menggulir di dalamnya. */
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: var(--h-navbar);
+    bottom: 0;
+    left: 0;
+    z-index: 9;
+    align-self: stretch; /* tetap anak grid: tanpa ini `start` memendekkan laci */
+    width: min(280px, 85vw);
+    padding: var(--sp-2);
+    overflow: hidden;
+    background: var(--c-card);
+    border-right: var(--card-border);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  }
+  /* Kotak cari dan menu setinggi isinya (flex-basis SearchBox untuk lebar navbar tak boleh jadi tinggi). */
+  .layout__left--open > .layout__drawer-search,
+  .layout__left--open > :deep(.menu) {
+    flex: none;
+  }
+  .layout__backdrop {
+    display: block;
+    position: fixed;
+    inset: var(--h-navbar) 0 0;
+    z-index: 8;
+    background: rgba(0, 0, 0, 0.35);
+  }
+}
 @media (max-width: 640px) {
   .layout__cols {
     grid-template-columns: minmax(0, 1fr);
@@ -150,12 +215,11 @@ router.afterEach(() => (menuOpen.value = false))
   .layout__left {
     display: none;
   }
-  .layout__left--open {
+  /* Kotak cari pindah dari navbar ke laci hanya di ponsel. */
+  .layout__left--open .layout__drawer-search {
     display: block;
-    padding: var(--sp-2);
-    background: var(--c-card);
-    border: var(--card-border);
-    border-radius: var(--radius);
+    max-width: none;
+    margin-bottom: var(--sp-3);
   }
 }
 </style>

@@ -258,9 +258,42 @@ async function block() {
   bottom: calc(-1 * var(--sp-5) - var(--sp-3));
   margin: 0;
 }
+/* ≤900 px: tombol tidak muat sebaris dengan nama di atas cover, jadi pindah ke alur di bawah cover
+   dan boleh turun baris. Header jadi lebih tinggi dari cover: foto dan nama berjangkar ke dasar cover. */
+@media (max-width: 900px) {
+  .header {
+    --cover-h: var(--h-cover);
+  }
+  .header__avatar {
+    top: calc(var(--cover-h) + var(--sp-5));
+    bottom: auto;
+    transform: translateY(-100%);
+  }
+  .header__name {
+    right: var(--sp-3);
+    top: calc(var(--cover-h) - var(--sp-3));
+    bottom: auto;
+    transform: translateY(-100%);
+    overflow-wrap: anywhere;
+  }
+  .header__actions {
+    position: static;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    padding: var(--sp-2) var(--sp-3);
+    padding-left: calc(var(--avatar-l) + 2 * var(--sp-4));
+  }
+  .header__error {
+    position: static;
+    margin: 0 var(--sp-3) var(--sp-2);
+  }
+}
 @media (max-width: 640px) {
+  .header {
+    --cover-h: 160px;
+  }
   .header__cover {
-    height: 160px;
+    height: var(--cover-h);
   }
   .header__avatar :deep(.avatar--l) {
     width: var(--avatar-m);
@@ -269,11 +302,9 @@ async function block() {
   .header__name {
     left: calc(var(--avatar-m) + 2 * var(--sp-4) + var(--sp-2));
     font-size: var(--fs-title);
-    bottom: var(--sp-3);
   }
   .header__actions {
-    top: var(--sp-2);
-    bottom: auto;
+    padding-left: calc(var(--avatar-m) + 2 * var(--sp-4));
   }
 }
 .header__file {

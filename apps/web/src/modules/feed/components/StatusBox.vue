@@ -403,6 +403,47 @@ async function submit() {
   border-radius: var(--radius);
   background: var(--c-card);
 }
+/* Ponsel: tiga tab sama lebar, ikon di atas label, supaya label tidak terpotong dua baris yang tak rata
+   dan area sentuh cukup besar; footer boleh turun baris. */
+@media (max-width: 640px) {
+  .status__tabs {
+    margin: 0 var(--sp-2);
+  }
+  .status__tab,
+  .status__tab:first-child {
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: var(--sp-1);
+    padding: 0 var(--sp-1);
+    font-size: var(--fs-small);
+    line-height: 1.25;
+    text-align: center;
+  }
+  .status__tab:first-child {
+    border-left: 0;
+  }
+  .status__tab--active::after {
+    left: 50%;
+    margin-left: -4px;
+  }
+  .status__foot {
+    flex-wrap: wrap;
+  }
+  .status__foot > .status__privacy {
+    flex: 1 1 110px;
+    min-width: 0;
+  }
+  .status__privacy-wrap {
+    flex: 1 1 170px;
+    min-width: 0;
+  }
+  .status__privacy-wrap .status__privacy {
+    flex: 1;
+    min-width: 0;
+  }
+}
 .status__tagged {
   margin: var(--sp-2) 0 0;
   color: var(--c-text-muted);
