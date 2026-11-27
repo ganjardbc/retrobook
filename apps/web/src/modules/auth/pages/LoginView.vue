@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue'
 import { t, type MessageKey } from '@retrobook/shared/i18n'
 import { computed, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
@@ -28,6 +29,14 @@ const NOTICES = {
   ACCOUNT_SUSPENDED: 'auth.login.reason.ACCOUNT_SUSPENDED',
   ACCOUNT_BANNED: 'auth.login.reason.ACCOUNT_BANNED',
 } as const satisfies Record<string, MessageKey>
+
+// ikon dan warna mengikuti LeftMenu supaya konsisten di dalam app
+const FEATURES = [
+  { key: 'timeline', icon: 'mdi:chart-timeline-variant', tone: 'blue' },
+  { key: 'chat', icon: 'mdi:message-text-outline', tone: 'green' },
+  { key: 'poke', icon: 'mdi:hand-pointing-right', tone: 'orange' },
+  { key: 'privacy', icon: 'mdi:account-lock-outline', tone: 'red' },
+] as const
 
 const notice = computed(() => {
   const reason = route.query.reason
@@ -113,6 +122,17 @@ async function submitSignup() {
         <section class="tagline">
           <h1>{{ t('auth.login.tagline.title') }}</h1>
           <p>{{ t('auth.login.tagline.body') }}</p>
+          <ul class="features">
+            <li v-for="f in FEATURES" :key="f.key" class="feature">
+              <span class="feature__icon" :class="`feature__icon--${f.tone}`" aria-hidden="true"
+                ><Icon :icon="f.icon"
+              /></span>
+              <div>
+                <strong>{{ t(`auth.login.feature.${f.key}.title`) }}</strong>
+                <span>{{ t(`auth.login.feature.${f.key}.body`) }}</span>
+              </div>
+            </li>
+          </ul>
         </section>
         <section class="signup">
           <form class="signup__form" @submit.prevent="submitSignup">
@@ -244,19 +264,16 @@ async function submitSignup() {
   background: #6985b9;
 }
 .main {
-  width: min(1160px, 100%);
+  width: min(var(--auth-container), 100%);
   margin: 0 auto;
-  padding: 52px 28px 64px;
+  padding: 56px var(--auth-gutter) 64px;
   flex: 1;
 }
 .main__cols {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(330px, 0.88fr);
+  grid-template-columns: minmax(0, 1fr) minmax(330px, 480px);
   align-items: start;
-  gap: clamp(52px, 8vw, 112px);
-}
-.tagline {
-  padding-top: 38px;
+  gap: clamp(48px, 6vw, 96px);
 }
 .tagline h1 {
   max-width: 580px;
@@ -273,6 +290,55 @@ async function submitSignup() {
   color: #59616e;
   font-size: 21px;
   line-height: 1.5;
+}
+.features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 28px;
+  max-width: 600px;
+  margin: 40px 0 0;
+  padding: 28px 0 0;
+  border-top: 1px solid #d9dee7;
+  list-style: none;
+}
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.feature__icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--c-text-on-brand);
+  font-size: 22px;
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 14%);
+}
+.feature__icon--blue {
+  background: var(--c-icon-blue);
+}
+.feature__icon--green {
+  background: var(--c-icon-green);
+}
+.feature__icon--orange {
+  background: var(--c-icon-orange);
+}
+.feature__icon--red {
+  background: var(--c-icon-red);
+}
+.feature strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #30343b;
+  font-size: 16px;
+}
+.feature div span {
+  color: #59616e;
+  font-size: 14px;
+  line-height: 1.45;
 }
 .signup {
   min-width: 0;
@@ -370,19 +436,17 @@ async function submitSignup() {
     margin-top: 0;
   }
   .main {
-    padding: 28px 20px 44px;
+    padding: 28px var(--auth-gutter) 44px;
   }
   .main__cols {
     grid-template-columns: 1fr;
     gap: 34px;
   }
-  .tagline {
-    padding-top: 6px;
-  }
   .signup__form h2 {
     font-size: 32px;
   }
-  .signup__fields {
+  .signup__fields,
+  .features {
     grid-template-columns: 1fr;
   }
   .signup__wide {

@@ -23,6 +23,9 @@ import WordMark from '@/components/WordMark.vue'
   --login-ground: #edf0f5;
   --login-ink: #30343b;
   --login-muted: #737d8c;
+  /* lebar dan gutter bersama: header dan konten halaman harus sejajar */
+  --auth-container: 1120px;
+  --auth-gutter: 32px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -35,10 +38,10 @@ import WordMark from '@/components/WordMark.vue'
   box-shadow: 0 1px 2px rgb(20 39 74 / 18%);
 }
 .auth-layout__header-inner {
-  width: min(1240px, 100%);
-  min-height: 106px;
+  width: min(var(--auth-container), 100%);
+  min-height: 90px;
   margin: 0 auto;
-  padding: 14px 28px;
+  padding: 14px var(--auth-gutter);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -66,12 +69,15 @@ import WordMark from '@/components/WordMark.vue'
   border-top: 1px solid #d9dee7;
 }
 @media (max-width: 760px) {
+  .auth-layout {
+    --auth-gutter: 20px;
+  }
   .auth-layout__header-inner {
     min-height: 0;
     align-items: flex-start;
     flex-direction: column;
     gap: 16px;
-    padding: 18px 20px 20px;
+    padding: 18px var(--auth-gutter) 20px;
   }
 }
 </style>
