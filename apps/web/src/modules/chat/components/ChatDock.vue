@@ -1,8 +1,21 @@
 <script setup lang="ts">
+import { inject, watch } from 'vue'
+import { routeLocationKey } from 'vue-router'
+import { useMobile } from '@/composables/mobile'
 import ChatWindow from '@/modules/chat/components/ChatWindow.vue'
 import { useChatStore } from '@/modules/chat/stores'
 
 const chat = useChatStore()
+// Tanpa router terpasang (tes komponen) tidak ada perpindahan halaman yang perlu diikuti.
+const route = inject(routeLocationKey, null)
+const mobile = useMobile()
+// Ponsel: lembar chat menutupi halaman, jadi saat pindah halaman diciutkan menjadi bilah di dasar layar.
+watch(
+  () => route?.fullPath,
+  () => {
+    if (mobile.value) chat.windows.forEach((w) => (w.minimized = true))
+  },
+)
 </script>
 
 <template>
@@ -31,13 +44,27 @@ const chat = useChatStore()
   }
 }
 @media (max-width: 640px) {
-  /* Layar sempit: hanya satu jendela yang muat. */
+  /* Ponsel: jendela terbaru menjadi lembar selebar layar di bawah navbar (seperti aplikasi chat);
+     jendela lain tetap terbuka di belakang dan tidak ditampilkan. Diciutkan: tinggal bilah judul. */
   .dock {
-    left: var(--sp-2);
-    flex-direction: column-reverse;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
   }
   .dock > :deep(.win) {
     width: auto;
+    height: calc(100vh - var(--h-navbar));
+    height: calc(100dvh - var(--h-navbar));
+    border-right: 0;
+    border-left: 0;
+  }
+  .dock > :deep(.win--min) {
+    height: auto;
+  }
+  .dock > :deep(.win:not(:last-child)) {
+    display: none;
   }
 }
 </style>

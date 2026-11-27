@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { routerKey } from 'vue-router'
 import Jewel from '@/components/Jewel.vue'
 
 const mk = (props: Record<string, unknown> = {}) =>
@@ -53,5 +54,50 @@ describe('Jewel', () => {
     await w.vm.$nextTick()
     expect(w.find('.body').exists()).toBe(false)
     w.unmount()
+  })
+
+  describe('di ponsel (≤640 px)', () => {
+    const asMobile = (matches: boolean) =>
+      vi.stubGlobal('matchMedia', () => ({
+        matches,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }))
+    const mkWithRouter = (push: () => void, props: Record<string, unknown> = {}) =>
+      mount(Jewel, {
+        props: { icon: 'mdi:earth', label: 'Notifications', allTo: '/notifications', ...props },
+        slots: { default: '<p class="body">isi</p>' },
+        global: { provide: { [routerKey as symbol]: { push } }, stubs: { RouterLink: true } },
+        attachTo: document.body,
+      })
+    afterEach(() => vi.unstubAllGlobals())
+
+    it('klik langsung membuka halaman lengkap tanpa popup dan tanpa aria popup', async () => {
+      asMobile(true)
+      const push = vi.fn()
+      const w = mkWithRouter(push)
+      const btn = w.find('button')
+      expect(btn.attributes('aria-haspopup')).toBeUndefined()
+      await btn.trigger('click')
+      expect(push).toHaveBeenCalledWith('/notifications')
+      expect(w.find('.body').exists()).toBe(false)
+      w.unmount()
+    })
+
+    it('tanpa allTo tetap popup; di desktop tetap popup', async () => {
+      asMobile(true)
+      const push = vi.fn()
+      const noLink = mkWithRouter(push, { allTo: undefined })
+      await noLink.find('button').trigger('click')
+      expect(noLink.find('.body').exists()).toBe(true)
+      noLink.unmount()
+
+      asMobile(false)
+      const desktop = mkWithRouter(push)
+      await desktop.find('button').trigger('click')
+      expect(push).not.toHaveBeenCalled()
+      expect(desktop.find('.body').exists()).toBe(true)
+      desktop.unmount()
+    })
   })
 })

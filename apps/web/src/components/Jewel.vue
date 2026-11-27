@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import { t } from '@retrobook/shared/i18n'
-import { computed, onBeforeUnmount, onMounted, ref, useId } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, inject, onBeforeUnmount, onMounted, ref, useId } from 'vue'
+import { RouterLink, routerKey } from 'vue-router'
+import { useMobile } from '@/composables/mobile'
 
 const props = defineProps<{
   icon: string
@@ -14,6 +15,16 @@ const props = defineProps<{
   allTo?: string
 }>()
 const open = defineModel<boolean>('open', { default: false })
+
+// Tanpa router terpasang (mis. tes komponen) tombol tetap berupa popup.
+const router = inject(routerKey, null)
+const mobile = useMobile()
+// Di ponsel popup tidak muat: klik langsung membuka halaman lengkapnya.
+const direct = computed(() => mobile.value && !!props.allTo && !!router)
+function onClick() {
+  if (direct.value) void router?.push(props.allTo as string)
+  else open.value = !open.value
+}
 
 const root = ref<HTMLElement | null>(null)
 const button = ref<HTMLButtonElement | null>(null)
@@ -51,16 +62,16 @@ onBeforeUnmount(() => {
       class="jewel__btn"
       :class="{ 'jewel__btn--on': badge }"
       type="button"
-      aria-haspopup="true"
-      :aria-expanded="open"
-      :aria-controls="panelId"
+      :aria-haspopup="direct ? undefined : 'true'"
+      :aria-expanded="direct ? undefined : open"
+      :aria-controls="direct ? undefined : panelId"
       :aria-label="badge ? `${label} (${badge})` : label"
-      @click="open = !open"
+      @click="onClick"
     >
       <Icon :icon="icon" aria-hidden="true" />
       <span v-if="badge" class="jewel__badge" aria-hidden="true">{{ badge }}</span>
     </button>
-    <div v-if="open" :id="panelId" class="jewel__panel">
+    <div v-if="open && !direct" :id="panelId" class="jewel__panel">
       <div class="jewel__title">{{ label }}</div>
       <slot />
       <RouterLink v-if="allTo" class="jewel__all" :to="allTo" @click="open = false">{{

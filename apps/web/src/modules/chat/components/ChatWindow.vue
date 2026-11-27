@@ -260,4 +260,25 @@ function submit() {
 .win__form input {
   width: 100%;
 }
+@media (max-width: 640px) {
+  .win__log {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+  }
+  /* Tombol kepala lebih besar untuk jari. */
+  .win__btn {
+    width: 44px;
+  }
+  .win__title {
+    padding-block: var(--sp-3);
+  }
+  .win__form {
+    padding: var(--sp-2);
+  }
+  .win__form input {
+    min-height: 40px;
+    font-size: 16px; /* di bawah 16px iOS memperbesar halaman saat fokus */
+  }
+}
 </style>
